@@ -13641,16 +13641,21 @@ let _qrCurrentUrl = '';
 })();
 
 // ══════════════════════════════════════════════════════════════════════
-// URL PERMANENTE DEL MENÚ DIGITAL — NO MODIFICAR
-// Esta constante es la dirección canónica del menú digital.
-// Se usa para el QR y se rellena automáticamente al abrir esa sección.
+// URL DINÁMICA DEL MENÚ DIGITAL
+// Se construye automáticamente a partir del dominio actual del sistema,
+// así funciona correctamente sin importar dónde esté alojado.
 // ══════════════════════════════════════════════════════════════════════
-const MENU_DIGITAL_URL = 'https://ochoacastro.github.io/Restaurante-DIAN/menu.html';
+const MENU_DIGITAL_URL = (function() {
+  const loc = window.location;
+  // Obtener la ruta base (carpeta donde está index.html)
+  const basePath = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
+  return loc.origin + basePath + 'menu.html';
+})();
 
 function cfgGenerateQR() {
   const urlInput = document.getElementById('qrUrlInput');
-  // Siempre usar la URL permanente si el campo está vacío o tiene la URL anterior
-  if (!urlInput.value || urlInput.value.includes('github.io')) urlInput.value = MENU_DIGITAL_URL;
+  // Pre-llenar con la URL dinámica si el campo está vacío
+  if (!urlInput.value) urlInput.value = MENU_DIGITAL_URL;
   const url = (urlInput?.value || '').trim();
   if (!url) { showToast('⚠️ Escribe la URL del menú primero'); urlInput?.focus(); return; }
   _qrCurrentUrl = url;
