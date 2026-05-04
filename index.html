@@ -4085,8 +4085,8 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     <div class="cfg-acc-body">
       <div class="cfg-acc-inner">
         <div class="qr-url-row">
-          <input id="qrUrlInput" class="qr-url-input" type="url" placeholder="URL del menú digital" autocomplete="off" spellcheck="false" title="URL del menú digital">
-          <button class="btn-save-config" style="white-space:nowrap;padding:10px 14px;" onclick="cfgGenerateQR()">Generar</button>
+          <input id="qrUrlInput" class="qr-url-input" type="url" placeholder="https://tu-dominio.com/menu.html" autocomplete="off" spellcheck="false" title="URL del menú digital">
+          <button class="btn-save-config" style="white-space:nowrap;padding:10px 14px;" onclick="cfgGuardarYGenerarQR()">Generar</button>
         </div>
         <div id="qrCanvasWrap" class="qr-canvas-wrap" style="display:none;"></div>
         <div id="qrLinkBox" class="qr-link-box" style="display:none;">
@@ -4097,7 +4097,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
           <button class="qr-action-btn" onclick="cfgQrDownload()">⬇️ Descargar PNG</button>
           <button class="qr-action-btn" onclick="cfgQrShare()">📤 Compartir</button>
         </div>
-        <div class="qr-note">Escribe la URL del menú digital y genera el QR. Los clientes lo escanean para acceder al menú.</div>
+        <div class="qr-note">Escribe la URL completa donde está tu menú digital (ej: https://tu-dominio.com/menu.html). Se guardará automáticamente.</div>
       </div>
     </div>
   </div>
@@ -13031,9 +13031,14 @@ function onCfgAccOpen(id) {
   // ── QR: siempre pre-llenar con la URL permanente y generar automáticamente ──
   if (id === 'cfgacc-qr') {
     const inp = document.getElementById('qrUrlInput');
-    if (inp) { inp.value = MENU_DIGITAL_URL; }
-    // Generar el QR automáticamente al abrir la sección
-    setTimeout(cfgGenerateQR, 80);
+    if (inp) {
+      inp.removeAttribute('readonly');
+      // Cargar URL guardada en localStorage
+      const saved = cfgGetQrUrl();
+      if (saved) inp.value = saved;
+    }
+    // Generar automáticamente si ya hay URL guardada
+    if (cfgGetQrUrl()) setTimeout(cfgGenerateQR, 80);
   }
   if (id === 'cfgAccFE') {
     // Handled by toggleCfgAccFE()
@@ -13645,17 +13650,24 @@ let _qrCurrentUrl = '';
 // Se construye automáticamente a partir del dominio actual del sistema,
 // así funciona correctamente sin importar dónde esté alojado.
 // ══════════════════════════════════════════════════════════════════════
-const MENU_DIGITAL_URL = (function() {
-  const loc = window.location;
-  // Obtener la ruta base (carpeta donde está index.html)
-  const basePath = loc.pathname.substring(0, loc.pathname.lastIndexOf('/') + 1);
-  return loc.origin + basePath + 'menu.html';
-})();
+const QR_URL_KEY = 'helechos_qr_menu_url';
+
+function cfgGetQrUrl() {
+  return localStorage.getItem(QR_URL_KEY) || '';
+}
+
+function cfgGuardarYGenerarQR() {
+  const urlInput = document.getElementById('qrUrlInput');
+  const url = (urlInput?.value || '').trim();
+  if (!url) { showToast('⚠️ Escribe la URL del menú primero'); urlInput?.focus(); return; }
+  if (!url.startsWith('http')) { showToast('⚠️ La URL debe comenzar con https://'); urlInput?.focus(); return; }
+  // Guardar en localStorage para recordarla siempre
+  localStorage.setItem(QR_URL_KEY, url);
+  cfgGenerateQR();
+}
 
 function cfgGenerateQR() {
   const urlInput = document.getElementById('qrUrlInput');
-  // Siempre pre-llenar con la URL dinámica del dominio actual
-  urlInput.value = MENU_DIGITAL_URL;
   const url = (urlInput?.value || '').trim();
   if (!url) { showToast('⚠️ Escribe la URL del menú primero'); urlInput?.focus(); return; }
   _qrCurrentUrl = url;
