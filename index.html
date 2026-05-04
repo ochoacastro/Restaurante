@@ -4085,7 +4085,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     <div class="cfg-acc-body">
       <div class="cfg-acc-inner">
         <div class="qr-url-row">
-          <input id="qrUrlInput" class="qr-url-input" type="url" placeholder="https://ochoacastro.github.io/Restaurante-DIAN/menu.html" autocomplete="off" spellcheck="false" readonly title="URL permanente del menú — no modificar">
+          <input id="qrUrlInput" class="qr-url-input" type="url" placeholder="URL del menú digital" autocomplete="off" spellcheck="false" title="URL del menú digital">
           <button class="btn-save-config" style="white-space:nowrap;padding:10px 14px;" onclick="cfgGenerateQR()">Generar</button>
         </div>
         <div id="qrCanvasWrap" class="qr-canvas-wrap" style="display:none;"></div>
@@ -13654,8 +13654,8 @@ const MENU_DIGITAL_URL = (function() {
 
 function cfgGenerateQR() {
   const urlInput = document.getElementById('qrUrlInput');
-  // Pre-llenar con la URL dinámica si el campo está vacío
-  if (!urlInput.value) urlInput.value = MENU_DIGITAL_URL;
+  // Siempre pre-llenar con la URL dinámica del dominio actual
+  urlInput.value = MENU_DIGITAL_URL;
   const url = (urlInput?.value || '').trim();
   if (!url) { showToast('⚠️ Escribe la URL del menú primero'); urlInput?.focus(); return; }
   _qrCurrentUrl = url;
