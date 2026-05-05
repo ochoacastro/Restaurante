@@ -3666,6 +3666,10 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
       <label class="mpp-toggle"><input type="checkbox" id="mperm-diseno" onchange="masterTogglePerm('diseno',this.checked)"><span class="mpp-slider"></span></label>
     </div>
     <div class="mpp-row">
+      <div class="mpp-label"><span class="mpp-label-icon">📢</span>Publicidad y banners</div>
+      <label class="mpp-toggle"><input type="checkbox" id="mperm-publicidad" onchange="masterTogglePerm('publicidad',this.checked)"><span class="mpp-slider"></span></label>
+    </div>
+    <div class="mpp-row">
       <div class="mpp-label"><span class="mpp-label-icon">📲</span>Código QR del menú</div>
       <label class="mpp-toggle"><input type="checkbox" id="mperm-qr" onchange="masterTogglePerm('qr',this.checked)"><span class="mpp-slider"></span></label>
     </div>
@@ -13234,7 +13238,8 @@ function applyMasterPerms() {
   Object.entries(PERM_SECTIONS).forEach(([key, accId]) => {
     const acc = document.getElementById(accId);
     if (!acc) return;
-    const habilitado = isMaster || !!perms[key];
+    // Si la key no existe en perms (sección nueva), habilitarla por defecto
+    const habilitado = isMaster || (perms[key] === undefined ? true : !!perms[key]);
     if (habilitado) {
       acc.classList.remove('acc-locked');
       acc.style.display = '';
