@@ -3699,6 +3699,29 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     </div>
   </div>
 
+  <!-- Combos -->
+  <div class="cfg-acc" id="cfgacc-combos">
+    <div class="cfg-acc-header" data-cfgacc="cfgacc-combos">
+      <div class="cfg-acc-left">
+        <span class="cfg-acc-icon">🎁</span>
+        <div>
+          <div class="cfg-acc-title">Combos</div>
+          <div class="cfg-acc-sub" id="cfgCombosCount">—</div>
+        </div>
+      </div>
+      <span class="cfg-acc-arrow">▼</span>
+    </div>
+    <div class="cfg-acc-body">
+      <div class="cfg-acc-inner">
+        <p style="font-size:12px;color:var(--gris);line-height:1.5;margin-bottom:10px;">
+          Agrupa productos en combos con precio especial. Aparecen en el menú como una sección propia.
+        </p>
+        <div id="combosList"></div>
+        <button class="btn-save-config" style="margin-top:10px;" onclick="abrirModalNuevoCombo()">➕ Crear combo</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Precios rápidos -->
   <div class="cfg-acc" id="cfgacc-precios">
     <div class="cfg-acc-header" data-cfgacc="cfgacc-precios">
@@ -4700,6 +4723,61 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   </div>
 </div>
 
+
+<!-- MODAL EDITAR / NUEVO COMBO -->
+<div class="modal-overlay" id="modalEditCombo">
+  <div class="modal modal-usuarios" style="max-height:92vh;overflow-y:auto;">
+    <div class="modal-handle"></div>
+    <h3 id="editComboTitulo">Nuevo combo</h3>
+    <p style="margin-bottom:14px;color:var(--gris);font-size:13px;">Define los productos incluidos y el precio especial del combo</p>
+
+    <div class="form-row">
+      <label class="form-label">Nombre del combo</label>
+      <input class="form-input" id="editComboNombre" placeholder="Ej: Combo Familiar" maxlength="50">
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Descripción <span style="font-weight:400;color:var(--gris)">(opcional, menú cliente)</span></label>
+      <textarea class="form-input" id="editComboDesc" rows="2" placeholder="Ej: Incluye 2 platos fuertes + 2 bebidas + postre" style="resize:none;line-height:1.4;"></textarea>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label" style="margin-bottom:8px;">Productos incluidos</label>
+      <div id="editComboItemsWrap" style="display:flex;flex-direction:column;gap:8px;"></div>
+      <button type="button" onclick="comboAgregarLinea()" style="margin-top:10px;width:100%;padding:10px;background:transparent;border:1.5px dashed var(--gris);border-radius:10px;color:var(--gris);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;">➕ Agregar producto al combo</button>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Precio del combo <span style="font-weight:400;color:var(--gris)">(deja vacío para sumar los productos)</span></label>
+      <div class="edit-grid-2">
+        <div>
+          <label class="form-label form-label-small">Precio restaurante</label>
+          <input class="form-input" id="editComboPrecio" type="text" inputmode="numeric" placeholder="Automático" style="font-family:var(--font-num);font-size:17px;font-weight:700;color:var(--rappi);">
+        </div>
+        <div>
+          <label class="form-label form-label-small">Precio domicilio</label>
+          <input class="form-input" id="editComboPrecioDom" type="text" inputmode="numeric" placeholder="Igual que local" style="font-family:var(--font-num);font-size:17px;font-weight:700;color:var(--rappi);">
+        </div>
+      </div>
+      <div id="editComboResumen" style="margin-top:8px;font-size:12px;color:var(--gris);line-height:1.5;"></div>
+    </div>
+
+    <div class="form-row">
+      <label class="form-label">Foto del combo <span style="font-weight:400;color:var(--gris)">(opcional)</span></label>
+      <div id="editComboFotoWrap" class="edit-photo-wrap">
+        <div id="editComboFotoPreview" class="edit-photo-preview"></div>
+        <button id="editComboFotoBtn" class="edit-photo-btn" type="button" onclick="document.getElementById('editComboFotoInput').click()">📷 Subir foto del combo</button>
+      </div>
+      <button id="editComboFotoDelBtn" type="button" onclick="borrarFotoCombo()" style="display:none;margin-top:8px;width:100%;padding:10px;background:transparent;border:1.5px solid var(--rojo);border-radius:10px;color:var(--rojo);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">🗑️ Borrar foto</button>
+      <input id="editComboFotoInput" type="file" accept="image/*" hidden onchange="onEditComboFotoChange(event)">
+    </div>
+
+    <div class="modal-btns" style="margin-top:18px;">
+      <button class="modal-btn-cancel" onclick="cerrarModal('modalEditCombo')">Cancelar</button>
+      <button class="modal-btn-ok" onclick="guardarCombo()">✅ Guardar combo</button>
+    </div>
+  </div>
+</div>
 
 <div class="modal-overlay" id="modalUsuarioMenu">
   <div class="modal modal-usuarios">
@@ -7804,7 +7882,7 @@ function abrirDrawer(key) {
   if (key === 'carrito')  renderCarrito();
   if (key === 'pago')     renderPago();
   if (key === 'stats')    renderStats();
-  if (key === 'editmenu') { renderProductosConfig(); renderPreciosConfig(); applyMasterPerms(); }
+  if (key === 'editmenu') { renderProductosConfig(); renderPreciosConfig(); renderCombosConfig(); applyMasterPerms(); }
   if (key === 'config')   { renderUsuariosConfig(); if (typeof feApplyHabilitado === 'function') feApplyHabilitado(); }
 
   // Permisos de rol
@@ -8756,6 +8834,292 @@ function guardarMenuLocalStorage() {
   try { localStorage.setItem('helechos_menu_custom_v3', JSON.stringify(data)); } catch(_) {}
   fbSync('menu', data);
 }
+
+// ── COMBOS ────────────────────────────────────────────────────────────
+let COMBOS = (function() {
+  try {
+    const raw = localStorage.getItem('helechos_combos');
+    if (raw) return JSON.parse(raw);
+  } catch(_) {}
+  return [];
+})();
+
+let editComboIdx = -1;
+let editComboFotoData = '';
+let _comboLineaId = 0;
+
+function guardarCombosLS() {
+  localStorage.setItem('helechos_combos', JSON.stringify(COMBOS));
+  if (window.fbSync) fbSync('combos', COMBOS.length ? COMBOS : null);
+}
+
+// ─ Render lista de combos en config ──────────────────────────────────
+function renderCombosConfig() {
+  const list = document.getElementById('combosList');
+  const countEl = document.getElementById('cfgCombosCount');
+  if (countEl) countEl.textContent = `${COMBOS.length} combo${COMBOS.length !== 1 ? 's' : ''}`;
+  if (!list) return;
+  if (COMBOS.length === 0) {
+    list.innerHTML = '<p style="font-size:13px;color:var(--gris);text-align:center;padding:16px 0;">Sin combos. Crea el primero.</p>';
+    return;
+  }
+  list.innerHTML = COMBOS.map((combo, idx) => {
+    const precioMostrar = combo.precio ? fmt(combo.precio) : _comboPrecioAuto(combo);
+    return `
+    <div class="user-mgmt-item">
+      ${combo.foto
+        ? `<img src="${combo.foto}" style="width:44px;height:44px;border-radius:10px;object-fit:cover;flex-shrink:0;" alt="">`
+        : `<div style="width:44px;height:44px;border-radius:10px;background:var(--fondo);display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">🎁</div>`
+      }
+      <div class="user-mgmt-info" style="flex:1;min-width:0;">
+        <div class="user-mgmt-name" style="font-size:14px;">${esc(combo.nombre)}</div>
+        <div class="user-mgmt-sub" style="display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap;">
+          <span style="background:rgba(255,214,0,0.12);color:var(--rappi);border:1px solid rgba(255,214,0,0.25);border-radius:20px;padding:1px 8px;font-size:10px;font-weight:600;">${precioMostrar}</span>
+          <span style="font-size:10px;color:var(--gris);">${(combo.items||[]).length} producto${(combo.items||[]).length !== 1 ? 's' : ''}</span>
+          ${combo.descripcion ? `<span style="font-size:10px;color:var(--gris);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;">${esc(combo.descripcion)}</span>` : ''}
+        </div>
+      </div>
+      <div class="user-mgmt-btns">
+        <button class="user-mgmt-btn" onclick="abrirEditarCombo(${idx})">✏️</button>
+        <button class="user-mgmt-btn del" onclick="eliminarCombo(${idx})">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function _comboPrecioAuto(combo) {
+  if (!combo.items || !combo.items.length) return '$0';
+  const total = combo.items.reduce((s, it) => {
+    const prod = MENU.find(m => m.nombre === it.nombre);
+    return s + (prod ? prod.precio : 0) * (it.cantidad || 1);
+  }, 0);
+  return fmt(total);
+}
+
+// ─ Abrir modales ──────────────────────────────────────────────────────
+function abrirModalNuevoCombo() {
+  editComboIdx = -1;
+  editComboFotoData = '';
+  document.getElementById('editComboTitulo').textContent = 'Nuevo combo';
+  document.getElementById('editComboNombre').value = '';
+  document.getElementById('editComboDesc').value = '';
+  document.getElementById('editComboPrecio').value = '';
+  document.getElementById('editComboPrecioDom').value = '';
+  document.getElementById('editComboResumen').textContent = '';
+  _resetEditComboFoto();
+  _renderComboLineas([]);
+  document.getElementById('modalEditCombo').classList.add('show');
+  setTimeout(() => document.getElementById('editComboNombre').focus(), 200);
+}
+
+function abrirEditarCombo(idx) {
+  editComboIdx = idx;
+  const c = COMBOS[idx];
+  document.getElementById('editComboTitulo').textContent = 'Editar combo';
+  document.getElementById('editComboNombre').value = c.nombre || '';
+  document.getElementById('editComboDesc').value = c.descripcion || '';
+  document.getElementById('editComboPrecio').value = c.precio ? Number(c.precio).toLocaleString('es-CO') : '';
+  document.getElementById('editComboPrecioDom').value = c.precioDomicilio ? Number(c.precioDomicilio).toLocaleString('es-CO') : '';
+  _setEditComboFoto(c.foto || '');
+  _renderComboLineas(c.items || []);
+  _actualizarResumenCombo();
+  document.getElementById('modalEditCombo').classList.add('show');
+}
+
+// ─ Manejo de líneas de productos del combo ────────────────────────────
+function _renderComboLineas(items) {
+  _comboLineaId = 0;
+  const wrap = document.getElementById('editComboItemsWrap');
+  wrap.innerHTML = '';
+  if (items.length === 0) {
+    comboAgregarLinea();
+  } else {
+    items.forEach(it => comboAgregarLinea(it));
+  }
+}
+
+function comboAgregarLinea(item) {
+  const wrap = document.getElementById('editComboItemsWrap');
+  const lid = ++_comboLineaId;
+  const opts = MENU.map(m =>
+    `<option value="${esc(m.nombre)}" ${item && m.nombre === item.nombre ? 'selected' : ''}>${esc(m.nombre)} — ${fmt(m.precio)}</option>`
+  ).join('');
+  const qty = item ? (item.cantidad || 1) : 1;
+
+  const div = document.createElement('div');
+  div.id = `combo-linea-${lid}`;
+  div.style.cssText = 'display:flex;gap:8px;align-items:center;';
+  div.innerHTML = `
+    <select class="form-input" id="combo-prod-${lid}" onchange="_actualizarResumenCombo()" style="flex:1;min-width:0;appearance:auto;-webkit-appearance:auto;background:var(--blanco);cursor:pointer;font-size:13px;padding:8px 10px;">
+      <option value="" disabled ${!item ? 'selected' : ''}>Selecciona producto…</option>
+      ${opts}
+    </select>
+    <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+      <button type="button" onclick="comboQty(${lid},-1)" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--borde);background:var(--blanco);color:var(--negro);font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">−</button>
+      <span id="combo-qty-${lid}" style="min-width:20px;text-align:center;font-weight:700;font-family:var(--font-num);font-size:14px;">${qty}</span>
+      <button type="button" onclick="comboQty(${lid},1)" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--borde);background:var(--rappi);color:#111;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;">+</button>
+    </div>
+    <button type="button" onclick="comboEliminarLinea(${lid})" style="width:28px;height:28px;border-radius:8px;border:1.5px solid var(--rojo);background:transparent;color:var(--rojo);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;">×</button>`;
+  wrap.appendChild(div);
+}
+
+function comboQty(lid, delta) {
+  const el = document.getElementById(`combo-qty-${lid}`);
+  if (!el) return;
+  let v = parseInt(el.textContent) + delta;
+  if (v < 1) v = 1;
+  el.textContent = v;
+  _actualizarResumenCombo();
+}
+
+function comboEliminarLinea(lid) {
+  const el = document.getElementById(`combo-linea-${lid}`);
+  if (el) el.remove();
+  _actualizarResumenCombo();
+}
+
+function _leerLineasCombo() {
+  const wrap = document.getElementById('editComboItemsWrap');
+  const lines = wrap ? [...wrap.children] : [];
+  const items = [];
+  lines.forEach(div => {
+    const id = div.id.replace('combo-linea-', '');
+    const selEl  = div.querySelector(`#combo-prod-${id}`);
+    const qtyEl  = div.querySelector(`#combo-qty-${id}`);
+    if (!selEl || !selEl.value) return;
+    items.push({ nombre: selEl.value, cantidad: parseInt(qtyEl ? qtyEl.textContent : '1') || 1 });
+  });
+  return items;
+}
+
+function _actualizarResumenCombo() {
+  const items = _leerLineasCombo();
+  const resEl = document.getElementById('editComboResumen');
+  if (!resEl) return;
+  if (!items.length) { resEl.textContent = ''; return; }
+  const total = items.reduce((s, it) => {
+    const prod = MENU.find(m => m.nombre === it.nombre);
+    return s + (prod ? prod.precio * it.cantidad : 0);
+  }, 0);
+  const precioManual = document.getElementById('editComboPrecio').value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  const precioFinal  = precioManual ? parseInt(precioManual) : total;
+  const descuento    = total > 0 && precioFinal < total ? ` · Ahorras ${fmt(total - precioFinal)}` : '';
+  resEl.innerHTML = `Suma individual: <strong>${fmt(total)}</strong>${precioManual ? ` → Precio combo: <strong style="color:var(--rappi);">${fmt(precioFinal)}</strong>${descuento}` : ' <span style="color:var(--gris);">(precio automático)</span>'}`;
+}
+
+// ─ Guardar combo ──────────────────────────────────────────────────────
+function guardarCombo() {
+  const nombre = document.getElementById('editComboNombre').value.trim();
+  if (!nombre) { showToast('⚠️ Ingresa el nombre del combo'); return; }
+
+  const items = _leerLineasCombo();
+  if (!items.length) { showToast('⚠️ Agrega al menos un producto al combo'); return; }
+
+  const precioRaw = document.getElementById('editComboPrecio').value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  const precioVal = precioRaw ? parseInt(precioRaw) : null;
+
+  const precioDomRaw = document.getElementById('editComboPrecioDom').value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  const precioDomVal = precioDomRaw ? parseInt(precioDomRaw) : null;
+
+  const descripcion = document.getElementById('editComboDesc').value.trim();
+  const foto = editComboFotoData || '';
+
+  const combo = { nombre, descripcion, precio: precioVal, precioDomicilio: precioDomVal, items, foto };
+
+  if (editComboIdx >= 0) {
+    COMBOS[editComboIdx] = combo;
+    showToast('✅ Combo actualizado');
+  } else {
+    COMBOS.push(combo);
+    showToast('✅ Combo creado');
+  }
+
+  guardarCombosLS();
+  renderCombosConfig();
+  cerrarModal('modalEditCombo');
+}
+
+function eliminarCombo(idx) {
+  const c = COMBOS[idx];
+  if (!c) return;
+  confirmar({ icono:'🗑️', titulo:'Eliminar combo', mensaje:`¿Eliminar el combo "${c.nombre}"?`, textoOk:'Eliminar', callback() {
+    COMBOS.splice(idx, 1);
+    guardarCombosLS();
+    renderCombosConfig();
+    showToast('🗑️ Combo eliminado');
+  }});
+}
+
+// ─ Foto del combo ─────────────────────────────────────────────────────
+function _resetEditComboFoto() {
+  editComboFotoData = '';
+  const wrap    = document.getElementById('editComboFotoWrap');
+  const preview = document.getElementById('editComboFotoPreview');
+  const btn     = document.getElementById('editComboFotoBtn');
+  const delBtn  = document.getElementById('editComboFotoDelBtn');
+  if (wrap)    wrap.classList.remove('has-photo');
+  if (preview) preview.innerHTML = '';
+  if (btn)     btn.textContent = '📷 Subir foto del combo';
+  if (delBtn)  delBtn.style.display = 'none';
+}
+
+function _setEditComboFoto(dataUrl) {
+  editComboFotoData = dataUrl || '';
+  const wrap    = document.getElementById('editComboFotoWrap');
+  const preview = document.getElementById('editComboFotoPreview');
+  const btn     = document.getElementById('editComboFotoBtn');
+  const delBtn  = document.getElementById('editComboFotoDelBtn');
+  if (!dataUrl) { _resetEditComboFoto(); return; }
+  if (wrap)    wrap.classList.add('has-photo');
+  if (preview) preview.innerHTML = `<img src="${dataUrl}" alt="foto combo">`;
+  if (btn)     btn.textContent = '📷 Cambiar foto';
+  if (delBtn)  delBtn.style.display = 'block';
+}
+
+function borrarFotoCombo() { _resetEditComboFoto(); showToast('🗑️ Foto eliminada'); }
+
+function onEditComboFotoChange(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  if (file.size > 2 * 1024 * 1024) { showToast('⚠️ Foto muy grande (máx. 2 MB)'); e.target.value = ''; return; }
+  const reader = new FileReader();
+  reader.onload = ev => _setEditComboFoto(ev.target.result);
+  reader.readAsDataURL(file);
+  e.target.value = '';
+}
+
+// ─ Formato precio en inputs del combo ────────────────────────────────
+(function() {
+  function _fmtComboInput(id) {
+    const inp = document.getElementById(id);
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      const selStart = this.selectionStart;
+      const prevLen  = this.value.length;
+      const raw = this.value.replace(/\./g, '').replace(/[^0-9]/g, '');
+      if (raw === '') { this.value = ''; _actualizarResumenCombo(); return; }
+      const formatted = parseInt(raw, 10).toLocaleString('es-CO');
+      this.value = formatted;
+      try { this.setSelectionRange(Math.max(0, selStart + (formatted.length - prevLen)), Math.max(0, selStart + (formatted.length - prevLen))); } catch(_) {}
+      _actualizarResumenCombo();
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => { _fmtComboInput('editComboPrecio'); _fmtComboInput('editComboPrecioDom'); });
+  } else {
+    _fmtComboInput('editComboPrecio'); _fmtComboInput('editComboPrecioDom');
+  }
+})();
+
+// ─ Sincronización Firebase → COMBOS ──────────────────────────────────
+// Se engancha en el bloque initFirebaseSync más abajo; aquí solo exponemos
+// la función por si el listener llega antes del init.
+window._applyCombosFromFirebase = function(val) {
+  if (!Array.isArray(val)) return;
+  COMBOS = val;
+  localStorage.setItem('helechos_combos', JSON.stringify(COMBOS));
+  renderCombosConfig();
+};
 
 // ── CARRITO ───────────────────────────────────────────────────────────
 function renderCarrito() {
@@ -12643,6 +13007,10 @@ function fbEscucharCambios() {
         if (carrito.length > 0) renderCarrito();
       }
     },
+    { path: 'helechos/combos', handler: (val) => {
+        if (window._applyCombosFromFirebase) window._applyCombosFromFirebase(val);
+      }
+    },
     { path: 'helechos/historial', handler: (val) => {
         if (!Array.isArray(val)) return;
         // BUG 8 fix: antes de reemplazar el historial completo, preservar facturas que
@@ -13423,6 +13791,7 @@ function onCfgAccOpen(id) {
   if (id === 'cfgacc-cats')     cfgRenderCategories();
   if (id === 'cfgacc-catimgs')  cfgRenderCatImages();
   if (id === 'cfgacc-productos') { renderProductosConfig(); }
+  if (id === 'cfgacc-combos')   { renderCombosConfig(); }
   if (id === 'cfgacc-precios')  { renderPreciosConfig(); }
   if (id === 'cfgacc-diseno')   { cfgRenderDiseno(); renderClosedBgPreview(); renderClassicBgPreview(); renderSkinGrid(); }
   if (id === 'cfgacc-publicidad') { renderAdBannerPreview(); if (typeof renderAdBannerVerticalList === 'function') renderAdBannerVerticalList(); }
