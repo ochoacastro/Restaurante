@@ -4071,12 +4071,11 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <div id="adBannerListWrap" style="margin-bottom:10px;"></div>
 
         <!-- Botón agregar banner horizontal -->
-        <label style="cursor:pointer;display:block;">
-          <div class="btn-save-config" style="text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">
-            <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar banner horizontal
-          </div>
-          <input type="file" accept="image/*" hidden id="adBannerInput" onchange="cargarAdBanner(this)" multiple>
-        </label>
+        <input type="file" accept="image/*" hidden id="adBannerInput" onchange="cargarAdBanner(this)" multiple>
+        <button class="btn-save-config" onclick="document.getElementById('adBannerInput').click()"
+          style="width:100%;text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;cursor:pointer;">
+          <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar banner horizontal
+        </button>
         <div class="qr-note" style="margin-top:8px;">Cada skin tiene su propio conjunto de banners. Toca 🗑 para eliminar uno.</div>
 
         <!-- Separador -->
@@ -4088,12 +4087,11 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
           Al tocar un banner, el cliente verá esta versión ampliada en pantalla completa. Si no subes una imagen vertical, se mostrará el banner horizontal. Sube una por cada banner horizontal, en el mismo orden.
         </div>
         <div id="adBannerVerticalListWrap" style="margin-bottom:10px;"></div>
-        <label style="cursor:pointer;display:block;">
-          <div class="btn-save-config" style="text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);">
-            <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar imagen vertical
-          </div>
-          <input type="file" accept="image/*" hidden id="adBannerVerticalInput" onchange="cargarAdBannerVertical(this)" multiple>
-        </label>
+        <input type="file" accept="image/*" hidden id="adBannerVerticalInput" onchange="cargarAdBannerVertical(this)" multiple>
+        <button class="btn-save-config" onclick="document.getElementById('adBannerVerticalInput').click()"
+          style="width:100%;text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);cursor:pointer;">
+          <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar imagen vertical
+        </button>
 
         <!-- compat: elementos legacy que renderAdBannerPreview() espera -->
         <div id="adBannerPreviewWrap" style="display:none;"></div>
