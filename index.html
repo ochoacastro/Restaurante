@@ -4081,17 +4081,16 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <!-- Separador -->
         <div style="height:1px;background:var(--borde);margin:18px 0 14px;"></div>
 
-        <!-- BANNERS VERTICALES -->
-        <div class="form-label form-label-small" style="margin-bottom:4px;">🔍 Imágenes verticales (zoom al tocar)</div>
-        <div style="font-size:11px;color:var(--gris);margin-bottom:10px;line-height:1.5;">
-          Al tocar un banner, el cliente verá esta versión ampliada en pantalla completa. Si no subes una imagen vertical, se mostrará el banner horizontal. Sube una por cada banner horizontal, en el mismo orden.
-        </div>
-        <div id="adBannerVerticalListWrap" style="margin-bottom:10px;"></div>
+        <!-- BANNERS VERTICALES — se muestran integrados con cada banner horizontal -->
+        <div id="adBannerVerticalListWrap" style="display:none;margin-bottom:10px;"></div>
         <input type="file" accept="image/*" hidden id="adBannerVerticalInput" onchange="cargarAdBannerVertical(this)" multiple>
-        <button class="btn-save-config" onclick="document.getElementById('adBannerVerticalInput').click()"
-          style="width:100%;text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);cursor:pointer;">
+        <button id="adBannerVerticalBtn" type="button" onclick="document.getElementById('adBannerVerticalInput').click()"
+          style="display:none;width:100%;text-align:center;padding:10px;font-size:13px;align-items:center;justify-content:center;gap:6px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);cursor:pointer;">
           <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar imagen vertical
         </button>
+        <div style="font-size:11px;color:var(--gris);margin-top:6px;line-height:1.5;">
+          💡 La imagen vertical de cada banner aparece en el slot correspondiente arriba — toca "+" debajo de cada banner horizontal para subirla.
+        </div>
 
         <!-- compat: elementos legacy que renderAdBannerPreview() espera -->
         <div id="adBannerPreviewWrap" style="display:none;"></div>
@@ -6603,6 +6602,8 @@ function renderAdBannerPreview() {
   const skinObj = MENU_SKINS[key] || MENU_SKINS.clasico;
   const banners = getAdBanners();
   const arr     = banners[key] || [];
+  const verts   = getAdBannersVertical();
+  const arrV    = verts[key] || [];
   const speed   = getAdBannerSpeed(key);
 
   // Etiqueta skin
@@ -6615,29 +6616,87 @@ function renderAdBannerPreview() {
   if (rangeEl) rangeEl.value = speed;
   if (labelEl) labelEl.textContent = speed + 's';
 
-  // Lista de banners
+  // Lista principal (horizontal + vertical por pareja)
   const listWrap = document.getElementById('adBannerListWrap');
   if (!listWrap) return;
 
   if (!arr.length) {
     listWrap.innerHTML = '<div style="width:100%;height:70px;border:1.5px dashed var(--borde);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--fondo);"><span style="font-size:12px;color:var(--gris);">Sin banners — toca "+" para agregar</span></div>';
-    // También refrescar verticales
-    if (typeof renderAdBannerVerticalList === 'function') renderAdBannerVerticalList();
     return;
   }
 
-  listWrap.innerHTML = arr.map((img, i) => `
-    <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1.5px solid var(--borde);">
-      <img src="${img}" alt="Banner ${i+1}" style="width:100%;display:block;max-height:130px;object-fit:cover;">
-      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);display:flex;align-items:flex-end;justify-content:space-between;padding:8px 10px;">
-        <span style="font-size:11px;font-weight:800;color:#fff;">Banner ${i+1} de ${arr.length}</span>
-        <button onclick="eliminarAdBanner(${i})" style="background:rgba(211,47,47,0.92);color:#fff;border:none;border-radius:8px;font-size:11px;padding:4px 10px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 Quitar</button>
-      </div>
-    </div>
-  `).join('');
+  listWrap.innerHTML = arr.map((img, i) => {
+    const imgV = arrV[i] || null;
+    const vertHTML = imgV
+      ? `<div style="position:relative;border-radius:10px;overflow:hidden;border:1.5px solid rgba(255,120,30,0.4);">
+           <img src="${imgV}" alt="Vertical ${i+1}" style="width:100%;display:block;max-height:160px;object-fit:contain;background:#111;">
+           <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);display:flex;align-items:flex-end;justify-content:space-between;padding:6px 8px;">
+             <span style="font-size:10px;font-weight:800;color:#fff;">🔍 Vertical ${i+1}</span>
+             <button type="button" onclick="eliminarAdBannerVertical(${i})" style="background:rgba(211,47,47,0.92);color:#fff;border:none;border-radius:6px;font-size:10px;padding:3px 8px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 Quitar</button>
+           </div>
+         </div>`
+      : `<button type="button" onclick="document.getElementById('adBannerVerticalSlot_${i}').click()"
+           style="width:100%;padding:10px;border:1.5px dashed rgba(255,120,30,0.5);border-radius:10px;background:rgba(255,120,30,0.05);color:rgba(255,120,30,0.9);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;">
+           <span style="font-size:16px;">+</span> Subir imagen vertical (zoom)
+         </button>
+         <input type="file" accept="image/*" id="adBannerVerticalSlot_${i}" hidden onchange="cargarAdBannerVerticalSlot(this,${i})">`;
 
-  // Refrescar también la lista de imágenes verticales
-  if (typeof renderAdBannerVerticalList === 'function') renderAdBannerVerticalList();
+    return `<div style="background:var(--blanco);border:1.5px solid var(--borde);border-radius:14px;overflow:hidden;margin-bottom:12px;">
+      <!-- Horizontal -->
+      <div style="position:relative;">
+        <img src="${img}" alt="Banner ${i+1}" style="width:100%;display:block;max-height:130px;object-fit:cover;">
+        <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.6),transparent);display:flex;align-items:flex-end;justify-content:space-between;padding:8px 10px;">
+          <span style="font-size:11px;font-weight:800;color:#fff;">🖼️ Banner ${i+1} de ${arr.length}</span>
+          <button type="button" onclick="eliminarAdBanner(${i})" style="background:rgba(211,47,47,0.92);color:#fff;border:none;border-radius:8px;font-size:11px;padding:4px 10px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 Quitar</button>
+        </div>
+      </div>
+      <!-- Vertical (slot emparejado) -->
+      <div style="padding:10px;">
+        <div style="font-size:10px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;">🔍 Imagen vertical al tocar</div>
+        ${vertHTML}
+      </div>
+    </div>`;
+  }).join('');
+
+  // Ocultar la sección separada de verticales (ahora están integradas)
+  const vertWrap = document.getElementById('adBannerVerticalListWrap');
+  if (vertWrap) vertWrap.style.display = 'none';
+  const vertBtn = document.getElementById('adBannerVerticalBtn');
+  if (vertBtn) vertBtn.style.display = 'none';
+}
+
+function cargarAdBannerVerticalSlot(input, idx) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 10 * 1024 * 1024) { showToast('⚠️ Imagen muy grande (máx 10 MB)'); return; }
+  const key = getSkinKey();
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const imgEl = new Image();
+    imgEl.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = imgEl.width, h = imgEl.height;
+      const MAX_W = 1080, MAX_H = 1920;
+      const ratio = Math.min(MAX_W / w, MAX_H / h, 1);
+      w = Math.round(w * ratio); h = Math.round(h * ratio);
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+      const compressed = canvas.toDataURL('image/jpeg', 0.85);
+      const verts = getAdBannersVertical();
+      const arr = verts[key] || [];
+      // Asegurar que el array tenga slots hasta idx
+      while (arr.length <= idx) arr.push(null);
+      arr[idx] = compressed;
+      // Limpiar nulls del final
+      while (arr.length && arr[arr.length - 1] === null) arr.pop();
+      saveAdBannersVerticalArr(key, arr);
+      renderAdBannerPreview();
+      showToast('✅ Imagen vertical guardada para banner ' + (idx + 1));
+    };
+    imgEl.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+  input.value = '';
 }
 
 function eliminarAdBanner(idx) {
