@@ -276,113 +276,6 @@
     background: rgba(255,255,255,0.12);
   }
 
-  /* ── ZOOM MODAL — imagen vertical a pantalla completa ───────── */
-  #bannerZoomOverlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    z-index: 9999;
-    background: rgba(0,0,0,0.96);
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    touch-action: pan-y;
-    overflow: hidden;
-  }
-  #bannerZoomOverlay.show {
-    display: flex;
-  }
-  #bannerZoomClose {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    z-index: 10001;
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: none;
-    background: rgba(255,255,255,0.15);
-    color: #fff;
-    font-size: 20px;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    transition: background 0.18s, transform 0.18s;
-    line-height: 1;
-  }
-  #bannerZoomClose:active {
-    background: rgba(255,255,255,0.28);
-    transform: scale(0.9);
-  }
-  #bannerZoomTrack {
-    display: flex;
-    width: 100%;
-    height: 100%;
-    transition: transform 0.42s cubic-bezier(0.4,0,0.2,1);
-    will-change: transform;
-    touch-action: pan-y;
-  }
-  .banner-zoom-slide {
-    min-width: 100%;
-    height: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    padding: 60px 16px 40px;
-    box-sizing: border-box;
-  }
-  .banner-zoom-slide img {
-    max-width: 100%;
-    max-height: 100%;
-    object-fit: contain;
-    border-radius: 12px;
-    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-    display: block;
-    user-select: none;
-    -webkit-user-drag: none;
-    pointer-events: none;
-  }
-  #bannerZoomDots {
-    position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    gap: 7px;
-    pointer-events: none;
-  }
-  .banner-zoom-dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.35);
-    transition: background 0.3s, transform 0.3s;
-  }
-  .banner-zoom-dot.active {
-    background: #fff;
-    transform: scale(1.4);
-  }
-  #bannerZoomCounter {
-    position: absolute;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.5);
-    color: rgba(255,255,255,0.75);
-    font-size: 12px;
-    font-weight: 800;
-    padding: 5px 12px;
-    border-radius: 999px;
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    pointer-events: none;
-    white-space: nowrap;
-  }
-
   .hero{
     background:#1A1108;
     color:#fff;
@@ -437,14 +330,6 @@
     border-color:var(--rappi);
     box-shadow:0 4px 12px rgba(255,68,26,.33);
   }
-  /* Combo card en menú cliente */
-  .menu-combo-row { background:var(--blanco); border:1.5px solid rgba(255,68,26,0.25); border-radius:16px; padding:14px; display:flex; align-items:flex-start; gap:12px; box-shadow:var(--sombra-s); }
-  .menu-combo-icon { font-size:32px; flex-shrink:0; }
-  .menu-combo-info { flex:1; min-width:0; }
-  .menu-combo-name { font-size:16px; font-weight:800; margin-bottom:3px; }
-  .menu-combo-desc { font-size:12px; color:var(--gris-osc); line-height:1.5; margin-bottom:6px; }
-  .menu-combo-precio { font-size:18px; font-weight:900; color:var(--rappi); }
-  .menu-combo-badge { display:inline-block; background:rgba(255,68,26,0.09); color:var(--rappi); border:1px solid rgba(255,68,26,0.2); border-radius:20px; padding:2px 9px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
   .menu-grid{display:flex; flex-direction:column; gap:10px;}
   .menu-item{
     background:var(--blanco);
@@ -2334,14 +2219,6 @@
       <div id="adBannerImg" style="display:none;"></div>
     </div>
 
-    <!-- ZOOM MODAL — imagen vertical a pantalla completa -->
-    <div id="bannerZoomOverlay" aria-modal="true" role="dialog" aria-label="Imagen ampliada">
-      <div id="bannerZoomCounter"></div>
-      <button id="bannerZoomClose" aria-label="Cerrar">✕</button>
-      <div id="bannerZoomTrack"></div>
-      <div id="bannerZoomDots"></div>
-    </div>
-
     <section class="hero" id="heroSection">
       <h1 id="heroTitle">Menú del restaurante</h1>
       <p id="heroText">Consulta platos, fotos y precios.</p>
@@ -3590,10 +3467,7 @@ function subtotal(){
 
 function renderCategories(){
   const el = $('#catScroll');
-  // Agregar tab Combos si hay combos visibles para clientes
-  const combosCliente = loadCombosMenu().filter(c => c.habilitado !== false && c.visible?.clientes !== false);
-  const baseCats = categories();
-  const allCats = combosCliente.length ? [...baseCats, '🍱 Combos'] : baseCats;
+  const allCats = categories();
   const html = allCats.map(c => `<button class="cat-btn ${c===category ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('');
   el.innerHTML = html;
   el.querySelectorAll('.cat-btn').forEach(btn => {
@@ -3603,10 +3477,6 @@ function renderCategories(){
       renderCategories();
     });
   });
-}
-
-function loadCombosMenu(){
-  try { const r = localStorage.getItem('helechos_combos_v1'); return r ? JSON.parse(r) : []; } catch(e) { return []; }
 }
 
 function thumbHtml(item){
@@ -3642,22 +3512,7 @@ function renderMenu(){
 
   const items = currentMenuWithIndex();
 
-  // ── Combos para clientes ──────────────────────────────────
-  const combosCliente = loadCombosMenu().filter(c => c.habilitado !== false && c.visible?.clientes !== false);
-  const mostrarCombos = category === 'Todos' || category === '🍱 Combos';
-  const combosHtml = (mostrarCombos && combosCliente.length) ? combosCliente.map(c => `
-    <article class="menu-combo-row">
-      <div class="menu-combo-icon">🍱</div>
-      <div class="menu-combo-info">
-        <div class="menu-combo-badge">Combo</div>
-        <div class="menu-combo-name">${escapeHtml(c.nombre)}</div>
-        <div class="menu-combo-desc">${(c.items||[]).map(n=>`• ${escapeHtml(n)}`).join(' · ')}</div>
-        <div class="menu-combo-precio">${fmt(c.precio || 0)}</div>
-      </div>
-    </article>`).join('') : '';
-
-  const itemsHtml = (category === '🍱 Combos') ? '' :
-    (items.length ? items.map(({item, idx}) => `
+  const itemsHtml = items.length ? items.map(({item, idx}) => `
       <article class="menu-item ${mode === 'restaurante' ? 'view-only' : 'selectable'}" data-open="${idx}" role="${mode === 'domicilio' ? 'button' : 'article'}" tabindex="${mode === 'domicilio' ? '0' : '-1'}" aria-label="${escapeHtml(item.nombre)}">
         <div class="thumb ${item.foto ? 'has-photo' : ''}">${thumbHtml(item)}</div>
         <div class="info">
@@ -3668,15 +3523,15 @@ function renderMenu(){
           <div class="menu-badge">${mode === 'restaurante' ? 'Solo ver' : 'Toca para seleccionar'}</div>
         </div>
       </article>
-    `).join('') : (combosHtml ? '' : `
+    `).join('') : `
     <div class="empty">
       <div class="icon">🍽️</div>
       <div>No hay platos con esa búsqueda.</div>
     </div>
-  `));
+  `;
 
-  $('#resultsInfo').textContent = `${items.length + (mostrarCombos ? combosCliente.length : 0)} resultado${(items.length + (mostrarCombos ? combosCliente.length : 0))!==1?'s':''}`;
-  $('#menuGrid').innerHTML = combosHtml + itemsHtml;
+  $('#resultsInfo').textContent = `${items.length} resultado${items.length !== 1 ? 's' : ''}`;
+  $('#menuGrid').innerHTML = itemsHtml;
 
   const openByName = (idxStr) => {
     const item = menuItems[Number(idxStr)];
@@ -6141,7 +5996,7 @@ window.renderCategoryGridSafe = function() {
   }
   window.updateBtnMenuClasico = updateBtnMenuClasico;
 
-  // Click abre zoom de imagen vertical (o menú clásico si no hay vertical)
+  // Swipe táctil del carrusel de banners
   const wrap = document.getElementById('adBannerWrap');
   if (wrap) {
     // ── Swipe táctil ──────────────────────────────────────────────────
@@ -6196,201 +6051,13 @@ window.renderCategoryGridSafe = function() {
         const data = getAdData();
         if (data) adCarouselStart(data.speed);
       } else {
-        // Tap simple → no hacer nada (zoom deshabilitado en horizontal)
+        // Tap simple → reanudar carrusel
         _lastTapTs = Date.now();
         const data = getAdData();
         if (data) adCarouselStart(data.speed);
-        // openBannerZoom deshabilitado para banners horizontales
       }
     }, { passive: true });
-
-    // Click (desktop) → no hacer zoom en banners horizontales
-    wrap.addEventListener('click', (e) => {
-      // Zoom deshabilitado — usar el botón de menú para ver imágenes verticales
-    });
   }
-
-  // ── Zoom Modal — imagen vertical a pantalla completa ──────────────
-  (function initBannerZoom() {
-    const overlay   = document.getElementById('bannerZoomOverlay');
-    const track     = document.getElementById('bannerZoomTrack');
-    const dotsWrap  = document.getElementById('bannerZoomDots');
-    const closeBtn  = document.getElementById('bannerZoomClose');
-    const counter   = document.getElementById('bannerZoomCounter');
-    if (!overlay || !track || !closeBtn) return;
-
-    let _zoomCurrent = 0;
-    let _zoomImages  = []; // array de {horizontal, vertical} o simplemente string
-
-    function getZoomImages() {
-      try {
-        const raw = localStorage.getItem('helechos_menu_settings_v1');
-        if (!raw) return [];
-        const s = JSON.parse(raw);
-        const skinKey = s.classicSkin || 'clasico';
-        let arr = s.adBanners && s.adBanners[skinKey];
-        if (!arr || !arr.length) return [];
-        if (typeof arr === 'string') arr = [arr];
-        // Solo mostrar verticales que existen realmente (no usar horizontal como fallback)
-        let arrV = (s.adBannersVertical && s.adBannersVertical[skinKey]) || [];
-        if (typeof arrV === 'string') arrV = [arrV];
-        const result = [];
-        arr.forEach((h, i) => {
-          if (arrV[i] && arrV[i] !== null) {
-            result.push({ horizontal: h, vertical: arrV[i] });
-          }
-        });
-        return result;
-      } catch(e) { return []; }
-    }
-
-    function goTo(idx) {
-      const total = _zoomImages.length;
-      if (!total) return;
-      _zoomCurrent = ((idx % total) + total) % total;
-      track.style.transform = 'translateX(-' + (_zoomCurrent * 100) + '%)';
-      // actualizar dots
-      if (dotsWrap) {
-        dotsWrap.querySelectorAll('.banner-zoom-dot').forEach((d, i) =>
-          d.classList.toggle('active', i === _zoomCurrent)
-        );
-      }
-      // actualizar contador
-      if (counter) {
-        counter.textContent = total > 1 ? (_zoomCurrent + 1) + ' / ' + total : '';
-        counter.style.display = total > 1 ? '' : 'none';
-      }
-    }
-
-    function open(startIdx) {
-      _zoomImages = getZoomImages();
-      if (!_zoomImages.length) {
-        // No hay imágenes — abrir menú clásico como antes
-        if (typeof openMenuClasicoGlobal === 'function') openMenuClasicoGlobal();
-        return;
-      }
-
-      // Construir slides con imagen vertical
-      track.style.transition = 'none';
-      track.style.transform  = 'translateX(0)';
-      track.innerHTML = _zoomImages.map((img, i) => {
-        const src = typeof img === 'object' ? img.vertical : img;
-        return `<div class="banner-zoom-slide"><img src="${src}" alt="Imagen ${i+1}" draggable="false"></div>`;
-      }).join('');
-
-      // Dots
-      if (dotsWrap) {
-        dotsWrap.innerHTML = _zoomImages.length > 1
-          ? _zoomImages.map((_, i) => `<div class="banner-zoom-dot${i===0?' active':''}"></div>`).join('')
-          : '';
-      }
-
-      // Restaurar transición
-      requestAnimationFrame(() => requestAnimationFrame(() => {
-        track.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
-      }));
-
-      overlay.classList.add('show');
-      document.body.style.overflow = 'hidden';
-      _zoomCurrent = -1; // forzar refresh
-      goTo(startIdx || 0);
-    }
-
-    function close() {
-      overlay.classList.remove('show');
-      document.body.style.overflow = '';
-    }
-
-    // Exponer globalmente
-    window.openBannerZoom = open;
-    window.closeBannerZoom = close;
-
-    // Botón cerrar
-    closeBtn.addEventListener('click', close);
-
-    // Click en el fondo (no en la imagen)
-    overlay.addEventListener('click', (e) => {
-      if (e.target === overlay) close();
-    });
-
-    // Escape key
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && overlay.classList.contains('show')) close();
-    });
-
-    // ── Swipe táctil ─────────────────────────────────────────────
-    let _touchStartX = 0;
-    let _touchStartY = 0;
-    let _touchDragging = false;
-    let _dragDelta = 0;
-
-    track.addEventListener('touchstart', (e) => {
-      if (e.touches.length !== 1) return;
-      _touchStartX = e.touches[0].clientX;
-      _touchStartY = e.touches[0].clientY;
-      _touchDragging = true;
-      _dragDelta = 0;
-      track.style.transition = 'none';
-    }, { passive: true });
-
-    track.addEventListener('touchmove', (e) => {
-      if (!_touchDragging || e.touches.length !== 1) return;
-      const dx = e.touches[0].clientX - _touchStartX;
-      const dy = e.touches[0].clientY - _touchStartY;
-      // Solo manejar swipe horizontal (si el movimiento vertical es mayor, ignorar)
-      if (Math.abs(dy) > Math.abs(dx) && Math.abs(_dragDelta) < 5) return;
-      _dragDelta = dx;
-      const base = -(_zoomCurrent * 100);
-      const pct  = (dx / window.innerWidth) * 100;
-      track.style.transform = `translateX(calc(${base}% + ${dx}px))`;
-    }, { passive: true });
-
-    track.addEventListener('touchend', (e) => {
-      if (!_touchDragging) return;
-      _touchDragging = false;
-      track.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
-      const total = _zoomImages.length;
-      if (total <= 1) {
-        // volver a posición
-        goTo(_zoomCurrent);
-        return;
-      }
-      if (_dragDelta < -50) {
-        goTo(_zoomCurrent + 1);
-      } else if (_dragDelta > 50) {
-        goTo(_zoomCurrent - 1);
-      } else {
-        goTo(_zoomCurrent); // snap back
-      }
-    }, { passive: true });
-
-    // ── Swipe con mouse (desktop) ─────────────────────────────────
-    let _mouseStartX = 0;
-    let _mouseDragging = false;
-
-    track.addEventListener('mousedown', (e) => {
-      _mouseStartX = e.clientX;
-      _mouseDragging = true;
-      track.style.transition = 'none';
-      e.preventDefault();
-    });
-    document.addEventListener('mousemove', (e) => {
-      if (!_mouseDragging) return;
-      const dx = e.clientX - _mouseStartX;
-      const base = -(_zoomCurrent * 100);
-      track.style.transform = `translateX(calc(${base}% + ${dx}px))`;
-    });
-    document.addEventListener('mouseup', (e) => {
-      if (!_mouseDragging) return;
-      _mouseDragging = false;
-      track.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
-      const dx = e.clientX - _mouseStartX;
-      const total = _zoomImages.length;
-      if (total <= 1 || Math.abs(dx) < 60) { goTo(_zoomCurrent); return; }
-      dx < 0 ? goTo(_zoomCurrent + 1) : goTo(_zoomCurrent - 1);
-    });
-
-  })(); // fin initBannerZoom
 
   // Escuchar cambios desde index.html
   window.addEventListener('storage', e => {
@@ -6841,21 +6508,8 @@ window.renderCategoryGridSafe = function() {
     try { localStorage.setItem('helechos_last_mode', 'restaurante'); } catch(e) {}
   }
 
-  // Botón abrir — abre zoom de imágenes verticales si existen, si no el menú clásico
+  // Botón abrir — abre el menú clásico
   function btnMenuClasicoClick() {
-    try {
-      const raw = localStorage.getItem('helechos_menu_settings_v1');
-      if (raw) {
-        const s = JSON.parse(raw);
-        const skinKey = s.classicSkin || 'clasico';
-        const arrV = (s.adBannersVertical && s.adBannersVertical[skinKey]) || [];
-        const hasVerticals = Array.isArray(arrV) ? arrV.some(v => v) : !!arrV;
-        if (hasVerticals && typeof window.openBannerZoom === 'function') {
-          window.openBannerZoom(0);
-          return;
-        }
-      }
-    } catch(e) {}
     openMenuClasico();
   }
 
