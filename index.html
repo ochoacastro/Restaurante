@@ -4048,9 +4048,15 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <div style="font-size:11px;font-weight:800;color:var(--gris-osc);margin-bottom:12px;">Skin activo: <span id="adSkinNombre" style="color:var(--rappi);"></span></div>
 
         <!-- BANNERS HORIZONTALES -->
-        <div class="form-label form-label-small" style="margin-bottom:4px;">🖼️ Banners horizontales (carrusel)</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+          <div style="background:rgba(21,101,192,0.12);border:1.5px solid rgba(21,101,192,0.3);
+            border-radius:8px;padding:5px 10px;font-size:12px;font-weight:900;color:#1565C0;">
+            ↔ HORIZONTAL
+          </div>
+          <div class="form-label form-label-small" style="margin:0;">Carrusel del menú</div>
+        </div>
         <div style="font-size:11px;color:var(--gris);margin-bottom:14px;line-height:1.5;">
-          Sube varios banners por skin. En el menú digital se desplazan automáticamente — el cliente también puede deslizarlos. Toca el botón del menú para ver las imágenes verticales.
+          Se desplazan solos en el menú del cliente. Ideal para promociones, combos o precios del día.
         </div>
 
         <!-- Control de velocidad -->
@@ -4088,8 +4094,14 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
           style="display:none;width:100%;text-align:center;padding:10px;font-size:13px;align-items:center;justify-content:center;gap:6px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);cursor:pointer;">
           <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar imagen vertical
         </button>
-        <div style="font-size:11px;color:var(--gris);margin-top:6px;line-height:1.5;">
-          💡 Cada banner horizontal puede tener su propia imagen vertical. El cliente la verá al presionar el botón del menú (ej: "Menú Día de la Madre"). Toca "+" debajo de cada banner para subirla.
+        <div style="background:rgba(255,100,20,0.07);border:1.5px solid rgba(255,100,20,0.22);
+          border-radius:10px;padding:10px 12px;margin-top:6px;">
+          <div style="font-size:11px;font-weight:800;color:#BF360C;margin-bottom:3px;">↕ IMÁGENES VERTICALES</div>
+          <div style="font-size:11px;color:var(--gris);line-height:1.5;">
+            Cada banner horizontal tiene su propia imagen vertical asociada.<br>
+            El cliente la ve al tocar el botón del menú (ej: carta completa, menú del día).<br>
+            <b style="color:#E64A19;">Súbelas en la sección naranja dentro de cada banner.</b>
+          </div>
         </div>
 
         <!-- compat: elementos legacy que renderAdBannerPreview() espera -->
@@ -6656,16 +6668,24 @@ function renderAdBannerPreview() {
          </label>`;
 
     return `
-    <div style="background:var(--blanco);border:1.5px solid var(--borde);border-radius:14px;
-      overflow:hidden;margin-bottom:12px;">
+    <div style="background:var(--blanco);border:1.5px solid var(--borde);border-radius:16px;
+      overflow:hidden;margin-bottom:16px;box-shadow:0 2px 8px rgba(0,0,0,.12);">
 
-      <!-- Fila superior: miniatura + controles orden + eliminar -->
-      <div style="display:flex;align-items:center;gap:0;">
+      <!-- ── SECCIÓN HORIZONTAL ── -->
+      <div style="background:rgba(30,120,255,0.07);border-bottom:2px solid rgba(30,120,255,0.18);
+        padding:8px 12px 6px;">
+        <div style="font-size:10px;font-weight:900;color:#1565C0;text-transform:uppercase;
+          letter-spacing:.8px;margin-bottom:2px;">↔ IMAGEN HORIZONTAL (carrusel)</div>
+        <div style="font-size:10px;color:#1976D2;font-weight:500;">Se desliza automáticamente en el menú</div>
+      </div>
+
+      <!-- Fila: miniatura + controles -->
+      <div style="display:flex;align-items:center;gap:0;padding:0;">
 
         <!-- Miniatura horizontal -->
         <div style="position:relative;flex-shrink:0;width:110px;height:72px;overflow:hidden;">
           <img src="${img}" style="width:100%;height:100%;object-fit:cover;">
-          <div style="position:absolute;bottom:3px;left:4px;background:rgba(0,0,0,.55);
+          <div style="position:absolute;bottom:3px;left:4px;background:rgba(21,101,192,.85);
             color:#fff;font-size:9px;font-weight:800;padding:2px 5px;border-radius:4px;">
             ${i+1}/${total}
           </div>
@@ -6674,7 +6694,7 @@ function renderAdBannerPreview() {
         <!-- Etiqueta -->
         <div style="flex:1;padding:0 10px;">
           <div style="font-size:13px;font-weight:800;color:var(--negro);">🖼️ Banner ${i+1}</div>
-          <div style="font-size:11px;color:var(--gris);margin-top:2px;">Horizontal · carrusel</div>
+          <div style="font-size:11px;color:#1976D2;margin-top:2px;font-weight:600;">Horizontal · carrusel</div>
         </div>
 
         <!-- Botones orden + eliminar -->
@@ -6699,10 +6719,12 @@ function renderAdBannerPreview() {
         </div>
       </div>
 
-      <!-- Vertical emparejada -->
-      <div style="border-top:1px solid var(--borde);padding:10px;">
-        <div style="font-size:10px;font-weight:700;color:var(--gris);text-transform:uppercase;
-          letter-spacing:.5px;margin-bottom:6px;">🔍 Imagen vertical (se abre con el botón del menú)</div>
+      <!-- ── SECCIÓN VERTICAL ── -->
+      <div style="background:rgba(255,100,20,0.07);border-top:2px solid rgba(255,100,20,0.22);
+        padding:8px 12px 6px;">
+        <div style="font-size:10px;font-weight:900;color:#BF360C;text-transform:uppercase;
+          letter-spacing:.8px;margin-bottom:2px;">↕ IMAGEN VERTICAL (se abre con el botón del menú)</div>
+        <div style="font-size:10px;color:#E64A19;font-weight:500;margin-bottom:8px;">Ej: carta completa, menú del día…</div>
         ${vertHTML}
       </div>
     </div>`;
