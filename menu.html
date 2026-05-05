@@ -6196,19 +6196,17 @@ window.renderCategoryGridSafe = function() {
         const data = getAdData();
         if (data) adCarouselStart(data.speed);
       } else {
-        // Tap simple → zoom
+        // Tap simple → no hacer nada (zoom deshabilitado en horizontal)
         _lastTapTs = Date.now();
         const data = getAdData();
         if (data) adCarouselStart(data.speed);
-        openBannerZoom(_adCurrentSlide);
+        // openBannerZoom deshabilitado para banners horizontales
       }
     }, { passive: true });
 
-    // Click (desktop) → zoom — ignorar si ya fue manejado por touchend
+    // Click (desktop) → no hacer zoom en banners horizontales
     wrap.addEventListener('click', (e) => {
-      if (Date.now() - _lastTapTs < 600) return; // fue un tap táctil, ya manejado
-      if (_touchMoved) return;
-      openBannerZoom(_adCurrentSlide);
+      // Zoom deshabilitado — usar el botón de menú para ver imágenes verticales
     });
   }
 
@@ -6233,13 +6231,16 @@ window.renderCategoryGridSafe = function() {
         let arr = s.adBanners && s.adBanners[skinKey];
         if (!arr || !arr.length) return [];
         if (typeof arr === 'string') arr = [arr];
-        // Verticales (opcional) — si no existe el slot, usar horizontal
+        // Solo mostrar verticales que existen realmente (no usar horizontal como fallback)
         let arrV = (s.adBannersVertical && s.adBannersVertical[skinKey]) || [];
         if (typeof arrV === 'string') arrV = [arrV];
-        return arr.map((h, i) => ({
-          horizontal: h,
-          vertical: (arrV[i] && arrV[i] !== null) ? arrV[i] : h
-        }));
+        const result = [];
+        arr.forEach((h, i) => {
+          if (arrV[i] && arrV[i] !== null) {
+            result.push({ horizontal: h, vertical: arrV[i] });
+          }
+        });
+        return result;
       } catch(e) { return []; }
     }
 
@@ -6820,10 +6821,27 @@ window.renderCategoryGridSafe = function() {
     try { localStorage.setItem('helechos_last_mode', 'restaurante'); } catch(e) {}
   }
 
-  // Botón abrir — nombre dinámico según skin activo
+  // Botón abrir — abre zoom de imágenes verticales si existen, si no el menú clásico
+  function btnMenuClasicoClick() {
+    try {
+      const raw = localStorage.getItem('helechos_menu_settings_v1');
+      if (raw) {
+        const s = JSON.parse(raw);
+        const skinKey = s.classicSkin || 'clasico';
+        const arrV = (s.adBannersVertical && s.adBannersVertical[skinKey]) || [];
+        const hasVerticals = Array.isArray(arrV) ? arrV.some(v => v) : !!arrV;
+        if (hasVerticals && typeof window.openBannerZoom === 'function') {
+          window.openBannerZoom(0);
+          return;
+        }
+      }
+    } catch(e) {}
+    openMenuClasico();
+  }
+
   const btn = document.getElementById('btnMenuClasico');
   if (btn) {
-    btn.addEventListener('click', openMenuClasico);
+    btn.addEventListener('click', btnMenuClasicoClick);
     // Nombre inicial según skin guardado
     if (typeof updateBtnMenuClasico === 'function') updateBtnMenuClasico(getSkinKey());
     else {
