@@ -3781,6 +3781,28 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         </div>
         <div id="cfgPayList" class="payment-list"></div>
         <button class="btn-save-config" style="margin-top:8px;" onclick="cfgAddPayment()">➕ Agregar método</button>
+
+        <!-- Tarifa de domicilio -->
+        <div style="margin-top:18px;border-top:1.5px solid var(--borde);padding-top:14px;">
+          <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--gris);margin-bottom:10px;">🛵 Cargo por domicilio</div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+            <div class="toggle-wrap">
+              <input type="checkbox" class="toggle-input" id="cfgDomTarifaEnabled"
+                onchange="cfgSaveDomTarifa()">
+              <label class="toggle-label" for="cfgDomTarifaEnabled"></label>
+            </div>
+            <span style="font-size:13px;font-weight:700;color:var(--negro);">Cobrar tarifa al cliente</span>
+          </div>
+          <div id="cfgDomTarifaRow" style="display:none;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <span style="font-size:13px;font-weight:600;color:var(--gris);">Valor del domicilio:</span>
+            <input id="cfgDomTarifaValor" class="config-input" type="number" inputmode="numeric"
+              min="0" placeholder="Ej: 3000"
+              style="width:120px;text-align:right;"
+              oninput="cfgSaveDomTarifa()">
+            <span style="font-size:12px;color:var(--gris);">COP</span>
+          </div>
+          <div id="cfgDomTarifaPreview" style="font-size:12px;color:var(--rappi);margin-top:6px;font-weight:700;"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -4038,14 +4060,30 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
           <!-- Lista de banners subidos -->
           <div id="adBannerListWrap" style="margin-bottom:10px;"></div>
 
-          <!-- Botón agregar -->
+          <!-- Botón agregar banner horizontal -->
           <label style="cursor:pointer;display:block;">
             <div class="btn-save-config" style="text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;">
-              <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar banner
+              <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar banner horizontal
             </div>
             <input type="file" accept="image/*" hidden id="adBannerInput" onchange="cargarAdBanner(this)" multiple>
           </label>
           <div class="qr-note" style="margin-top:8px;">Cada skin tiene su propio conjunto de banners. Toca 🗑 para eliminar uno.</div>
+
+          <!-- Separador -->
+          <div style="height:1px;background:var(--borde);margin:14px 0 12px;"></div>
+
+          <!-- Banners verticales (zoom al tocar) -->
+          <div class="form-label form-label-small" style="margin-bottom:4px;">🔍 Imágenes verticales (zoom al tocar)</div>
+          <div style="font-size:11px;color:var(--gris);margin-bottom:10px;line-height:1.5;">
+            Al tocar un banner, el cliente verá esta versión ampliada en pantalla completa. Si no subes una imagen vertical, se mostrará el banner horizontal. Sube una por cada banner horizontal, en el mismo orden.
+          </div>
+          <div id="adBannerVerticalListWrap" style="margin-bottom:10px;"></div>
+          <label style="cursor:pointer;display:block;">
+            <div class="btn-save-config" style="text-align:center;padding:10px;font-size:13px;display:flex;align-items:center;justify-content:center;gap:6px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);">
+              <span style="font-size:18px;font-weight:900;line-height:1;">+</span> Agregar imagen vertical
+            </div>
+            <input type="file" accept="image/*" hidden id="adBannerVerticalInput" onchange="cargarAdBannerVertical(this)" multiple>
+          </label>
 
           <!-- compat: elemento legacy que renderAdBannerPreview() espera -->
           <div id="adBannerPreviewWrap" style="display:none;"></div>
@@ -6588,6 +6626,8 @@ function renderAdBannerPreview() {
 
   if (!arr.length) {
     listWrap.innerHTML = '<div style="width:100%;height:70px;border:1.5px dashed var(--borde);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--fondo);"><span style="font-size:12px;color:var(--gris);">Sin banners — toca "+" para agregar</span></div>';
+    // También refrescar verticales
+    if (typeof renderAdBannerVerticalList === 'function') renderAdBannerVerticalList();
     return;
   }
 
@@ -6600,6 +6640,9 @@ function renderAdBannerPreview() {
       </div>
     </div>
   `).join('');
+
+  // Refrescar también la lista de imágenes verticales
+  if (typeof renderAdBannerVerticalList === 'function') renderAdBannerVerticalList();
 }
 
 function eliminarAdBanner(idx) {
@@ -6652,6 +6695,97 @@ function quitarAdBanner() {
   saveAdBannersArr(key, null);
   renderAdBannerPreview();
   showToast('🗑️ Banners quitados');
+}
+
+// ── BANNERS VERTICALES (zoom al tocar) ──────────────────────────────────
+function getAdBannersVertical() {
+  try {
+    const raw = localStorage.getItem('helechos_menu_settings_v1');
+    if (!raw) return {};
+    const ms = JSON.parse(raw);
+    return ms.adBannersVertical || {};
+  } catch(e) { return {}; }
+}
+
+function saveAdBannersVerticalArr(skinKey, arr) {
+  try {
+    const raw = localStorage.getItem('helechos_menu_settings_v1');
+    const ms = raw ? JSON.parse(raw) : {};
+    if (!ms.adBannersVertical) ms.adBannersVertical = {};
+    if (arr && arr.length) ms.adBannersVertical[skinKey] = arr;
+    else delete ms.adBannersVertical[skinKey];
+    localStorage.setItem('helechos_menu_settings_v1', JSON.stringify(ms));
+    if (window.fbSync) fbSync('menuSettings/adBannersVertical/' + skinKey, arr && arr.length ? arr : null);
+  } catch(e) { console.warn('saveAdBannersVertical error:', e); }
+}
+
+function renderAdBannerVerticalList() {
+  const key = getSkinKey();
+  const verts = getAdBannersVertical();
+  const arr = verts[key] || [];
+  const listWrap = document.getElementById('adBannerVerticalListWrap');
+  if (!listWrap) return;
+
+  if (!arr.length) {
+    listWrap.innerHTML = '<div style="width:100%;height:70px;border:1.5px dashed var(--borde);border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:10px;background:var(--fondo);"><span style="font-size:12px;color:var(--gris);">Sin imágenes verticales — opcional</span></div>';
+    return;
+  }
+
+  listWrap.innerHTML = arr.map((img, i) => `
+    <div style="position:relative;border-radius:12px;overflow:hidden;margin-bottom:10px;border:1.5px solid rgba(255,68,26,0.3);">
+      <img src="${img}" alt="Vertical ${i+1}" style="width:100%;display:block;max-height:200px;object-fit:contain;background:#111;">
+      <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.55),transparent);display:flex;align-items:flex-end;justify-content:space-between;padding:8px 10px;">
+        <span style="font-size:11px;font-weight:800;color:#fff;">Vertical ${i+1} → Banner ${i+1}</span>
+        <button onclick="eliminarAdBannerVertical(${i})" style="background:rgba(211,47,47,0.92);color:#fff;border:none;border-radius:8px;font-size:11px;padding:4px 10px;font-weight:700;cursor:pointer;font-family:inherit;">🗑 Quitar</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function eliminarAdBannerVertical(idx) {
+  const key = getSkinKey();
+  const verts = getAdBannersVertical();
+  const arr = verts[key] || [];
+  arr.splice(idx, 1);
+  saveAdBannersVerticalArr(key, arr);
+  renderAdBannerVerticalList();
+  showToast('🗑️ Imagen vertical eliminada');
+}
+
+function cargarAdBannerVertical(input) {
+  const files = input.files;
+  if (!files || !files.length) return;
+  const key = getSkinKey();
+  let loaded = 0;
+  Array.from(files).forEach(file => {
+    if (file.size > 10 * 1024 * 1024) { showToast('⚠️ Imagen muy grande (máx 10 MB)'); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const imgEl = new Image();
+      imgEl.onload = () => {
+        const canvas = document.createElement('canvas');
+        let w = imgEl.width, h = imgEl.height;
+        // Preservar orientación vertical — max 1080px de ancho, 1920 de alto
+        const MAX_W = 1080, MAX_H = 1920;
+        const ratio = Math.min(MAX_W / w, MAX_H / h, 1);
+        w = Math.round(w * ratio); h = Math.round(h * ratio);
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.85);
+        const verts = getAdBannersVertical();
+        const arr = verts[key] || [];
+        arr.push(compressed);
+        saveAdBannersVerticalArr(key, arr);
+        loaded++;
+        renderAdBannerVerticalList();
+        if (loaded === files.length)
+          showToast('✅ ' + loaded + ' imagen' + (loaded > 1 ? 'es' : '') + ' vertical' + (loaded > 1 ? 'es' : '') + ' guardada' + (loaded > 1 ? 's' : ''));
+      };
+      imgEl.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+  input.value = '';
 }
 
 // ── GRILLA DE BOTONES PDF POR SKIN ──────────────────────────────────────
@@ -8601,7 +8735,9 @@ function renderPago() {
       ? Math.round(subtotal * descuentoValor / 100)
       : Math.min(descuentoValor, subtotal);
   }
-  const total = subtotal - descMonto;
+  const _domTarifaRP = cfgGetDomTarifa();
+  const domCargoRP = (tipoOrden === 'domicilio' && _domTarifaRP.enabled && _domTarifaRP.valor > 0) ? _domTarifaRP.valor : 0;
+  const total = subtotal - descMonto + domCargoRP;
 
   // Métodos de pago
   let metodosPago;
@@ -8660,6 +8796,7 @@ function renderPago() {
     <div class="totales" style="border-top:2px solid ${uc}22;margin-bottom:8px;">
       <div class="total-row"><span>Subtotal</span><span class="val" style="color:${uc}99;">${fmt(subtotal)}</span></div>
       ${descMonto > 0 ? `<div class="total-row" style="color:${uc};"><span>Descuento</span><span class="val">−${fmt(descMonto)}</span></div>` : ''}
+      ${domCargoRP > 0 ? `<div class="total-row" style="color:var(--gris-osc);"><span>🛵 Domicilio</span><span class="val">+${fmt(domCargoRP)}</span></div>` : ''}
       ${(()=>{ const resumen = {}; carrito.forEach(item => { const tasa = (item.iva !== undefined && item.iva !== null) ? Number(item.iva) : 8; if (tasa === 0) return; const precioTotal = item.precio * item.cantidad; const base = Math.round(precioTotal / (1 + tasa / 100)); const imp = precioTotal - base; if (!resumen[tasa]) resumen[tasa] = { imp: 0, base: 0 }; resumen[tasa].imp += imp; resumen[tasa].base += base; }); const entradas = Object.entries(resumen).filter(([,v])=>v.imp>0); if (!entradas.length) return ''; return `<div style="border-top:1px solid ${uc}22;padding-top:6px;margin-top:2px;">` + entradas.map(([tasa, v]) => `<div class="total-row" style="font-size:12px;opacity:0.8;"><span>Base ${tasa}%</span><span class="val">${fmt(v.base)}</span></div><div class="total-row" style="font-size:12px;color:${uc};"><span>${Number(tasa)===8?'Impoconsumo 8%':'IVA '+tasa+'%'} (incluido)</span><span class="val" style="font-weight:700;">${fmt(v.imp)}</span></div>`).join('') + `</div>`; })()}
       <div class="total-row grande" style="color:${uc};"><span>TOTAL</span><span class="val" style="color:${uc};">${fmt(total)}</span></div>
     </div>
@@ -13021,7 +13158,7 @@ document.querySelectorAll('.cfg-acc-header[data-cfgacc]').forEach(header => {
 });
 
 function onCfgAccOpen(id) {
-  if (id === 'cfgacc-pagos')    cfgRenderPayments();
+  if (id === 'cfgacc-pagos')    { cfgRenderPayments(); cfgRenderDomTarifa(); }
   if (id === 'cfgacc-cats')     cfgRenderCategories();
   if (id === 'cfgacc-catimgs')  cfgRenderCatImages();
   if (id === 'cfgacc-productos') { renderProductosConfig(); }
@@ -13430,6 +13567,38 @@ function cfgSavePaymentField(idx, field, value) {
   if (!s.paymentMethods || !s.paymentMethods[idx]) return;
   s.paymentMethods[idx][field] = value;
   saveMenuSettings(s);
+}
+
+// ── TARIFA DE DOMICILIO ──────────────────────────────────────────────
+function cfgGetDomTarifa() {
+  const s = loadMenuSettings();
+  return { enabled: !!s.domTarifaEnabled, valor: Number(s.domTarifaValor) || 0 };
+}
+
+function cfgSaveDomTarifa() {
+  const chk = document.getElementById('cfgDomTarifaEnabled');
+  const inp = document.getElementById('cfgDomTarifaValor');
+  if (!chk) return;
+  const s = loadMenuSettings();
+  s.domTarifaEnabled = chk.checked;
+  s.domTarifaValor   = Math.max(0, parseFloat((inp && inp.value) || '0') || 0);
+  saveMenuSettings(s);
+  cfgRenderDomTarifa();
+}
+
+function cfgRenderDomTarifa() {
+  const cfg = cfgGetDomTarifa();
+  const chk = document.getElementById('cfgDomTarifaEnabled');
+  const inp = document.getElementById('cfgDomTarifaValor');
+  const row = document.getElementById('cfgDomTarifaRow');
+  const prev = document.getElementById('cfgDomTarifaPreview');
+  if (!chk) return;
+  chk.checked = cfg.enabled;
+  if (inp) inp.value = cfg.valor > 0 ? cfg.valor : '';
+  if (row) row.style.display = cfg.enabled ? 'flex' : 'none';
+  if (prev) prev.textContent = cfg.enabled && cfg.valor > 0
+    ? `✅ Se agregará ${fmt(cfg.valor)} al total de cada domicilio`
+    : cfg.enabled ? '⚠️ Ingresa un valor mayor a 0' : '';
 }
 
 function cfgAddPayment() {
@@ -14328,11 +14497,14 @@ function abrirModalCobro() {
     descMonto = descuentoTipo === 'pct' ? Math.round(subtotal * descuentoValor / 100) : Math.min(descuentoValor, subtotal);
     descMonto = Math.min(descMonto, subtotal);
   }
-  const total = subtotal - descMonto;
+  // Tarifa domicilio
+  const _domTarifa = cfgGetDomTarifa();
+  const domCargo = (tipoOrden === 'domicilio' && _domTarifa.enabled && _domTarifa.valor > 0) ? _domTarifa.valor : 0;
+  const total = subtotal - descMonto + domCargo;
   _cobroActual = null;
   _pagosSeleccionados = {};
   // No preseleccionar monto — el cajero lo ingresa manualmente para poder calcular cambio
-  renderModalCobro(total, subtotal, descMonto);
+  renderModalCobro(total, subtotal, descMonto, domCargo);
   document.getElementById('modalCobro').classList.add('show');
 }
 
@@ -14348,11 +14520,15 @@ function abrirModalCobroConRecibo(recibo) {
   feDireccion = recibo.feDireccion || '';
   feTelefono  = recibo.feTelefono  || '';
   // No preseleccionar monto — el cajero lo ingresa (permite calcular cambio)
-  renderModalCobro(recibo.total, recibo.subtotal, recibo.descMonto || 0);
+  const _domTarifa = cfgGetDomTarifa();
+  const domCargo = (recibo.tipoOrden === 'domicilio' && _domTarifa.enabled && _domTarifa.valor > 0) ? _domTarifa.valor : 0;
+  const totalConDom = recibo.total + domCargo;
+  renderModalCobro(totalConDom, recibo.subtotal, recibo.descMonto || 0, domCargo);
   document.getElementById('modalCobro').classList.add('show');
 }
 
-function renderModalCobro(total, subtotal, descMonto) {
+function renderModalCobro(total, subtotal, descMonto, domCargo) {
+  domCargo = domCargo || 0;
   // Métodos de pago disponibles
   let metodos = [];
   try {
@@ -14431,6 +14607,7 @@ function renderModalCobro(total, subtotal, descMonto) {
             onblur="ocultarChipsDelay('${esc(m.label)}')">
         </div>
       </div>
+      ${esEfectivo(m.label) ? `<div style="font-size:11px;color:var(--gris);margin-top:4px;padding:0 2px;">💬 Ingresa el monto que entrega el cliente para calcular el vuelto</div>` : ''}
       ${chipsHTML}
     </div>`;
   }).join('');
@@ -14507,6 +14684,7 @@ function renderModalCobro(total, subtotal, descMonto) {
     <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.15);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;">
       ${descMonto > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gris-osc);margin-bottom:3px;"><span>Subtotal</span><span style="font-family:var(--font-num);">${fmt(subtotal)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--rappi);margin-bottom:6px;"><span>Descuento</span><span style="font-family:var(--font-num);">-${fmt(descMonto)}</span></div>` : ''}
+      ${domCargo > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gris-osc);margin-bottom:4px;"><span>🛵 Domicilio</span><span style="font-family:var(--font-num);font-weight:700;">+${fmt(domCargo)}</span></div>` : ''}
       ${ivaEntradas.map(([tasa, v]) => `
       <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--gris-osc);margin-bottom:2px;">
         <span>Base ${tasa}%</span><span style="font-family:var(--font-num);">${fmt(v.base)}</span>
