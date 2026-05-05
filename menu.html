@@ -276,6 +276,113 @@
     background: rgba(255,255,255,0.12);
   }
 
+  /* ── ZOOM MODAL — imagen vertical a pantalla completa ───────── */
+  #bannerZoomOverlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background: rgba(0,0,0,0.96);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    touch-action: pan-y;
+    overflow: hidden;
+  }
+  #bannerZoomOverlay.show {
+    display: flex;
+  }
+  #bannerZoomClose {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 10001;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    color: #fff;
+    font-size: 20px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    transition: background 0.18s, transform 0.18s;
+    line-height: 1;
+  }
+  #bannerZoomClose:active {
+    background: rgba(255,255,255,0.28);
+    transform: scale(0.9);
+  }
+  #bannerZoomTrack {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.42s cubic-bezier(0.4,0,0.2,1);
+    will-change: transform;
+    touch-action: pan-y;
+  }
+  .banner-zoom-slide {
+    min-width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 60px 16px 40px;
+    box-sizing: border-box;
+  }
+  .banner-zoom-slide img {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+    display: block;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: none;
+  }
+  #bannerZoomDots {
+    position: absolute;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 7px;
+    pointer-events: none;
+  }
+  .banner-zoom-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.35);
+    transition: background 0.3s, transform 0.3s;
+  }
+  .banner-zoom-dot.active {
+    background: #fff;
+    transform: scale(1.4);
+  }
+  #bannerZoomCounter {
+    position: absolute;
+    top: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.5);
+    color: rgba(255,255,255,0.75);
+    font-size: 12px;
+    font-weight: 800;
+    padding: 5px 12px;
+    border-radius: 999px;
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
   .hero{
     background:#1A1108;
     color:#fff;
@@ -2211,12 +2318,20 @@
   <main id="panel" class="panel active">
 
     <!-- BANNER PUBLICITARIO — CARRUSEL AUTOMÁTICO -->
-    <div id="adBannerWrap" role="button" aria-label="Ver menú especial">
+    <div id="adBannerWrap" role="button" aria-label="Ver imagen ampliada">
       <div id="adBannerTrack"></div>
       <div id="adBannerDots"></div>
       <div id="adBannerRipple"></div>
       <!-- legacy compat -->
       <div id="adBannerImg" style="display:none;"></div>
+    </div>
+
+    <!-- ZOOM MODAL — imagen vertical a pantalla completa -->
+    <div id="bannerZoomOverlay" aria-modal="true" role="dialog" aria-label="Imagen ampliada">
+      <div id="bannerZoomCounter"></div>
+      <button id="bannerZoomClose" aria-label="Cerrar">✕</button>
+      <div id="bannerZoomTrack"></div>
+      <div id="bannerZoomDots"></div>
     </div>
 
     <section class="hero" id="heroSection">
@@ -5992,13 +6107,196 @@ window.renderCategoryGridSafe = function() {
   }
   window.updateBtnMenuClasico = updateBtnMenuClasico;
 
-  // Click abre el menú clásico
+  // Click abre zoom de imagen vertical (o menú clásico si no hay vertical)
   const wrap = document.getElementById('adBannerWrap');
   if (wrap) {
-    wrap.addEventListener('click', () => {
-      if (typeof openMenuClasicoGlobal === 'function') openMenuClasicoGlobal();
+    wrap.addEventListener('click', (e) => {
+      // Detectar en qué slide estamos actualmente
+      const slideIdx = _adCurrentSlide;
+      openBannerZoom(slideIdx);
     });
   }
+
+  // ── Zoom Modal — imagen vertical a pantalla completa ──────────────
+  (function initBannerZoom() {
+    const overlay   = document.getElementById('bannerZoomOverlay');
+    const track     = document.getElementById('bannerZoomTrack');
+    const dotsWrap  = document.getElementById('bannerZoomDots');
+    const closeBtn  = document.getElementById('bannerZoomClose');
+    const counter   = document.getElementById('bannerZoomCounter');
+    if (!overlay || !track || !closeBtn) return;
+
+    let _zoomCurrent = 0;
+    let _zoomImages  = []; // array de {horizontal, vertical} o simplemente string
+
+    // Obtener imágenes verticales del banner si existen
+    function getZoomImages() {
+      try {
+        const raw = localStorage.getItem('helechos_menu_settings_v1');
+        if (!raw) return [];
+        const s = JSON.parse(raw);
+        const skinKey = s.classicSkin || 'clasico';
+        let arr = s.adBanners && s.adBanners[skinKey];
+        if (!arr) return [];
+        if (typeof arr === 'string') arr = [arr];
+        // Intentar leer imágenes verticales si existen en adBannersVertical
+        let arrV = s.adBannersVertical && s.adBannersVertical[skinKey];
+        if (arrV && typeof arrV === 'string') arrV = [arrV];
+        // Mapear: si hay vertical para ese índice, usarla; si no, usar horizontal
+        return arr.map((h, i) => ({
+          horizontal: h,
+          vertical: (arrV && arrV[i]) ? arrV[i] : h
+        }));
+      } catch(e) { return []; }
+    }
+
+    function goTo(idx) {
+      const total = _zoomImages.length;
+      if (!total) return;
+      _zoomCurrent = ((idx % total) + total) % total;
+      track.style.transform = 'translateX(-' + (_zoomCurrent * 100) + '%)';
+      // actualizar dots
+      if (dotsWrap) {
+        dotsWrap.querySelectorAll('.banner-zoom-dot').forEach((d, i) =>
+          d.classList.toggle('active', i === _zoomCurrent)
+        );
+      }
+      // actualizar contador
+      if (counter) {
+        counter.textContent = total > 1 ? (_zoomCurrent + 1) + ' / ' + total : '';
+        counter.style.display = total > 1 ? '' : 'none';
+      }
+    }
+
+    function open(startIdx) {
+      _zoomImages = getZoomImages();
+      if (!_zoomImages.length) {
+        // No hay imágenes — abrir menú clásico como antes
+        if (typeof openMenuClasicoGlobal === 'function') openMenuClasicoGlobal();
+        return;
+      }
+
+      // Construir slides con imagen vertical
+      track.style.transition = 'none';
+      track.style.transform  = 'translateX(0)';
+      track.innerHTML = _zoomImages.map((img, i) => {
+        const src = typeof img === 'object' ? img.vertical : img;
+        return `<div class="banner-zoom-slide"><img src="${src}" alt="Imagen ${i+1}" draggable="false"></div>`;
+      }).join('');
+
+      // Dots
+      if (dotsWrap) {
+        dotsWrap.innerHTML = _zoomImages.length > 1
+          ? _zoomImages.map((_, i) => `<div class="banner-zoom-dot${i===0?' active':''}"></div>`).join('')
+          : '';
+      }
+
+      // Restaurar transición
+      requestAnimationFrame(() => requestAnimationFrame(() => {
+        track.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
+      }));
+
+      overlay.classList.add('show');
+      document.body.style.overflow = 'hidden';
+      _zoomCurrent = -1; // forzar refresh
+      goTo(startIdx || 0);
+    }
+
+    function close() {
+      overlay.classList.remove('show');
+      document.body.style.overflow = '';
+    }
+
+    // Exponer globalmente
+    window.openBannerZoom = open;
+    window.closeBannerZoom = close;
+
+    // Botón cerrar
+    closeBtn.addEventListener('click', close);
+
+    // Click en el fondo (no en la imagen)
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) close();
+    });
+
+    // Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && overlay.classList.contains('show')) close();
+    });
+
+    // ── Swipe táctil ─────────────────────────────────────────────
+    let _touchStartX = 0;
+    let _touchStartY = 0;
+    let _touchDragging = false;
+    let _dragDelta = 0;
+
+    track.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      _touchStartX = e.touches[0].clientX;
+      _touchStartY = e.touches[0].clientY;
+      _touchDragging = true;
+      _dragDelta = 0;
+      track.style.transition = 'none';
+    }, { passive: true });
+
+    track.addEventListener('touchmove', (e) => {
+      if (!_touchDragging || e.touches.length !== 1) return;
+      const dx = e.touches[0].clientX - _touchStartX;
+      const dy = e.touches[0].clientY - _touchStartY;
+      // Solo manejar swipe horizontal (si el movimiento vertical es mayor, ignorar)
+      if (Math.abs(dy) > Math.abs(dx) && Math.abs(_dragDelta) < 5) return;
+      _dragDelta = dx;
+      const base = -(_zoomCurrent * 100);
+      const pct  = (dx / window.innerWidth) * 100;
+      track.style.transform = `translateX(calc(${base}% + ${dx}px))`;
+    }, { passive: true });
+
+    track.addEventListener('touchend', (e) => {
+      if (!_touchDragging) return;
+      _touchDragging = false;
+      track.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
+      const total = _zoomImages.length;
+      if (total <= 1) {
+        // volver a posición
+        goTo(_zoomCurrent);
+        return;
+      }
+      if (_dragDelta < -50) {
+        goTo(_zoomCurrent + 1);
+      } else if (_dragDelta > 50) {
+        goTo(_zoomCurrent - 1);
+      } else {
+        goTo(_zoomCurrent); // snap back
+      }
+    }, { passive: true });
+
+    // ── Swipe con mouse (desktop) ─────────────────────────────────
+    let _mouseStartX = 0;
+    let _mouseDragging = false;
+
+    track.addEventListener('mousedown', (e) => {
+      _mouseStartX = e.clientX;
+      _mouseDragging = true;
+      track.style.transition = 'none';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!_mouseDragging) return;
+      const dx = e.clientX - _mouseStartX;
+      const base = -(_zoomCurrent * 100);
+      track.style.transform = `translateX(calc(${base}% + ${dx}px))`;
+    });
+    document.addEventListener('mouseup', (e) => {
+      if (!_mouseDragging) return;
+      _mouseDragging = false;
+      track.style.transition = 'transform 0.42s cubic-bezier(0.4,0,0.2,1)';
+      const dx = e.clientX - _mouseStartX;
+      const total = _zoomImages.length;
+      if (total <= 1 || Math.abs(dx) < 60) { goTo(_zoomCurrent); return; }
+      dx < 0 ? goTo(_zoomCurrent + 1) : goTo(_zoomCurrent - 1);
+    });
+
+  })(); // fin initBannerZoom
 
   // Escuchar cambios desde index.html
   window.addEventListener('storage', e => {
