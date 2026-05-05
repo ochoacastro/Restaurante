@@ -437,6 +437,14 @@
     border-color:var(--rappi);
     box-shadow:0 4px 12px rgba(255,68,26,.33);
   }
+  /* Combo card en menú cliente */
+  .menu-combo-row { background:var(--blanco); border:1.5px solid rgba(255,68,26,0.25); border-radius:16px; padding:14px; display:flex; align-items:flex-start; gap:12px; box-shadow:var(--sombra-s); }
+  .menu-combo-icon { font-size:32px; flex-shrink:0; }
+  .menu-combo-info { flex:1; min-width:0; }
+  .menu-combo-name { font-size:16px; font-weight:800; margin-bottom:3px; }
+  .menu-combo-desc { font-size:12px; color:var(--gris-osc); line-height:1.5; margin-bottom:6px; }
+  .menu-combo-precio { font-size:18px; font-weight:900; color:var(--rappi); }
+  .menu-combo-badge { display:inline-block; background:rgba(255,68,26,0.09); color:var(--rappi); border:1px solid rgba(255,68,26,0.2); border-radius:20px; padding:2px 9px; font-size:10px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; margin-bottom:6px; }
   .menu-grid{display:flex; flex-direction:column; gap:10px;}
   .menu-item{
     background:var(--blanco);
@@ -3582,7 +3590,11 @@ function subtotal(){
 
 function renderCategories(){
   const el = $('#catScroll');
-  const html = categories().map(c => `<button class="cat-btn ${c===category ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('');
+  // Agregar tab Combos si hay combos visibles para clientes
+  const combosCliente = loadCombosMenu().filter(c => c.habilitado !== false && c.visible?.clientes !== false);
+  const baseCats = categories();
+  const allCats = combosCliente.length ? [...baseCats, '🍱 Combos'] : baseCats;
+  const html = allCats.map(c => `<button class="cat-btn ${c===category ? 'active' : ''}" data-cat="${c}">${c}</button>`).join('');
   el.innerHTML = html;
   el.querySelectorAll('.cat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -3591,6 +3603,10 @@ function renderCategories(){
       renderCategories();
     });
   });
+}
+
+function loadCombosMenu(){
+  try { const r = localStorage.getItem('helechos_combos_v1'); return r ? JSON.parse(r) : []; } catch(e) { return []; }
 }
 
 function thumbHtml(item){
@@ -3625,8 +3641,23 @@ function renderMenu(){
   } catch(_) {}
 
   const items = currentMenuWithIndex();
-  $('#resultsInfo').textContent = `${items.length} resultado${items.length!==1?'s':''}`;
-  $('#menuGrid').innerHTML = items.length ? items.map(({item, idx}) => `
+
+  // ── Combos para clientes ──────────────────────────────────
+  const combosCliente = loadCombosMenu().filter(c => c.habilitado !== false && c.visible?.clientes !== false);
+  const mostrarCombos = category === 'Todos' || category === '🍱 Combos';
+  const combosHtml = (mostrarCombos && combosCliente.length) ? combosCliente.map(c => `
+    <article class="menu-combo-row">
+      <div class="menu-combo-icon">🍱</div>
+      <div class="menu-combo-info">
+        <div class="menu-combo-badge">Combo</div>
+        <div class="menu-combo-name">${escapeHtml(c.nombre)}</div>
+        <div class="menu-combo-desc">${(c.items||[]).map(n=>`• ${escapeHtml(n)}`).join(' · ')}</div>
+        <div class="menu-combo-precio">${fmt(c.precio || 0)}</div>
+      </div>
+    </article>`).join('') : '';
+
+  const itemsHtml = (category === '🍱 Combos') ? '' :
+    (items.length ? items.map(({item, idx}) => `
       <article class="menu-item ${mode === 'restaurante' ? 'view-only' : 'selectable'}" data-open="${idx}" role="${mode === 'domicilio' ? 'button' : 'article'}" tabindex="${mode === 'domicilio' ? '0' : '-1'}" aria-label="${escapeHtml(item.nombre)}">
         <div class="thumb ${item.foto ? 'has-photo' : ''}">${thumbHtml(item)}</div>
         <div class="info">
@@ -3637,12 +3668,15 @@ function renderMenu(){
           <div class="menu-badge">${mode === 'restaurante' ? 'Solo ver' : 'Toca para seleccionar'}</div>
         </div>
       </article>
-    `).join('') : `
+    `).join('') : (combosHtml ? '' : `
     <div class="empty">
       <div class="icon">🍽️</div>
       <div>No hay platos con esa búsqueda.</div>
     </div>
-  `;
+  `));
+
+  $('#resultsInfo').textContent = `${items.length + (mostrarCombos ? combosCliente.length : 0)} resultado${(items.length + (mostrarCombos ? combosCliente.length : 0))!==1?'s':''}`;
+  $('#menuGrid').innerHTML = combosHtml + itemsHtml;
 
   const openByName = (idxStr) => {
     const item = menuItems[Number(idxStr)];
