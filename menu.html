@@ -6118,7 +6118,7 @@ window.renderCategoryGridSafe = function() {
       _touchStartX = e.touches[0].clientX;
       _touchStartY = e.touches[0].clientY;
       _touchDragging = true;
-      _touchMoved = false;
+      _touchMoved = false;  // siempre resetear al inicio del toque
       // Pausar autorotación mientras el usuario toca
       clearInterval(_adCarouselTimer);
     }, { passive: true });
@@ -6141,6 +6141,8 @@ window.renderCategoryGridSafe = function() {
       }
     }, { passive: false });
 
+    let _lastTapTs = 0;
+
     wrap.addEventListener('touchend', (e) => {
       if (!_touchDragging) return;
       _touchDragging = false;
@@ -6155,23 +6157,23 @@ window.renderCategoryGridSafe = function() {
         } else if (dx > SWIPE_THRESHOLD) {
           adCarouselGoTo(_adCurrentSlide - 1);
         } else {
-          // Snap back sin cambio de slide
           adCarouselGoTo(_adCurrentSlide);
         }
-        // Reanudar autorotación
         const data = getAdData();
         if (data) adCarouselStart(data.speed);
       } else {
-        // No hubo movimiento significativo → fue un tap → abrir zoom
+        // Tap simple → zoom
+        _lastTapTs = Date.now();
         const data = getAdData();
         if (data) adCarouselStart(data.speed);
         openBannerZoom(_adCurrentSlide);
       }
     }, { passive: true });
 
-    // Click (desktop/sin swipe) → zoom
+    // Click (desktop) → zoom — ignorar si ya fue manejado por touchend
     wrap.addEventListener('click', (e) => {
-      if (_touchMoved) return; // ya manejado por touchend
+      if (Date.now() - _lastTapTs < 600) return; // fue un tap táctil, ya manejado
+      if (_touchMoved) return;
       openBannerZoom(_adCurrentSlide);
     });
   }
@@ -6188,7 +6190,6 @@ window.renderCategoryGridSafe = function() {
     let _zoomCurrent = 0;
     let _zoomImages  = []; // array de {horizontal, vertical} o simplemente string
 
-    // Obtener imágenes verticales del banner si existen
     function getZoomImages() {
       try {
         const raw = localStorage.getItem('helechos_menu_settings_v1');
@@ -6196,15 +6197,14 @@ window.renderCategoryGridSafe = function() {
         const s = JSON.parse(raw);
         const skinKey = s.classicSkin || 'clasico';
         let arr = s.adBanners && s.adBanners[skinKey];
-        if (!arr) return [];
+        if (!arr || !arr.length) return [];
         if (typeof arr === 'string') arr = [arr];
-        // Intentar leer imágenes verticales si existen en adBannersVertical
-        let arrV = s.adBannersVertical && s.adBannersVertical[skinKey];
-        if (arrV && typeof arrV === 'string') arrV = [arrV];
-        // Mapear: si hay vertical para ese índice, usarla; si no, usar horizontal
+        // Verticales (opcional) — si no existe el slot, usar horizontal
+        let arrV = (s.adBannersVertical && s.adBannersVertical[skinKey]) || [];
+        if (typeof arrV === 'string') arrV = [arrV];
         return arr.map((h, i) => ({
           horizontal: h,
-          vertical: (arrV && arrV[i]) ? arrV[i] : h
+          vertical: (arrV[i] && arrV[i] !== null) ? arrV[i] : h
         }));
       } catch(e) { return []; }
     }
