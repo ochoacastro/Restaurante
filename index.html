@@ -2581,6 +2581,48 @@
   .cat-mgr-name { flex: 1; font-size: 14px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .cat-mgr-del { border: none; background: #D32F2F; color: #fff; border-radius: 8px; padding: 6px 10px; font-weight: 900; font-size: 13px; cursor: pointer; }
 
+  /* ── COMBOS ────────────────────────────────────────────── */
+  .combo-card { background: var(--fondo); border: 1.5px solid var(--borde); border-radius: 14px; overflow: hidden; margin-bottom: 10px; }
+  .combo-card-header { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--blanco); }
+  .combo-card-icon { font-size: 22px; flex-shrink: 0; }
+  .combo-card-info { flex: 1; min-width: 0; }
+  .combo-card-name { font-size: 15px; font-weight: 800; color: var(--negro); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .combo-card-price { font-size: 13px; font-weight: 700; color: var(--rappi); margin-top: 2px; }
+  .combo-card-body { padding: 10px 14px 14px; border-top: 1px solid var(--borde); }
+  .combo-vis-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+  .combo-vis-chip { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; color: var(--gris-osc); background: var(--blanco); border: 1.5px solid var(--borde); border-radius: 999px; padding: 5px 10px; }
+  .combo-items-list { font-size: 12px; color: var(--gris-osc); margin-top: 6px; line-height: 1.7; }
+  .combo-item-tag { display: inline-block; background: rgba(255,68,26,0.08); border: 1px solid rgba(255,68,26,0.18); color: var(--rappi); border-radius: 20px; padding: 2px 8px; margin: 2px; font-size: 11px; font-weight: 700; }
+  .combo-actions { display: flex; gap: 8px; margin-top: 10px; }
+  .combo-btn-edit { flex: 1; background: var(--blanco); border: 1.5px solid var(--borde); color: var(--negro); border-radius: 10px; padding: 8px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; }
+  .combo-btn-del { background: rgba(211,47,47,0.1); border: 1.5px solid rgba(211,47,47,0.25); color: #D32F2F; border-radius: 10px; padding: 8px 12px; font-size: 12px; font-weight: 800; cursor: pointer; font-family: inherit; }
+
+  /* Modal combo */
+  .combo-modal-overlay { display: none; position: fixed; inset: 0; z-index: 1200; background: rgba(0,0,0,0.65); align-items: flex-end; justify-content: center; }
+  .combo-modal-overlay.show { display: flex; }
+  .combo-modal { background: var(--blanco); border-radius: 22px 22px 0 0; width: 100%; max-height: 92vh; overflow-y: auto; padding: 20px 16px 40px; }
+  .combo-modal-title { font-size: 17px; font-weight: 900; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+  .combo-field-label { font-size: 11px; font-weight: 800; color: var(--gris); text-transform: uppercase; letter-spacing: .6px; margin-bottom: 5px; margin-top: 14px; }
+  .combo-input { width: 100%; border: 1.5px solid var(--borde); background: var(--fondo); color: var(--negro); border-radius: 12px; padding: 12px 14px; font-size: 15px; font-family: inherit; outline: none; box-sizing: border-box; }
+  .combo-input:focus { border-color: var(--rappi); }
+  .combo-items-wrap { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+  .combo-item-row { display: flex; align-items: center; gap: 8px; background: var(--fondo); border: 1.5px solid var(--borde); border-radius: 10px; padding: 8px 10px; }
+  .combo-item-row span { flex: 1; font-size: 13px; font-weight: 700; color: var(--negro); }
+  .combo-item-remove { background: none; border: none; font-size: 16px; cursor: pointer; color: #D32F2F; padding: 0 4px; flex-shrink: 0; }
+  .combo-vis-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 6px; }
+  .combo-vis-opt { display: flex; flex-direction: column; align-items: center; gap: 6px; background: var(--fondo); border: 1.5px solid var(--borde); border-radius: 12px; padding: 10px 6px; cursor: pointer; transition: border-color .15s; }
+  .combo-vis-opt.active { border-color: var(--rappi); background: rgba(255,68,26,0.06); }
+  .combo-vis-opt .vis-icon { font-size: 20px; }
+  .combo-vis-opt .vis-label { font-size: 10px; font-weight: 800; color: var(--gris-osc); text-align: center; line-height: 1.2; }
+
+  /* Combo en menú admin */
+  .menu-combo-card { background: linear-gradient(135deg,rgba(255,68,26,0.06),rgba(255,68,26,0.02)); border: 1.5px solid rgba(255,68,26,0.28); border-radius: 14px; padding: 12px 14px; margin-bottom: 8px; }
+  .menu-combo-header { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .menu-combo-name { font-size: 15px; font-weight: 800; color: var(--negro); flex: 1; }
+  .menu-combo-price { font-size: 14px; font-weight: 900; color: var(--rappi); }
+  .menu-combo-items-list { font-size: 12px; color: var(--gris-osc); margin-top: 6px; }
+  .menu-combo-qty { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+
   /* ── Fotos de categoría ── */
   .catimg-item { border: 1.5px solid var(--borde); border-radius: 14px; overflow: hidden; background: var(--fondo); }
   .catimg-preview { position: relative; width: 100%; height: 100px; background: #1a1a1a; overflow: hidden; }
@@ -3738,6 +3780,82 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
           <button class="btn-save-config" style="width:100%;padding:12px;" onclick="cfgAddCategory()">➕ Crear categoría</button>
         </div>
         <div id="cfgCatList" style="display:flex;flex-direction:column;gap:8px;margin-top:4px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Combos -->
+  <div class="cfg-acc" id="cfgacc-combos">
+    <div class="cfg-acc-header" data-cfgacc="cfgacc-combos">
+      <div class="cfg-acc-left">
+        <span class="cfg-acc-icon">🍱</span>
+        <div>
+          <div class="cfg-acc-title">Combos</div>
+          <div class="cfg-acc-sub" id="cfgComboCount">—</div>
+        </div>
+      </div>
+      <span class="cfg-acc-arrow">▼</span>
+    </div>
+    <div class="cfg-acc-body">
+      <div class="cfg-acc-inner">
+        <p style="font-size:12px;color:var(--gris);line-height:1.5;margin-bottom:14px;">
+          Un combo agrupa platos sin precio unitario. Tiene su propio precio y se puede mostrar u ocultar por canal: clientes, meseros y administradores al tomar pedidos.
+        </p>
+        <div id="cfgComboList" style="margin-bottom:10px;"></div>
+        <button class="btn-save-config" style="width:100%;padding:12px;display:flex;align-items:center;justify-content:center;gap:6px;"
+          onclick="cfgAbrirComboModal(null)">
+          <span style="font-size:18px;line-height:1;">+</span> Crear combo
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal combo -->
+  <div class="combo-modal-overlay" id="comboModalOverlay">
+    <div class="combo-modal">
+      <div class="combo-modal-title">🍱 <span id="comboModalTitulo">Nuevo combo</span></div>
+
+      <div class="combo-field-label">Nombre del combo *</div>
+      <input class="combo-input" id="comboNombreInput" type="text" placeholder="Ej: Picada familiar, Combo pareja..." maxlength="60">
+
+      <div class="combo-field-label">Precio del combo *</div>
+      <input class="combo-input" id="comboPrecioInput" type="number" min="0" placeholder="Ej: 45000">
+
+      <div class="combo-field-label">Platos que incluye</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <select class="combo-input" id="comboItemSelect" style="flex:1;padding:10px 12px;">
+          <option value="">— Selecciona un plato —</option>
+        </select>
+        <button type="button" onclick="cfgComboAgregarItem()"
+          style="background:var(--rappi);color:#fff;border:none;border-radius:12px;padding:10px 16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;flex-shrink:0;">+</button>
+      </div>
+      <div id="comboItemsWrap" class="combo-items-wrap"></div>
+
+      <div class="combo-field-label">Visibilidad por canal</div>
+      <div class="combo-vis-grid">
+        <div class="combo-vis-opt active" id="comboVisClientes" onclick="cfgComboToggleVis('clientes')">
+          <span class="vis-icon">📱</span>
+          <span class="vis-label">Clientes<br>(menú digital)</span>
+        </div>
+        <div class="combo-vis-opt active" id="comboVisMeseros" onclick="cfgComboToggleVis('meseros')">
+          <span class="vis-icon">🧑‍🍳</span>
+          <span class="vis-label">Meseros<br>(tomar pedido)</span>
+        </div>
+        <div class="combo-vis-opt active" id="comboVisAdmin" onclick="cfgComboToggleVis('admin')">
+          <span class="vis-icon">🛠️</span>
+          <span class="vis-label">Admin<br>(tomar pedido)</span>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;margin-top:20px;">
+        <button type="button" onclick="cfgCerrarComboModal()"
+          style="flex:1;padding:13px;border:1.5px solid var(--borde);background:var(--fondo);color:var(--gris-osc);border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
+          Cancelar
+        </button>
+        <button type="button" onclick="cfgGuardarCombo()"
+          style="flex:2;padding:13px;background:var(--rappi);color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">
+          💾 Guardar combo
+        </button>
       </div>
     </div>
   </div>
@@ -8129,6 +8247,18 @@ function renderCategorias() {
   // Siempre mostrar la barra de categorías con scroll horizontal
   const disponibles = MENU.filter(i => i.disponible !== false);
   const cats = ['Todos', ...new Set(disponibles.map(i => i.categoria))];
+
+  // Agregar tab Combos si hay combos visibles para este usuario
+  const esAdmin2 = usuarioActivo?.rol === 'admin' || usuarioActivo?.rol === 'master';
+  const esMesero = usuarioActivo?.rol === 'mesero';
+  const combosVis = loadCombos().filter(c => {
+    if (!c.habilitado && c.habilitado !== undefined) return false;
+    if (esAdmin2) return c.visible?.admin !== false;
+    if (esMesero) return c.visible?.meseros !== false;
+    return false;
+  });
+  if (combosVis.length > 0) cats.push('🍱 Combos');
+
   // Bug C fix: si catActiva ya no existe (por sync remoto o eliminación), volver a Todos
   if (catActiva !== 'Todos' && !cats.includes(catActiva)) catActiva = 'Todos';
   const html = cats.map(c =>
@@ -8137,7 +8267,7 @@ function renderCategorias() {
   const catScrollEl = document.getElementById('catScroll');
   catScrollEl.innerHTML = html;
   catScrollEl.style.display = 'flex';
-  // Asignar listeners por data-cat (evita romper onclick con comillas o caracteres especiales)
+  // Asignar listeners por data-cat
   catScrollEl.querySelectorAll('.cat-btn').forEach(btn => {
     btn.addEventListener('click', () => filtrarCat(btn.dataset.cat));
   });
@@ -8286,10 +8416,77 @@ function renderMenu() {
   }).join('');
   // En modo "Todos": insertar botones de categorías al inicio del grid
   const prefixHtml = catActiva === 'Todos' ? _getCatBotonesHtml() : '';
-  document.getElementById('menuGrid').innerHTML = prefixHtml + _itemsMap;
+
+  // ── Combos visibles para este usuario ────────────────────
+  const esAdmin2 = usuarioActivo?.rol === 'admin' || usuarioActivo?.rol === 'master';
+  const esMesero = usuarioActivo?.rol === 'mesero';
+  const combosAll = loadCombos().filter(c => c.habilitado !== false);
+  const combosVis = (catActiva === 'Todos' || catActiva === '🍱 Combos')
+    ? combosAll.filter(c => {
+        if (esAdmin2) return c.visible?.admin !== false;
+        if (esMesero) return c.visible?.meseros !== false;
+        return false; // otros roles no ven combos en este panel
+      })
+    : [];
+
+  const combosHtml = combosVis.map(c => {
+    const carritoCombo = carrito.find(x => x.esCombo && x.comboId === c.id);
+    const qty = carritoCombo ? carritoCombo.cantidad : 0;
+    const inCart = qty > 0;
+    const carritoIdx = carrito.findIndex(x => x.esCombo && x.comboId === c.id);
+    return `
+    <div class="menu-combo-card">
+      <div class="menu-combo-header">
+        <div>
+          <div class="menu-combo-name">🍱 ${esc(c.nombre)}</div>
+          <div class="menu-combo-items-list">${(c.items||[]).map(n=>`• ${esc(n)}`).join(' · ')}</div>
+        </div>
+        <div class="menu-combo-price">${fmt(c.precio)}</div>
+      </div>
+      <div class="menu-combo-qty">
+        ${inCart
+          ? `<button class="menu-qty-btn" onclick="cambiarQtyCombo('${c.id}',-1)">−</button>
+             <span class="menu-qty-num">${qty}</span>`
+          : ''}
+        <button class="menu-qty-btn plus" onclick="cambiarQtyCombo('${c.id}',1)">+</button>
+        ${inCart ? `<span style="font-size:12px;color:var(--gris-osc);font-weight:600;">${fmt(c.precio*qty)}</span>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+
+  document.getElementById('menuGrid').innerHTML = prefixHtml + combosHtml + _itemsMap;
 }
 
 function agregarItem(idx) { cambiarQtyMenu(idx, 1); }
+
+function cambiarQtyCombo(comboId, delta) {
+  if (!ordenActivaId && delta > 0) { showToast('ℹ️ Crea una orden primero'); abrirModalNuevaOrden(); return; }
+  if (!ordenActivaId) return;
+  const combos = loadCombos();
+  const combo  = combos.find(c => c.id === comboId);
+  if (!combo) return;
+  const existeIdx = carrito.findIndex(x => x.esCombo && x.comboId === comboId);
+  if (existeIdx >= 0) {
+    carrito[existeIdx].cantidad += delta;
+    if (carrito[existeIdx].cantidad <= 0) carrito.splice(existeIdx, 1);
+  } else if (delta > 0) {
+    carrito.push({
+      nombre:   '🍱 ' + combo.nombre,
+      categoria:'Combo',
+      precio:   combo.precio,
+      cantidad: 1,
+      esCombo:  true,
+      comboId,
+      notas:    [''],
+      servido:  [false],
+      iva:      0,
+    });
+  }
+  guardarOrdenActiva();
+  renderMenu();
+  actualizarBadge();
+  if (delta > 0) showToast(`✅ Combo: ${combo.nombre}`);
+}
 
 function cambiarQtyMenu(idx, delta) {
   // Si no hay orden activa, abrir modal para crear una
@@ -13211,6 +13408,7 @@ document.querySelectorAll('.cfg-acc-header[data-cfgacc]').forEach(header => {
 
 function onCfgAccOpen(id) {
   if (id === 'cfgacc-pagos')    { cfgRenderPayments(); cfgRenderDomTarifa(); }
+  if (id === 'cfgacc-combos')   cfgRenderCombos();
   if (id === 'cfgacc-cats')     cfgRenderCategories();
   if (id === 'cfgacc-catimgs')  cfgRenderCatImages();
   if (id === 'cfgacc-productos') { renderProductosConfig(); }
@@ -13643,6 +13841,198 @@ function cfgGetAllCategories() {
   }
   return cats.sort((a,b) => a.localeCompare(b,'es'));
 }
+
+// ══════════════════════════════════════════════════════════
+// COMBOS
+// ══════════════════════════════════════════════════════════
+const COMBOS_KEY = 'helechos_combos_v1';
+
+function loadCombos() {
+  try { const r = localStorage.getItem(COMBOS_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
+}
+function saveCombos(arr) {
+  try { localStorage.setItem(COMBOS_KEY, JSON.stringify(arr)); } catch(e) { showToast('⚠️ No se pudo guardar los combos'); }
+  if (window.fbSync) try { window.fbSync('combos', arr); } catch(e) {}
+}
+
+// ── Estado del modal ──────────────────────────────────────
+let _comboEditId   = null;   // null = nuevo, string = editar
+let _comboItems    = [];     // array de strings (nombres de platos)
+let _comboVis      = { clientes: true, meseros: true, admin: true };
+
+function cfgRenderCombos() {
+  const combos = loadCombos();
+  const list   = document.getElementById('cfgComboList');
+  const countEl = document.getElementById('cfgComboCount');
+  if (!list) return;
+  if (countEl) countEl.textContent = combos.length ? `${combos.length} combo${combos.length>1?'s':''}` : '0 combos';
+
+  if (!combos.length) {
+    list.innerHTML = '<div style="border:1.5px dashed var(--borde);border-radius:12px;padding:20px;text-align:center;color:var(--gris);font-size:13px;">Sin combos todavía</div>';
+    return;
+  }
+
+  list.innerHTML = combos.map(c => {
+    const visChips = [
+      c.visible?.clientes !== false ? '<span class="combo-item-tag">📱 Clientes</span>' : '',
+      c.visible?.meseros  !== false ? '<span class="combo-item-tag">🧑‍🍳 Meseros</span>' : '',
+      c.visible?.admin    !== false ? '<span class="combo-item-tag">🛠️ Admin</span>'    : '',
+    ].filter(Boolean).join('') || '<span style="font-size:11px;color:#D32F2F;">⚠️ Oculto en todos</span>';
+
+    const itemsHtml = (c.items||[]).length
+      ? (c.items).map(n => `<span class="combo-item-tag">${esc(n)}</span>`).join('')
+      : '<span style="font-size:11px;color:var(--gris);font-style:italic;">Sin platos asignados</span>';
+
+    return `
+    <div class="combo-card">
+      <div class="combo-card-header">
+        <span class="combo-card-icon">🍱</span>
+        <div class="combo-card-info">
+          <div class="combo-card-name">${esc(c.nombre)}</div>
+          <div class="combo-card-price">${fmt(c.precio || 0)}</div>
+        </div>
+        <div class="toggle-wrap" title="${c.habilitado!==false?'Habilitado':'Deshabilitado'}">
+          <input type="checkbox" class="toggle-input" id="comboena_${c.id}" ${c.habilitado!==false?'checked':''} data-combo-ena="${c.id}">
+          <label class="toggle-label" for="comboena_${c.id}"></label>
+        </div>
+      </div>
+      <div class="combo-card-body">
+        <div style="font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">Platos incluidos</div>
+        <div>${itemsHtml}</div>
+        <div style="font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin:8px 0 4px;">Visible para</div>
+        <div>${visChips}</div>
+        <div class="combo-actions">
+          <button class="combo-btn-edit" onclick="cfgAbrirComboModal('${c.id}')">✏️ Editar</button>
+          <button class="combo-btn-del"  onclick="cfgEliminarCombo('${c.id}')">🗑️</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Toggle habilitado
+  list.querySelectorAll('[data-combo-ena]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const id = chk.dataset.comboEna;
+      const combos2 = loadCombos();
+      const c = combos2.find(x => x.id === id);
+      if (c) { c.habilitado = chk.checked; saveCombos(combos2); cfgRenderCombos(); renderMenu(); }
+    });
+  });
+}
+
+function cfgAbrirComboModal(id) {
+  const combos = loadCombos();
+  const c = id ? combos.find(x => x.id === id) : null;
+  _comboEditId = id || null;
+  _comboItems  = c ? [...(c.items || [])] : [];
+  _comboVis    = c ? { clientes: c.visible?.clientes !== false, meseros: c.visible?.meseros !== false, admin: c.visible?.admin !== false }
+                   : { clientes: true, meseros: true, admin: true };
+
+  document.getElementById('comboModalTitulo').textContent = c ? 'Editar combo' : 'Nuevo combo';
+  document.getElementById('comboNombreInput').value  = c ? c.nombre  : '';
+  document.getElementById('comboPrecioInput').value  = c ? c.precio  : '';
+
+  // Poblar selector de platos del MENU
+  const sel = document.getElementById('comboItemSelect');
+  sel.innerHTML = '<option value="">— Selecciona un plato —</option>' +
+    MENU.filter(i => i.disponible !== false).map(i => `<option value="${esc(i.nombre)}">${esc(i.nombre)} · ${fmt(i.precio)}</option>`).join('');
+
+  _cfgComboRenderItems();
+  _cfgComboRenderVis();
+
+  document.getElementById('comboModalOverlay').classList.add('show');
+  document.getElementById('comboNombreInput').focus();
+}
+
+function cfgCerrarComboModal() {
+  document.getElementById('comboModalOverlay').classList.remove('show');
+}
+
+function _cfgComboRenderItems() {
+  const wrap = document.getElementById('comboItemsWrap');
+  if (!wrap) return;
+  if (!_comboItems.length) {
+    wrap.innerHTML = '<div style="font-size:12px;color:var(--gris);font-style:italic;padding:4px 0;">Sin platos agregados</div>';
+    return;
+  }
+  wrap.innerHTML = _comboItems.map((n, i) => `
+    <div class="combo-item-row">
+      <span>${esc(n)}</span>
+      <button class="combo-item-remove" onclick="_cfgComboRemoveItem(${i})">✕</button>
+    </div>`).join('');
+}
+
+function _cfgComboRenderVis() {
+  ['clientes','meseros','admin'].forEach(k => {
+    const el = document.getElementById('comboVis' + k.charAt(0).toUpperCase() + k.slice(1));
+    if (el) el.classList.toggle('active', !!_comboVis[k]);
+  });
+}
+
+function cfgComboToggleVis(key) {
+  _comboVis[key] = !_comboVis[key];
+  _cfgComboRenderVis();
+}
+
+function cfgComboAgregarItem() {
+  const sel = document.getElementById('comboItemSelect');
+  const val = sel.value;
+  if (!val) { showToast('⚠️ Selecciona un plato'); return; }
+  if (_comboItems.includes(val)) { showToast('⚠️ Ya está en el combo'); return; }
+  _comboItems.push(val);
+  sel.value = '';
+  _cfgComboRenderItems();
+}
+
+function _cfgComboRemoveItem(i) {
+  _comboItems.splice(i, 1);
+  _cfgComboRenderItems();
+}
+
+function cfgGuardarCombo() {
+  const nombre = (document.getElementById('comboNombreInput').value || '').trim();
+  const precio = parseFloat(document.getElementById('comboPrecioInput').value) || 0;
+  if (!nombre) { showToast('⚠️ Ingresa el nombre del combo'); return; }
+  if (!precio)  { showToast('⚠️ Ingresa el precio del combo'); return; }
+
+  const combos = loadCombos();
+  if (_comboEditId) {
+    const idx = combos.findIndex(x => x.id === _comboEditId);
+    if (idx >= 0) {
+      combos[idx] = { ...combos[idx], nombre, precio, items: [..._comboItems], visible: { ..._comboVis } };
+    }
+  } else {
+    combos.push({
+      id:         'combo_' + Date.now(),
+      nombre,
+      precio,
+      items:      [..._comboItems],
+      visible:    { ..._comboVis },
+      habilitado: true,
+    });
+  }
+  saveCombos(combos);
+  cfgCerrarComboModal();
+  cfgRenderCombos();
+  renderMenu();
+  showToast(`✅ Combo "${nombre}" guardado`);
+}
+
+function cfgEliminarCombo(id) {
+  const combos = loadCombos();
+  const c = combos.find(x => x.id === id);
+  if (!c) return;
+  if (!confirm(`¿Eliminar el combo "${c.nombre}"?`)) return;
+  saveCombos(combos.filter(x => x.id !== id));
+  cfgRenderCombos();
+  renderMenu();
+  showToast('🗑️ Combo eliminado');
+}
+
+// Cerrar modal al tocar el overlay
+document.getElementById('comboModalOverlay')?.addEventListener('click', e => {
+  if (e.target === document.getElementById('comboModalOverlay')) cfgCerrarComboModal();
+});
 
 function cfgRenderCategories() {
   const list = document.getElementById('cfgCatList');
