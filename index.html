@@ -7048,7 +7048,7 @@ async function descargarMenuEspecialPDF(forceSkinKey) {
     }
 
     // Calcular altura total
-    let totalH = PAD; // top padding
+    let totalH = PAD + 10; // top padding + franja decorativa
 
     // Logo
     const logoData = localStorage.getItem('helechos_logo');
@@ -7095,7 +7095,6 @@ async function descargarMenuEspecialPDF(forceSkinKey) {
     ctx.scale(DPR, DPR);
 
     // ── Fondo degradado del skin ──────────────────────────────────────
-    // Convertir bgDefault a colores para createLinearGradient
     const BG_STOPS = {
       clasico:     ['#0d0a04','#1a1204'],
       madre:       ['#1a0010','#2d0020'],
@@ -7111,6 +7110,38 @@ async function descargarMenuEspecialPDF(forceSkinKey) {
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, totalH);
 
+    // ── Patrón temático SVG sobre el gradiente ────────────────────────
+    const SVG_PATTERNS = {
+      clasico: `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><defs><pattern id="p" width="120" height="120" patternUnits="userSpaceOnUse"><rect width="120" height="120" fill="none"/><g opacity="0.07" fill="#f5dc82"><rect x="28" y="10" width="3" height="30" rx="1.5"/><rect x="34" y="10" width="3" height="30" rx="1.5"/><rect x="40" y="10" width="3" height="30" rx="1.5"/><rect x="31" y="40" width="9" height="50" rx="4.5"/><rect x="78" y="10" width="4" height="80" rx="2"/><ellipse cx="80" cy="10" rx="4" ry="6"/><polygon points="60,52 63,61 72,61 65,66 68,75 60,70 52,75 55,66 48,61 57,61" opacity="0.5"/></g></pattern></defs><rect width="120" height="120" fill="url(%23p)"/></svg>`,
+      madre: `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><defs><pattern id="p" width="140" height="140" patternUnits="userSpaceOnUse"><rect width="140" height="140" fill="none"/><g opacity="0.09" fill="#ffb3d9"><path d="M70 105 C70 105 20 75 20 45 C20 28 33 20 45 25 C55 29 70 42 70 42 C70 42 85 29 95 25 C107 20 120 28 120 45 C120 75 70 105 70 105Z"/><circle cx="20" cy="20" r="6"/><circle cx="14" cy="20" r="3"/><circle cx="26" cy="20" r="3"/><circle cx="20" cy="14" r="3"/><circle cx="20" cy="26" r="3"/><circle cx="120" cy="115" r="6"/><circle cx="114" cy="115" r="3"/><circle cx="126" cy="115" r="3"/><circle cx="120" cy="109" r="3"/><circle cx="120" cy="121" r="3"/><path d="M25 100 C25 100 10 90 10 80 C10 74 15 71 20 73 C22 74 25 77 25 77 C25 77 28 74 30 73 C35 71 40 74 40 80 C40 90 25 100 25 100Z" opacity="0.6"/><path d="M115 30 C115 30 100 20 100 10 C100 4 105 1 110 3 C112 4 115 7 115 7 C115 7 118 4 120 3 C125 1 130 4 130 10 C130 20 115 30 115 30Z" opacity="0.6"/><ellipse cx="70" cy="20" rx="12" ry="7" transform="rotate(-30 70 20)"/><ellipse cx="70" cy="20" rx="12" ry="7" transform="rotate(30 70 20)"/><circle cx="70" cy="20" r="2"/></g></pattern></defs><rect width="140" height="140" fill="url(%23p)"/></svg>`,
+      padre: `<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130"><defs><pattern id="p" width="130" height="130" patternUnits="userSpaceOnUse"><rect width="130" height="130" fill="none"/><g opacity="0.08" fill="#90caf9"><path d="M65 10 L75 10 L82 45 L65 70 L48 45Z"/><rect x="61" y="10" width="8" height="8" rx="2"/><polygon points="20,55 23,64 33,64 25,70 28,79 20,73 12,79 15,70 7,64 17,64" opacity="0.7"/><polygon points="110,20 113,29 123,29 115,35 118,44 110,38 102,44 105,35 97,29 107,29" opacity="0.7"/><rect x="10" y="100" width="5" height="25" rx="2.5" transform="rotate(-45 20 110)"/><circle cx="10" cy="103" r="7" fill="none" stroke="#90caf9" stroke-width="3"/><polygon points="110,90 120,100 110,115 100,100" opacity="0.5"/><ellipse cx="62" cy="115" rx="12" ry="5" transform="rotate(15 62 115)"/><ellipse cx="78" cy="115" rx="12" ry="5" transform="rotate(-15 78 115)"/></g></pattern></defs><rect width="130" height="130" fill="url(%23p)"/></svg>`,
+      halloween: `<svg xmlns="http://www.w3.org/2000/svg" width="150" height="150"><defs><pattern id="p" width="150" height="150" patternUnits="userSpaceOnUse"><rect width="150" height="150" fill="none"/><g opacity="0.08"><ellipse cx="75" cy="85" rx="30" ry="26" fill="#ff9800"/><rect x="72" y="60" width="6" height="12" rx="3" fill="#33a000"/><path d="M60 83 L66 78 L72 83 L72 92 L60 92Z" fill="#000" opacity="0.4"/><path d="M78 83 L84 78 L90 83 L90 92 L78 92Z" fill="#000" opacity="0.4"/><path d="M64 95 Q75 105 86 95" stroke="#000" stroke-width="3" fill="none" opacity="0.4"/><path d="M20 30 Q35 22 32 40 Q18 38 20 30Z" fill="#ffeb3b" opacity="0.9"/><path d="M115 25 Q105 18 100 25 Q107 30 110 25 Q113 30 120 25 Q115 18 115 25Z" fill="#c0a0ff"/><ellipse cx="112" cy="26" rx="3" ry="4" fill="#c0a0ff"/><circle cx="25" cy="120" r="1.5" fill="#ccc"/><line x1="25" y1="105" x2="25" y2="120" stroke="#ccc" stroke-width="1"/><circle cx="25" cy="112" r="7" fill="none" stroke="#ccc" stroke-width="0.8"/><circle cx="25" cy="112" r="13" fill="none" stroke="#ccc" stroke-width="0.8"/><line x1="18" y1="105" x2="32" y2="119" stroke="#ccc" stroke-width="0.8"/><line x1="32" y1="105" x2="18" y2="119" stroke="#ccc" stroke-width="0.8"/><polygon points="130,100 132,107 139,107 133,111 136,118 130,114 124,118 127,111 121,107 128,107" fill="#ff9800" opacity="0.6"/></g></pattern></defs><rect width="150" height="150" fill="url(%23p)"/></svg>`,
+      navidad: `<svg xmlns="http://www.w3.org/2000/svg" width="140" height="140"><defs><pattern id="p" width="140" height="140" patternUnits="userSpaceOnUse"><rect width="140" height="140" fill="none"/><g opacity="0.09"><polygon points="70,10 95,45 80,45 100,75 82,75 95,100 45,100 58,75 40,75 60,45 45,45" fill="#00c853"/><rect x="62" y="100" width="16" height="14" rx="2" fill="#8b4513"/><circle cx="70" cy="10" r="5" fill="#ffeb3b"/><circle cx="55" cy="58" r="4" fill="#ff5252"/><circle cx="82" cy="50" r="3" fill="#ffeb3b"/><circle cx="65" cy="78" r="4" fill="#448aff"/><circle cx="78" cy="82" r="3" fill="#ff5252"/><g fill="#e3f2fd" transform="translate(15,15)"><rect x="-1" y="-12" width="2" height="24"/><rect x="-1" y="-12" width="2" height="24" transform="rotate(60)"/><rect x="-1" y="-12" width="2" height="24" transform="rotate(120)"/><circle r="3"/></g><g fill="#e3f2fd" transform="translate(125,110)"><rect x="-1" y="-10" width="2" height="20"/><rect x="-1" y="-10" width="2" height="20" transform="rotate(60)"/><rect x="-1" y="-10" width="2" height="20" transform="rotate(120)"/><circle r="2.5"/></g><path d="M115 35 Q115 20 125 20 Q135 20 135 35 L138 55 L112 55Z" fill="#ffeb3b" opacity="0.7"/><rect x="120" y="55" width="10" height="5" rx="2" fill="#ffeb3b" opacity="0.7"/><circle cx="125" cy="62" r="4" fill="#ffeb3b" opacity="0.7"/></g></pattern></defs><rect width="140" height="140" fill="url(%23p)"/></svg>`,
+      sanvalentin: `<svg xmlns="http://www.w3.org/2000/svg" width="130" height="130"><defs><pattern id="p" width="130" height="130" patternUnits="userSpaceOnUse"><rect width="130" height="130" fill="none"/><g opacity="0.09" fill="#ff6b9d"><path d="M65 95 C65 95 22 68 22 42 C22 27 34 19 46 24 C54 28 65 40 65 40 C65 40 76 28 84 24 C96 19 108 27 108 42 C108 68 65 95 65 95Z"/><path d="M20 35 C20 35 5 26 5 15 C5 8 11 4 17 7 C19 8 20 11 20 11 C20 11 21 8 23 7 C29 4 35 8 35 15 C35 26 20 35 20 35Z" opacity="0.5"/><path d="M115 105 C115 105 100 96 100 85 C100 78 106 74 112 77 C114 78 115 81 115 81 C115 81 116 78 118 77 C124 74 130 78 130 85 C130 96 115 105 115 105Z" opacity="0.5"/><line x1="10" y1="100" x2="50" y2="60" stroke="#ff6b9d" stroke-width="2" fill="none"/><polygon points="50,55 56,65 44,65"/><circle cx="110" cy="20" r="10"/><circle cx="118" cy="15" r="7"/><circle cx="102" cy="15" r="7"/><circle cx="110" cy="12" r="7"/><rect x="108" y="30" width="4" height="15" rx="2" fill="#00c853" opacity="0.8"/></g></pattern></defs><rect width="130" height="130" fill="url(%23p)"/></svg>`,
+    };
+
+    // Dibujar patrón SVG como imagen repetida sobre el gradiente
+    const svgStr = SVG_PATTERNS[skinKey] || SVG_PATTERNS.clasico;
+    await new Promise(resolve => {
+      const svgBlob = new Blob([svgStr], { type: 'image/svg+xml' });
+      const svgUrl  = URL.createObjectURL(svgBlob);
+      const patImg  = new Image();
+      patImg.onload = () => {
+        const pw = patImg.naturalWidth  || 120;
+        const ph = patImg.naturalHeight || 120;
+        const pat = ctx.createPattern(patImg, 'repeat');
+        ctx.save();
+        ctx.fillStyle = pat;
+        ctx.globalAlpha = 1;
+        ctx.fillRect(0, 0, W, totalH);
+        ctx.restore();
+        URL.revokeObjectURL(svgUrl);
+        resolve();
+      };
+      patImg.onerror = resolve;
+      patImg.src = svgUrl;
+    });
+
     // ── Color del skin ────────────────────────────────────────────────
     const ac = skin.acento || '#f5dc82';
     const CAT_GRAD_COLORS = {
@@ -7123,7 +7154,41 @@ async function descargarMenuEspecialPDF(forceSkinKey) {
     };
     const [cat1, cat2] = CAT_GRAD_COLORS[skinKey] || ['#c8620a','#e07a12'];
 
-    let y = PAD;
+    let y = PAD + 10; // +10 por la franja decorativa superior
+
+    // ── Franja decorativa temática (borde superior) ─────────────────
+    const DECO_COLORS = {
+      clasico:     { c1:'#c8620a', c2:'#e07a12', c3:'#f5dc82' },
+      madre:       { c1:'#c2185b', c2:'#e91e8c', c3:'#ffb3d9' },
+      padre:       { c1:'#1565c0', c2:'#1976d2', c3:'#90caf9' },
+      halloween:   { c1:'#4a0080', c2:'#6a0dad', c3:'#ff9800' },
+      navidad:     { c1:'#b71c1c', c2:'#c62828', c3:'#ffeb3b' },
+      sanvalentin: { c1:'#880e4f', c2:'#ad1457', c3:'#ff6b9d' },
+    };
+    const dc = DECO_COLORS[skinKey] || DECO_COLORS.clasico;
+    // Barra superior degradada
+    const topBarGrad = ctx.createLinearGradient(0, 0, W, 0);
+    topBarGrad.addColorStop(0,   dc.c1);
+    topBarGrad.addColorStop(0.5, dc.c2);
+    topBarGrad.addColorStop(1,   dc.c1);
+    ctx.fillStyle = topBarGrad;
+    ctx.fillRect(0, 0, W, 6);
+    // Línea de brillo bajo la barra
+    const topGlowGrad = ctx.createLinearGradient(0, 6, W, 6);
+    topGlowGrad.addColorStop(0,   'transparent');
+    topGlowGrad.addColorStop(0.5, dc.c3 + '55');
+    topGlowGrad.addColorStop(1,   'transparent');
+    ctx.fillStyle = topGlowGrad;
+    ctx.fillRect(0, 6, W, 4);
+    // Barra inferior
+    const botBarGrad = ctx.createLinearGradient(0, 0, W, 0);
+    botBarGrad.addColorStop(0,   dc.c1);
+    botBarGrad.addColorStop(0.5, dc.c2);
+    botBarGrad.addColorStop(1,   dc.c1);
+    ctx.save();
+    ctx.fillStyle = botBarGrad;
+    ctx.fillRect(0, totalH - 6, W, 6);
+    ctx.restore();
 
     // ── LOGO ──────────────────────────────────────────────────────────
     if (logoData) {
