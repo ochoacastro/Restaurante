@@ -2048,7 +2048,12 @@
 
 <div id="app" class="hidden">
   <header class="header">
-    <div class="top">
+    <!-- Membrete: reemplaza logo+nombre+slogan cuando existe -->
+    <div id="headerMembreteWrap" style="display:none;margin:-14px -16px 10px;overflow:hidden;">
+      <img id="headerMembreteImg" src="" alt="Membrete" style="width:100%;display:block;max-height:160px;object-fit:cover;object-position:top;">
+    </div>
+    <!-- Marca normal (logo + nombre + slogan) -->
+    <div class="top" id="headerBrandRow">
       <div class="brand">
         <div class="logo" id="appHeaderLogo">🍽️</div>
         <div class="title-wrap">
@@ -3282,6 +3287,24 @@ function applyTheme(){
 
 
 function renderBusinessLogo(){
+  // ── Membrete: reemplaza toda la cabecera si existe ──
+  const membreteWrap = document.getElementById('headerMembreteWrap');
+  const brandRow     = document.getElementById('headerBrandRow');
+  try {
+    const mfCfg   = JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}');
+    const membrete = mfCfg.membrete || null;
+    if (membrete && membreteWrap) {
+      const img = document.getElementById('headerMembreteImg');
+      if (img) img.src = membrete;
+      membreteWrap.style.display = '';
+      if (brandRow) brandRow.style.display = 'none';
+      return; // no mostrar logo/nombre cuando hay membrete
+    }
+  } catch(e) {}
+  // Sin membrete: mostrar logo + nombre normales
+  if (membreteWrap) membreteWrap.style.display = 'none';
+  if (brandRow) brandRow.style.display = '';
+
   const logoHtml = settings.businessLogo
     ? `<img src="${settings.businessLogo}" alt="Logo del negocio">`
     : `<span>🍽️</span>`;
@@ -5370,6 +5393,22 @@ async function conectar(cfg) {
   }, e => console.warn(e));
   window._fbUnsubDecorImgs = () => off(rDecorImgs);
 
+  // Escuchar cambios en membrete del menú físico (cabecera digital)
+  if (window._fbUnsubMfCfg) window._fbUnsubMfCfg();
+  const rMfCfg = ref(db, 'helechos/menuFisicoCfg');
+  onValue(rMfCfg, snap => {
+    if (!snap.exists()) return;
+    const val = snap.val();
+    if (!val || typeof val !== 'object') return;
+    try {
+      const existing = JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}');
+      const merged = { ...existing, ...val };
+      localStorage.setItem('helechos_menu_fisico_cfg', JSON.stringify(merged));
+    } catch(_) {}
+    renderBusinessLogo();
+  }, e => console.warn(e));
+  window._fbUnsubMfCfg = () => off(rMfCfg);
+
   if (window.updateFbStatusUI) window.updateFbStatusUI(true);
 }
 
@@ -5900,6 +5939,10 @@ window.renderCategoryGridSafe = function() {
           renderBusinessLogo();
         }
       } catch(_) {}
+    }
+    // Membrete del menú físico cambiado desde el POS
+    if (e.key === 'helechos_menu_fisico_cfg') {
+      renderBusinessLogo();
     }
   });
 })();
