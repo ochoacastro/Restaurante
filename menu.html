@@ -6741,15 +6741,13 @@ window.renderCategoryGridSafe = function() {
 <script>
 // ══════════════════════════════════════════════════
 // MENÚ FÍSICO — lógica integrada en menu.html
+// Lee configuración del editor visual de index.html
 // ══════════════════════════════════════════════════
 (function() {
 
-  function fmtMF(n) {
-    return '$' + Number(n||0).toLocaleString('es-CO');
-  }
-  function escMF(s) {
-    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  }
+  function fmtMF(n) { return '$' + Number(n||0).toLocaleString('es-CO'); }
+  function escMF(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
   function getNombre() {
     try { const c = JSON.parse(localStorage.getItem('helechos_config')||'{}'); if(c.nombre && c.nombre!=='Mi Restaurante') return c.nombre; } catch(e){}
     return 'MI RESTAURANTE';
@@ -6757,23 +6755,8 @@ window.renderCategoryGridSafe = function() {
   function getMFCfg() {
     try { return JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}'); } catch(e) { return {}; }
   }
-  function getSubtitulo() {
-    const mf = getMFCfg();
-    if (mf.sede) return mf.sede;
-    try { const c = JSON.parse(localStorage.getItem('helechos_config')||'{}'); if(c.subtitulo) return c.subtitulo; } catch(e){}
-    return '';
-  }
-  function getSlogan() {
-    const mf = getMFCfg();
-    if (mf.slogan) return mf.slogan;
-    try { const c = JSON.parse(localStorage.getItem('helechos_config')||'{}'); if(c.slogan) return c.slogan; } catch(e){}
-    return 'SABOR, NATURALEZA Y TRADICIÓN';
-  }
   function getLogo() {
-    try {
-      const s = JSON.parse(localStorage.getItem('helechos_menu_settings_v1')||'{}');
-      if (s.businessLogo) return s.businessLogo;
-    } catch(e){}
+    try { const s = JSON.parse(localStorage.getItem('helechos_menu_settings_v1')||'{}'); if (s.businessLogo) return s.businessLogo; } catch(e){}
     return localStorage.getItem('helechos_logo') || '';
   }
   function getItems() {
@@ -6786,116 +6769,191 @@ window.renderCategoryGridSafe = function() {
   function renderMenuFisico() {
     const items    = getItems();
     const settings = getSettings();
+    const cfg      = getMFCfg();
 
-    const mfCfgNow = getMFCfg();
-    document.getElementById('mfNombre').textContent    = getNombre().toUpperCase();
-    document.getElementById('mfSubtitulo').textContent = getSubtitulo();
-    document.getElementById('mfSlogan').textContent    = getSlogan().toUpperCase();
-    const cierreEl = document.getElementById('mfCierre');
-    if (cierreEl) cierreEl.textContent = mfCfgNow.cierre || 'Gracias por preferirnos';
+    // ── Leer config del editor visual ──────────────────
+    const cp = cfg.colorPrimario || '#2D5A27';
+    const cn = cfg.colorNombre   || '#E8520A';
+    const cf = cfg.colorFondo    || '#F5EDD8';
+    const ce = cfg.colorEslogan  || '#6B3A2A';
+    const fuenteNombre = cfg.fuenteNombre || 'Oswald';
+    const fuentePlatos = cfg.fuentePlatos || 'Lato';
+    const tamano       = cfg.tamanoTexto  || 12;
+    const decorFernos  = cfg.decorFernos  !== false;
+    const decorLeaf    = cfg.decorLeaf    !== false;
+    const decorEmoji   = cfg.decorEmoji   || '🌿';
+    const mostrarDesc  = !!cfg.mostrarDesc;
+    const cols         = cfg.cols || 2;
+    const sede         = cfg.sede   || '';
+    const slogan       = cfg.slogan || '';
+    const cierre       = cfg.cierre || 'Gracias por preferirnos';
 
-    // Membrete: si existe, ocultar el header normal y mostrar la imagen
-    const mfHeader   = document.querySelector('.mf-header');
+    // ── Aplicar colores y fuentes a los estilos CSS del overlay ──
+    const mfDoc = document.getElementById('menuFisico');
+    if (mfDoc) {
+      mfDoc.style.background = cf;
+      mfDoc.style.fontFamily = `'${fuentePlatos}', sans-serif`;
+    }
+
+    // Aplicar colores CSS vars al overlay
+    const overlay = document.getElementById('menuFisicoOverlay');
+    if (overlay) {
+      overlay.style.setProperty('--mf-primario', cp);
+      overlay.style.setProperty('--mf-nombre',   cn);
+      overlay.style.setProperty('--mf-fondo',     cf);
+      overlay.style.setProperty('--mf-eslogan',   ce);
+    }
+
+    // ── Actualizar textos del header estático ──
+    const elNombre = document.getElementById('mfNombre');
+    const elSub    = document.getElementById('mfSubtitulo');
+    const elSlog   = document.getElementById('mfSlogan');
+    const elCierre = document.getElementById('mfCierre');
+    if (elNombre) { elNombre.textContent = getNombre().toUpperCase(); elNombre.style.color = cn; elNombre.style.fontFamily = `'${fuenteNombre}', sans-serif`; }
+    if (elSub)    elSub.textContent    = sede;
+    if (elSlog)   { elSlog.textContent = slogan.toUpperCase(); elSlog.style.background = ce; }
+    if (elCierre) { elCierre.textContent = cierre; elCierre.style.color = ce; }
+
+    // Aplicar color primario a bordes del header
+    const mfHeader = document.querySelector('.mf-header');
+    if (mfHeader) {
+      mfHeader.style.borderBottomColor = cp;
+    }
+
+    // ── Decorativos de esquinas ──
+    document.querySelectorAll('.mf-fern').forEach(el => {
+      el.style.display = decorFernos ? '' : 'none';
+      el.textContent   = decorEmoji;
+    });
+
+    // ── Membrete ──
     let membreteWrap = document.getElementById('mfMembreteImg');
-    const membrete   = mfCfgNow.membrete || null;
+    const membrete   = cfg.membrete || null;
     if (membrete) {
       if (!membreteWrap) {
         membreteWrap = document.createElement('div');
         membreteWrap.id = 'mfMembreteImg';
-        membreteWrap.style.cssText = 'width:100%;border-bottom:3px solid #2D5A27;overflow:hidden;position:relative;z-index:1;';
+        membreteWrap.style.cssText = `width:100%;border-bottom:3px solid ${cp};overflow:hidden;position:relative;z-index:1;`;
         membreteWrap.innerHTML = `<img src="${membrete}" style="width:100%;display:block;max-height:220px;object-fit:cover;">`;
         if (mfHeader) mfHeader.parentNode.insertBefore(membreteWrap, mfHeader);
       } else {
-        membreteWrap.querySelector('img').src = membrete;
+        membreteWrap.style.borderBottomColor = cp;
+        const img = membreteWrap.querySelector('img');
+        if (img) img.src = membrete;
       }
       if (mfHeader) mfHeader.style.display = 'none';
     } else {
       if (membreteWrap) membreteWrap.remove();
       if (mfHeader) mfHeader.style.display = '';
-      // Logo normal
+      // Logo
       const logoWrap = document.getElementById('mfLogoWrap');
       const logoPh   = document.getElementById('mfLogoPh');
       const logo     = getLogo();
       let logoImg    = logoWrap ? logoWrap.querySelector('img') : null;
       if (logo && logoWrap) {
-        if (!logoImg) {
-          logoImg = document.createElement('img');
-          logoImg.style.cssText = 'width:100%;height:100%;object-fit:contain;';
-          logoWrap.appendChild(logoImg);
-        }
+        if (!logoImg) { logoImg = document.createElement('img'); logoImg.style.cssText='width:100%;height:100%;object-fit:contain;'; logoWrap.appendChild(logoImg); }
         logoImg.src = logo;
         if (logoPh) logoPh.style.display = 'none';
+        // Aplicar color del borde del logo
+        logoWrap.style.borderColor = cp;
+        logoWrap.style.boxShadow   = `0 0 0 2px ${cf}, 0 0 0 4px ${cp}`;
       } else {
         if (logoImg) logoImg.remove();
-        if (logoPh) logoPh.style.display = '';
+        if (logoPh)  logoPh.style.display = '';
       }
     }
 
-    // Categorías (respetando ocultas del sistema Y configuración del menú físico)
-    const hidden = settings.hiddenCategories || [];
-    const mfCfgCat = getMFCfg();
-    const mfCatVis = mfCfgCat.catVisible || null;
-    const cats   = [...new Set(items.map(i => i.categoria).filter(Boolean))]
-                     .filter(c => !hidden.includes(c))
-                     .filter(c => !mfCatVis || mfCatVis[c] !== false);
+    // ── Eyebrow ──
+    const eyebrowEl = document.querySelector('.mf-eyebrow');
+    if (eyebrowEl) { eyebrowEl.style.color = cp; }
 
-    // Fotos: primero usar las configuradas en index.html, luego las del menú digital
-    const mfCfg  = getMFCfg();
-    const mfFotos = (mfCfg.fotos || []).filter(Boolean);
+    // ── Footer ──
+    const mfFooter = document.querySelector('.mf-footer');
+    if (mfFooter) mfFooter.style.borderTopColor = cp;
+
+    // ── Categorías ──
+    const hidden   = settings.hiddenCategories || [];
+    const mfCatVis = cfg.catVisible || null;
+    const cats     = [...new Set(items.map(i => i.categoria).filter(Boolean))]
+                       .filter(c => !hidden.includes(c))
+                       .filter(c => !mfCatVis || mfCatVis[c] !== false);
+
+    // ── Fotos ──
+    const mfFotos  = (cfg.fotos || []).filter(Boolean);
     const allFotos = items.map(i => i.foto).filter(Boolean);
     const catFotos = Object.values(settings.categoryImages || {}).filter(Boolean);
     const fotos    = mfFotos.length ? mfFotos : [...allFotos, ...catFotos].slice(0, 6);
-    const fotosL   = fotos.slice(0, 3);
-    const fotosR   = fotos.slice(3, 6);
 
-    // Categorías visibles según configuración de index.html
-    const mfCatVisible = mfCfg.catVisible || null;
-
-    // Distribuir cats en 2 columnas alternando
-    const colL = []; const colR = [];
-    cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
-
+    // ── Render ──
     function renderCat(cat) {
-      const catItems = items.filter(i => i.categoria === cat);
+      const catItems = items.filter(i => i.categoria === cat && i.disponible !== false);
       if (!catItems.length) return '';
-      return `<div class="mf-section-head">
-        <div class="mf-section-head-inner">${escMF(cat)}</div>
+      return `<div style="margin:10px 0 4px;">
+        <div style="display:inline-block;background:${cp};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:${Math.max(9,tamano-1)}px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;">${escMF(cat)}</div>
       </div>
-      <div>
-        ${catItems.map(item => `
-          <div class="mf-item">
-            <span class="mf-item-leaf">🌿</span>
-            <span class="mf-item-name">${escMF(item.nombre)}</span>
-            <span class="mf-item-dots"></span>
-            <span class="mf-item-price">${fmtMF(item.precioLocal || item.precioDomicilio || 0)}</span>
-          </div>`).join('')}
-      </div>`;
+      <div>${catItems.map(it => `
+        <div style="display:flex;align-items:baseline;padding:2px 0;">
+          ${decorLeaf ? `<span style="color:${cp};font-size:9px;margin-right:3px;">${escMF(decorEmoji)}</span>` : ''}
+          <div style="flex:1;min-width:0;">
+            <span style="font-size:${tamano}px;color:#1A1A1A;font-family:'${fuentePlatos}',sans-serif;">${escMF(it.nombre)}</span>
+            ${mostrarDesc && it.descripcion ? `<div style="font-size:${Math.max(8,tamano-2)}px;color:#888;line-height:1.3;">${escMF(it.descripcion)}</div>` : ''}
+          </div>
+          <span style="flex:0 0 auto;border-bottom:1.5px dotted rgba(0,0,0,.2);margin:0 3px 3px;flex-grow:1;"></span>
+          <span style="font-size:${tamano}px;font-weight:700;font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;">${fmtMF(it.precio||it.precioLocal||it.precioDomicilio||0)}</span>
+        </div>`).join('')}</div>`;
     }
 
     function renderFotos(arr) {
       if (!arr.length) return '';
-      const cls = arr.length <= 2 ? 'cols-2' : 'cols-3';
-      return `<div class="mf-photos ${cls}">
-        ${arr.map(f => `<div class="mf-photo"><img src="${f}" alt="plato"></div>`).join('')}
+      const gridCols = arr.length <= 2 ? '1fr 1fr' : '1fr 1fr 1fr';
+      return `<div style="display:grid;grid-template-columns:${gridCols};gap:4px;margin:8px 0;">
+        ${arr.map(f => `<div style="aspect-ratio:1.1;border-radius:5px;overflow:hidden;background:#ddd;">
+          <img src="${f}" alt="plato" style="width:100%;height:100%;object-fit:cover;">
+        </div>`).join('')}
       </div>`;
     }
 
     const body = document.getElementById('mfBody');
     if (!cats.length) {
-      body.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#999;font-size:13px;">
-        No hay platos configurados aún.</div>`;
+      body.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#999;font-size:13px;">No hay platos configurados aún.</div>`;
       return;
     }
 
-    body.innerHTML = `
-      <div class="mf-col mf-col-left">
-        ${colL.map(renderCat).join('')}
-        ${renderFotos(fotosL)}
-      </div>
-      <div class="mf-col">
-        ${colR.map(renderCat).join('')}
-        ${renderFotos(fotosR)}
+    if (cols === 1) {
+      // 1 columna
+      body.style.gridTemplateColumns = '1fr';
+      body.innerHTML = `<div style="padding:0 6px 12px;">
+        ${cats.map(renderCat).join('')}
+        ${renderFotos(fotos)}
       </div>`;
+    } else {
+      // 2 columnas
+      const colL = [], colR = [];
+      cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
+      const fotosL = fotos.slice(0,3), fotosR = fotos.slice(3,6);
+      body.style.gridTemplateColumns = '1fr 1fr';
+      body.innerHTML = `
+        <div class="mf-col mf-col-left" style="border-right-color:rgba(0,0,0,.1);">
+          ${colL.map(renderCat).join('')}
+          ${renderFotos(fotosL)}
+        </div>
+        <div class="mf-col">
+          ${colR.map(renderCat).join('')}
+          ${renderFotos(fotosR)}
+        </div>`;
+    }
+
+    // Cargar fuentes personalizadas si no están
+    const fontId = 'mfCustomFont';
+    let fontLink = document.getElementById(fontId);
+    if (!fontLink) {
+      fontLink = document.createElement('link');
+      fontLink.id  = fontId;
+      fontLink.rel = 'stylesheet';
+      document.head.appendChild(fontLink);
+    }
+    const fontsNeeded = encodeURIComponent(`${fuenteNombre}:700,900&family=${fuentePlatos}:400,700`);
+    fontLink.href = `https://fonts.googleapis.com/css2?family=${fontsNeeded}&display=swap`;
   }
 
   window.abrirMenuFisico = function() {
@@ -6904,7 +6962,6 @@ window.renderCategoryGridSafe = function() {
     overlay.classList.add('show');
     overlay.setAttribute('aria-hidden', 'false');
     document.getElementById('startScreen').classList.add('hidden');
-    // Mostrar botón guardar solo si hay sesión de administrador activa
     const guardarBtn = document.getElementById('mfGuardarBtn');
     if (guardarBtn) guardarBtn.style.display = sessionStorage.getItem('mfAdmin') ? '' : 'none';
   };
@@ -6928,10 +6985,11 @@ window.renderCategoryGridSafe = function() {
     const btn = document.querySelector('.mfo-dl-btn');
     if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
     try {
+      const cfg = getMFCfg();
       const menu = document.getElementById('menuFisico');
       const canvas = await html2canvas(menu, {
         scale: 3, useCORS: true, allowTaint: true,
-        backgroundColor: '#F5EDD8', logging: false
+        backgroundColor: cfg.colorFondo || '#F5EDD8', logging: false
       });
       const nombre = (getNombre()||'menu').replace(/\s+/g,'_').toLowerCase();
       const link = document.createElement('a');
@@ -6941,6 +6999,14 @@ window.renderCategoryGridSafe = function() {
     } catch(err) { console.error(err); }
     if (btn) { btn.textContent = '📥 Guardar'; btn.disabled = false; }
   };
+
+  // Re-render cuando cambia la config desde index.html
+  window.addEventListener('storage', e => {
+    if (e.key === 'helechos_menu_fisico_cfg') {
+      const overlay = document.getElementById('menuFisicoOverlay');
+      if (overlay && overlay.classList.contains('show')) renderMenuFisico();
+    }
+  });
 
 })();
 </script>
