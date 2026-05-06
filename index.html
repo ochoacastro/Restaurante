@@ -30,12 +30,17 @@
     if (raw) firebaseConfig = JSON.parse(raw);
   } catch(e) {}
 
+  // Config embebida como fallback automático (igual que menu.html)
   if (!firebaseConfig) {
-    // Sin config: disparar evento para que la UI muestre el modal
-    _fbReadyDispatched = true;
-    window.dispatchEvent(new Event('firebase-ready'));
-    // No continuar inicializando
-    throw new Error('Firebase no configurado aun');
+    firebaseConfig = {
+      apiKey:            "AIzaSyDqkmnJoldzILAY41ll_sQ4n29WM1XSvyA",
+      databaseURL:       "https://los-helechos-8-default-rtdb.firebaseio.com",
+      authDomain:        "los-helechos-8.firebaseapp.com",
+      projectId:         "los-helechos-8",
+      storageBucket:     "los-helechos-8.appspot.com",
+      messagingSenderId: "630169032531",
+      appId:             "1:630169032531:web:ce244307347e192277b3a6",
+    };
   }
 
   const app = initializeApp(firebaseConfig);
@@ -6643,11 +6648,18 @@ function saveConfig() {
   if (loginBrand) {
     localStorage.setItem('helechos_login_brand', loginBrand);
     const el = document.getElementById('loginBrandText'); if (el) el.textContent = loginBrand;
+    // Sincronizar al menú digital vía Firebase
+    config.loginBrand = loginBrand;
   }
   if (loginSub) {
     localStorage.setItem('helechos_login_sub', loginSub);
     const el = document.getElementById('loginSubText'); if (el) el.textContent = loginSub;
+    // Sincronizar al menú digital vía Firebase
+    config.loginSub = loginSub;
   }
+  // Re-sincronizar config completo con loginBrand/loginSub incluidos
+  localStorage.setItem('helechos_config', JSON.stringify(config));
+  fbSync('config', config);
   localStorage.setItem('helechos_login_emoji', loginEmoji);
   aplicarLoginIcon();
 
