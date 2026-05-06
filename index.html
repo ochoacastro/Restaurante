@@ -858,6 +858,62 @@
     -webkit-overflow-scrolling: touch;
   }
 
+  /* ── BOTÓN FLOTANTE GUARDAR MENÚ ── */
+  #btnGuardarMenuFlotante {
+    display: none;
+    position: sticky;
+    bottom: 16px;
+    margin: 16px 0 0;
+    width: 100%;
+    z-index: 200;
+    background: linear-gradient(135deg, #2E7D32, #43A047);
+    color: #fff;
+    border: none;
+    border-radius: 18px;
+    padding: 16px 20px;
+    font-size: 15px;
+    font-weight: 800;
+    font-family: inherit;
+    cursor: pointer;
+    box-shadow: 0 6px 24px rgba(46,125,50,0.45);
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    -webkit-tap-highlight-color: transparent;
+    animation: slideUpBtn 0.28s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  #btnGuardarMenuFlotante.visible { display: flex; }
+  #btnGuardarMenuFlotante:active {
+    transform: scale(0.97);
+    box-shadow: 0 3px 12px rgba(46,125,50,0.35);
+  }
+  #btnGuardarMenuFlotante .btn-save-badge {
+    position: absolute;
+    top: -9px; right: -9px;
+    background: #FF5722;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    min-width: 22px;
+    height: 22px;
+    border-radius: 11px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    border: 2px solid #fff;
+    animation: popBadge 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  }
+  @keyframes slideUpBtn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popBadge {
+    from { transform: scale(0.3); }
+    to   { transform: scale(1); }
+  }
+
   /* ── SECCIÓN LABEL ───────────────────────────────────── */
   .seccion-label {
     font-size: 12px; font-weight: 700;
@@ -3663,18 +3719,6 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     </div>
   </div>
 
-  <!-- Vista Previa Menú Digital -->
-  <div style="margin-bottom:12px;">
-    <button onclick="abrirVistaMenu()" style="width:100%;padding:16px 18px;background:linear-gradient(135deg,#1A1A1A,#333);color:#fff;border:none;border-radius:16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:12px;box-shadow:0 4px 18px rgba(0,0,0,0.22);touch-action:manipulation;">
-      <span style="font-size:24px;">📱</span>
-      <div style="text-align:left;">
-        <div>Vista previa del menú digital</div>
-        <div style="font-size:11px;font-weight:500;opacity:0.65;margin-top:2px;">Edita y previsualiza en tiempo real</div>
-      </div>
-      <span style="margin-left:auto;font-size:18px;">→</span>
-    </button>
-  </div>
-
   <!-- Productos -->
   <div class="cfg-acc" id="cfgacc-productos">
     <div class="cfg-acc-header" data-cfgacc="cfgacc-productos">
@@ -4041,6 +4085,10 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     </div>
   </div>
 
+      <button id="btnGuardarMenuFlotante" onclick="guardarMenuDesdeBotonFlotante()" style="position:relative;">
+        <span>💾 Guardar cambios en el menú</span>
+        <span class="btn-save-badge" id="btnGuardarMenuBadge">0</span>
+      </button>
       </div>
       <div id="drawer-slot-config" style="display:none;padding:14px 14px 20px;">
 
@@ -6978,6 +7026,13 @@ function abrirDrawer(key) {
 function cerrarDrawer() {
   if (!_drawerActual) return;
   const wasCarrito = _drawerActual === 'carrito';
+  // Si había cambios pendientes al cerrar editmenu, guardar automáticamente
+  if (_drawerActual === 'editmenu' && _menuCambiosPendientes > 0) {
+    guardarMenuLocalStorage();
+    _menuCambiosPendientes = 0;
+    const btn = document.getElementById('btnGuardarMenuFlotante');
+    if (btn) btn.classList.remove('visible');
+  }
   _drawerActual = null;
   cerrarPedidosPanel();
   document.getElementById('drawerOverlay').classList.remove('open');
@@ -7847,6 +7902,41 @@ function guardarPrecios() {
   renderMenu();
   renderPreciosConfig();
   showToast('✅ Precios guardados');
+}
+
+// ── Contador de cambios pendientes del menú ──────────────────────────
+let _menuCambiosPendientes = 0;
+let _menuGuardadoTimer = null;
+
+function registrarCambioMenu() {
+  // Solo activar si el drawer de editmenu está abierto
+  if (typeof _drawerActual === 'undefined' || _drawerActual !== 'editmenu') return;
+  _menuCambiosPendientes++;
+  const btn   = document.getElementById('btnGuardarMenuFlotante');
+  const badge = document.getElementById('btnGuardarMenuBadge');
+  if (btn) btn.classList.add('visible');
+  if (badge) {
+    badge.textContent = _menuCambiosPendientes;
+    // Re-animar badge al actualizar
+    badge.style.animation = 'none';
+    requestAnimationFrame(() => { badge.style.animation = ''; });
+  }
+}
+
+function guardarMenuDesdeBotonFlotante() {
+  _menuCambiosPendientes = 0;
+  const btn   = document.getElementById('btnGuardarMenuFlotante');
+  const badge = document.getElementById('btnGuardarMenuBadge');
+  if (btn) {
+    btn.classList.remove('visible');
+    // Feedback visual breve de confirmación
+    btn.style.background = 'linear-gradient(135deg,#1B5E20,#2E7D32)';
+    setTimeout(() => { btn.style.background = ''; }, 400);
+  }
+  if (badge) badge.textContent = '0';
+  // Guardar y sincronizar
+  guardarMenuLocalStorage();
+  showToast('✅ Menú guardado y sincronizado');
 }
 
 function guardarMenuLocalStorage() {
@@ -11243,7 +11333,7 @@ function guardarProducto() {
     showToast('✅ Producto agregado');
   }
 
-  guardarMenuLocalStorage();
+  registrarCambioMenu();
   renderProductosConfig();
   renderPreciosConfig();
   renderCategorias();
@@ -11262,7 +11352,7 @@ function eliminarProducto(idx) {
     if (idxActual < 0) { showToast('⚠️ El producto ya no existe'); renderProductosConfig(); return; }
     carrito = carrito.filter(c => c.nombre !== item.nombre);
     MENU.splice(idxActual, 1);
-    guardarMenuLocalStorage();
+    registrarCambioMenu();
     // Si la categoría activa ya no existe, volver a "Todos"
     const cats = new Set(MENU.map(i => i.categoria));
     if (!cats.has(catActiva)) catActiva = 'Todos';
@@ -13016,7 +13106,7 @@ function cfgRenderCategories() {
       if (hasItems && !confirm(`"${cat}" tiene platos. ¿Eliminar la categoría y sus platos?`)) return;
       if (hasItems) {
         MENU.splice(0, MENU.length, ...MENU.filter(i => i.categoria !== cat));
-        guardarMenuLocalStorage();
+        registrarCambioMenu();
         renderMenu();
         renderProductosConfig();
         renderPreciosConfig();
