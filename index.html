@@ -1798,14 +1798,19 @@
     display: flex; align-items: center; gap: 4px; flex: 1;
     font-size: 12px; color: var(--gris);
   }
-  .horario-time-input {
+  .horario-time-sel {
     border: 1.5px solid var(--borde); border-radius: 6px;
-    padding: 4px 6px; font-size: 13px; font-weight: 600;
+    padding: 4px 2px; font-size: 13px; font-weight: 700;
     color: var(--negro); background: var(--fondo);
-    outline: none; width: 74px; font-family: var(--font-num);
-    transition: border-color 0.2s;
+    outline: none; font-family: var(--font-num);
+    transition: border-color 0.2s; cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    text-align: center;
   }
-  .horario-time-input:focus { border-color: var(--rappi); background: var(--blanco); }
+  .horario-time-sel:focus { border-color: var(--rappi); background: var(--blanco); }
+  .horario-time-sel.sel-h  { width: 48px; }
+  .horario-time-sel.sel-m  { width: 48px; }
+  .horario-time-sel.sel-ap { width: 52px; }
   .horario-cerrado-label {
     flex: 1; font-size: 12px; font-weight: 600; color: var(--gris);
   }
@@ -6123,6 +6128,37 @@ function cargarHorariosConfig() {
   return JSON.parse(JSON.stringify(HORARIOS_DEFAULT));
 }
 
+// ── helpers hora 12h ──────────────────────────────────
+function _to12(val24) {
+  if (!val24) return { h: 6, m: 0, ap: 'AM' };
+  const [hh, mm] = val24.split(':').map(Number);
+  return { h: hh % 12 || 12, m: mm, ap: hh >= 12 ? 'PM' : 'AM' };
+}
+function _to24(h, m, ap) {
+  let hh = h % 12;
+  if (ap === 'PM') hh += 12;
+  return String(hh).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+function _hOpts(cur) {
+  return Array.from({length:12},(_,i)=>i+1).map(v=>`<option value="${v}"${v===cur?' selected':''}>${v}</option>`).join('');
+}
+function _mOpts(cur) {
+  return Array.from({length:12},(_,i)=>i*5).map(v=>`<option value="${v}"${v===cur?' selected':''}>${String(v).padStart(2,'0')}</option>`).join('');
+}
+function _apOpts(cur) {
+  return ['AM','PM'].map(v=>`<option value="${v}"${v===cur?' selected':''}>${v}</option>`).join('');
+}
+function _timeSelects(id, val24) {
+  const {h, m, ap} = _to12(val24);
+  // Round minutes to nearest 5
+  const m5 = Math.round(m / 5) * 5 % 60;
+  return `<select class="horario-time-sel sel-h"  id="${id}-h"  onchange="syncHorarioSel('${id}')">${_hOpts(h)}</select>`
+       + `<span style="font-weight:800;font-size:13px;color:var(--negro);padding:0 1px;">:</span>`
+       + `<select class="horario-time-sel sel-m"  id="${id}-m"  onchange="syncHorarioSel('${id}')">${_mOpts(m5)}</select>`
+       + `<select class="horario-time-sel sel-ap" id="${id}-ap" onchange="syncHorarioSel('${id}')">${_apOpts(ap)}</select>`;
+}
+function syncHorarioSel(id) { /* valor se lee al guardar */ }
+
 function renderHorarios() {
   const wrap = document.getElementById('horariosWrap');
   if (!wrap) return;
@@ -6136,9 +6172,9 @@ function renderHorarios() {
       </label>
       ${h.abierto
         ? `<div class="horario-times">
-            <input type="time" class="horario-time-input" id="hdesde-${i}" value="${h.desde}">
-            <span style="color:var(--gris);font-size:11px;">a</span>
-            <input type="time" class="horario-time-input" id="hhasta-${i}" value="${h.hasta}">
+            ${_timeSelects('hdesde-'+i, h.desde)}
+            <span style="color:var(--gris);font-size:11px;padding:0 2px;">a</span>
+            ${_timeSelects('hhasta-'+i, h.hasta)}
            </div>`
         : `<div class="horario-cerrado-label">Cerrado</div>`}
     </div>`).join('');
@@ -6155,10 +6191,14 @@ function toggleHorarioDia(idx, abierto) {
 function leerHorariosDelForm() {
   const horarios = cargarHorariosConfig();
   horarios.forEach((h, i) => {
-    const desdeEl = document.getElementById('hdesde-' + i);
-    const hastaEl = document.getElementById('hhasta-' + i);
-    if (desdeEl) h.desde = desdeEl.value || h.desde;
-    if (hastaEl) h.hasta = hastaEl.value || h.hasta;
+    const dH  = document.getElementById('hdesde-'+i+'-h');
+    const dM  = document.getElementById('hdesde-'+i+'-m');
+    const dAP = document.getElementById('hdesde-'+i+'-ap');
+    const hH  = document.getElementById('hhasta-'+i+'-h');
+    const hM  = document.getElementById('hhasta-'+i+'-m');
+    const hAP = document.getElementById('hhasta-'+i+'-ap');
+    if (dH && dM && dAP) h.desde = _to24(+dH.value, +dM.value, dAP.value);
+    if (hH && hM && hAP) h.hasta = _to24(+hH.value, +hM.value, hAP.value);
   });
   return horarios;
 }
@@ -6273,7 +6313,7 @@ function renderClosedHorarioOverlay() {
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:7.5px;color:#2a2a2a;padding:1.5px 3px;border-radius:3px;${!h.abierto ? 'opacity:0.4;' : ''}background:${h.abierto ? 'rgba(92,122,58,0.07)' : 'transparent'};">
       <span style="font-weight:700;min-width:22px;">${h.dia}</span>
       ${h.abierto
-        ? `<span style="color:#1a5c1a;font-weight:600;">${h.desde}–${h.hasta}</span>`
+        ? `<span style="color:#1a5c1a;font-weight:600;">${(d=>{const p=_to12(d);return p.h+":"+(p.m<10?"0"+p.m:p.m)+" "+p.ap;})(h.desde)}–${(d=>{const p=_to12(d);return p.h+":"+(p.m<10?"0"+p.m:p.m)+" "+p.ap;})(h.hasta)}</span>`
         : `<span style="color:#b44;font-style:italic;font-size:7px;">Cerrado</span>`}
     </div>`).join('');
 }
