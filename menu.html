@@ -5397,6 +5397,33 @@ async function conectar(cfg) {
   }, e => console.warn(e));
   window._fbUnsubDecorImgs = () => off(rDecorImgs);
 
+  // Escuchar cambios en config del restaurante (nombre, slogan, etc.)
+  if (window._fbUnsubConfig) window._fbUnsubConfig();
+  const rConfig = ref(db, 'helechos/config');
+  onValue(rConfig, snap => {
+    if (!snap.exists()) return;
+    const val = snap.val();
+    if (!val || typeof val !== 'object') return;
+    try {
+      const existing = JSON.parse(localStorage.getItem('helechos_config') || '{}');
+      const merged = { ...existing, ...val };
+      localStorage.setItem('helechos_config', JSON.stringify(merged));
+      // loginBrand y loginSub pueden venir en el config
+      const brand = val.loginBrand || val.nombre;
+      const sub   = val.loginSub   || val.slogan;
+      if (brand && brand !== 'Mi Restaurante') {
+        localStorage.setItem('helechos_login_brand', brand);
+      }
+      if (sub) {
+        localStorage.setItem('helechos_login_sub', sub);
+      }
+    } catch(_) {}
+    if (window.applyTheme) window.applyTheme();
+    if (window.render) window.render();
+    if (window.showSyncBadge) window.showSyncBadge('🔄 Configuración del restaurante actualizada');
+  }, e => console.warn(e));
+  window._fbUnsubConfig = () => off(rConfig);
+
   // Escuchar cambios en membrete del menú físico (cabecera digital)
   if (window._fbUnsubMfCfg) window._fbUnsubMfCfg();
   const rMfCfg = ref(db, 'helechos/menuFisicoCfg');
@@ -5410,6 +5437,11 @@ async function conectar(cfg) {
       localStorage.setItem('helechos_menu_fisico_cfg', JSON.stringify(merged));
     } catch(_) {}
     renderBusinessLogo();
+    // Re-renderizar menú físico si está abierto
+    const overlay = document.getElementById('menuFisicoOverlay');
+    if (overlay && overlay.classList.contains('show') && typeof window.abrirMenuFisico === 'function') {
+      window.abrirMenuFisico();
+    }
   }, e => console.warn(e));
   window._fbUnsubMfCfg = () => off(rMfCfg);
 
