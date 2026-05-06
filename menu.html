@@ -1789,6 +1789,183 @@
   .seg-despachado h2 { font-size: 20px; font-weight: 900; color: #0D47A1; margin-bottom: 6px; }
   .seg-despachado p { font-size: 13px; color: var(--gris); line-height: 1.6; }
 
+
+  /* ══════════════════════════════════════════════
+     MENÚ FÍSICO — overlay modo restaurante
+  ══════════════════════════════════════════════ */
+  #menuFisicoOverlay {
+    position: fixed; inset: 0;
+    background: #2a2a2a;
+    z-index: 8000;
+    display: none;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  #menuFisicoOverlay.show { display: flex; }
+
+  /* Barra superior */
+  .mfo-topbar {
+    background: #111;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    flex-shrink: 0;
+    border-bottom: 1px solid #333;
+  }
+  .mfo-back-btn {
+    background: #333; border: none; border-radius: 8px;
+    color: #ccc; font-size: 13px; font-weight: 700;
+    padding: 7px 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mfo-back-btn:active { background: #444; }
+  .mfo-topbar-title { flex: 1; font-size: 14px; font-weight: 700; color: #e0e0e0; }
+  .mfo-dl-btn {
+    background: #E8520A; border: none; border-radius: 8px;
+    color: #fff; font-size: 12px; font-weight: 700;
+    padding: 7px 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 5px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .mfo-dl-btn:active { background: #c44408; }
+
+  /* Área de scroll con el menú */
+  .mfo-scroll {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: flex;
+    justify-content: center;
+    background: #333;
+    padding: 16px 10px 30px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* ── MENÚ FÍSICO ── */
+  #menuFisico {
+    width: 100%;
+    max-width: 600px;
+    background: #F5EDD8;
+    position: relative;
+    font-family: 'Lato', sans-serif;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0,0,0,.4);
+  }
+  #menuFisico::before {
+    content: '';
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 5% 5%, rgba(93,70,35,.1) 0%, transparent 40%),
+      radial-gradient(ellipse at 95% 5%, rgba(93,70,35,.1) 0%, transparent 40%),
+      radial-gradient(ellipse at 5% 95%, rgba(93,70,35,.1) 0%, transparent 40%),
+      radial-gradient(ellipse at 95% 95%, rgba(93,70,35,.1) 0%, transparent 40%);
+    pointer-events: none; z-index: 0;
+  }
+  #menuFisico > * { position: relative; z-index: 1; }
+
+  /* Header menú físico */
+  .mf-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 20px 12px;
+    border-bottom: 3px solid #2D5A27;
+  }
+  .mf-logo-wrap {
+    width: 90px; height: 90px; flex-shrink: 0;
+    border-radius: 50%; border: 3px solid #2D5A27;
+    background: #EDE0C4;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px #F5EDD8, 0 0 0 4px #2D5A27;
+  }
+  .mf-logo-wrap img { width: 100%; height: 100%; object-fit: contain; }
+  .mf-logo-ph { font-size: 10px; color: #aaa; text-align: center; padding: 6px; line-height: 1.3; }
+  .mf-title-block { flex: 1; text-align: center; }
+  .mf-eyebrow {
+    font-size: 10px; font-weight: 700; color: #2D5A27;
+    letter-spacing: 3px; text-transform: uppercase;
+  }
+  .mf-name {
+    font-size: min(7vw, 38px); font-weight: 900; color: #E8520A;
+    line-height: 1; text-transform: uppercase; letter-spacing: -1px;
+    font-family: 'Oswald', sans-serif;
+  }
+  .mf-subtitle {
+    font-size: 15px; font-style: italic; color: #1A1A1A;
+    font-family: 'Playfair Display', serif; margin-top: 1px;
+  }
+  .mf-tagline-wrap { margin-top: 5px; }
+  .mf-tagline-bar {
+    background: #6B3A2A; color: #fff;
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 2px; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 3px; display: inline-block;
+  }
+
+  /* Body 2 col */
+  .mf-body {
+    display: grid; grid-template-columns: 1fr 1fr;
+    padding: 0 12px 14px;
+  }
+  .mf-col { padding: 8px 6px; }
+  .mf-col-left { border-right: 1.5px solid rgba(45,90,39,.25); }
+
+  /* Section head */
+  .mf-section-head { margin: 8px 0 5px; }
+  .mf-section-head-inner {
+    background: #2D5A27; color: #fff;
+    font-size: 11px; font-weight: 700; letter-spacing: 1.5px;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 4px;
+    display: inline-block;
+  }
+
+  /* Items */
+  .mf-item { display: flex; align-items: baseline; padding: 2px 0; }
+  .mf-item-leaf { color: #3D7A35; font-size: 9px; margin-right: 3px; flex-shrink: 0; }
+  .mf-item-name { font-size: 11.5px; color: #1A1A1A; flex: 1; line-height: 1.3; }
+  .mf-item-dots {
+    flex: 1; min-width: 10px;
+    border-bottom: 1.5px dotted rgba(0,0,0,.2);
+    margin: 0 3px; align-self: flex-end; margin-bottom: 3px;
+  }
+  .mf-item-price {
+    font-size: 11.5px; font-weight: 700; color: #1A1A1A;
+    white-space: nowrap; font-family: 'Oswald', sans-serif;
+  }
+
+  /* Fotos */
+  .mf-photos { display: grid; gap: 5px; margin: 8px 0; }
+  .mf-photos.cols-2 { grid-template-columns: 1fr 1fr; }
+  .mf-photos.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .mf-photo {
+    aspect-ratio: 1.1; border-radius: 6px; overflow: hidden;
+    background: #EDE0C4; border: 2px solid #EDE0C4;
+  }
+  .mf-photo img { width: 100%; height: 100%; object-fit: cover; }
+
+  /* Footer */
+  .mf-footer {
+    text-align: center; padding: 8px 16px 14px;
+    border-top: 2px solid #2D5A27;
+  }
+  .mf-footer-text {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px; font-style: italic; color: #6B3A2A;
+  }
+
+  /* Helechos decorativos */
+  .mf-fern {
+    position: absolute; opacity: .12;
+    pointer-events: none; font-size: 48px; user-select: none; z-index: 0;
+  }
+  .mf-fern.tl { top: 0; left: 0; transform: rotate(-30deg); }
+  .mf-fern.tr { top: 0; right: 0; transform: rotate(30deg); }
+  .mf-fern.bl { bottom: 0; left: 0; transform: rotate(150deg); }
+  .mf-fern.br { bottom: 0; right: 0; transform: rotate(-150deg); }
+
 </style>
 </head>
 <body>
@@ -3421,6 +3598,10 @@ function render(){
 }
 
 function openApp(selectedMode){
+  // Modo restaurante → mostrar menú físico directamente
+  if (selectedMode === 'restaurante') {
+    if (window.abrirMenuFisico) { window.abrirMenuFisico(); return; }
+  }
   mode = selectedMode;
   // Solo persistir si es clásico — restaurante/domicilio siempre inician desde el inicio al recargar
   try { localStorage.removeItem('helechos_last_mode'); } catch(e) {}
@@ -3560,6 +3741,7 @@ function renderPinPad(){
       }
       if(k === '✓'){
         if(_h(pinBuffer) === getAdminPinHash()){
+          sessionStorage.setItem('mfAdmin', '1');
           hideAdminLogin();
           openEditor();
         } else {
@@ -6467,6 +6649,257 @@ window.renderCategoryGridSafe = function() {
 
 })();
 
+</script>
+
+
+<!-- ══════════════════════════════════════════════
+     MENÚ FÍSICO — abre cuando cliente elige Restaurante
+══════════════════════════════════════════════ -->
+<div id="menuFisicoOverlay" aria-hidden="true">
+
+  <div class="mfo-topbar">
+    <div class="mfo-topbar-title" style="padding-left:4px;">🌿 Menú del Restaurante</div>
+  </div>
+
+  <div class="mfo-scroll">
+    <div id="menuFisico">
+      <div class="mf-fern tl">🌿</div>
+      <div class="mf-fern tr">🌿</div>
+      <div class="mf-fern bl">🌿</div>
+      <div class="mf-fern br">🌿</div>
+
+      <div class="mf-header">
+        <div class="mf-logo-wrap" id="mfLogoWrap">
+          <div class="mf-logo-ph" id="mfLogoPh">Logo</div>
+        </div>
+        <div class="mf-title-block">
+          <div class="mf-eyebrow">Restaurante</div>
+          <div class="mf-name" id="mfNombre">LOS HELECHOS</div>
+          <div class="mf-subtitle" id="mfSubtitulo">La Tupia</div>
+          <div class="mf-tagline-wrap">
+            <span class="mf-tagline-bar" id="mfSlogan">SABOR, NATURALEZA Y TRADICIÓN</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mf-body" id="mfBody">
+        <div style="grid-column:1/-1;text-align:center;padding:30px;color:#999;font-size:13px;">
+          Cargando menú...
+        </div>
+      </div>
+
+      <div class="mf-footer">
+        <div class="mf-footer-text" id="mfCierre">Gracias por preferirnos</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════
+// MENÚ FÍSICO — lógica integrada en menu.html
+// ══════════════════════════════════════════════════
+(function() {
+
+  function fmtMF(n) {
+    return '$' + Number(n||0).toLocaleString('es-CO');
+  }
+  function escMF(s) {
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+  function getNombre() {
+    try { const c = JSON.parse(localStorage.getItem('helechos_config')||'{}'); if(c.nombre && c.nombre!=='Mi Restaurante') return c.nombre; } catch(e){}
+    return 'MI RESTAURANTE';
+  }
+  function getMFCfg() {
+    try { return JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}'); } catch(e) { return {}; }
+  }
+  function getSubtitulo() {
+    const mf = getMFCfg();
+    if (mf.sede) return mf.sede;
+    try { const c = JSON.parse(localStorage.getItem('helechos_config')||'{}'); if(c.subtitulo) return c.subtitulo; } catch(e){}
+    return '';
+  }
+  function getSlogan() {
+    const mf = getMFCfg();
+    if (mf.slogan) return mf.slogan;
+    try { const c = JSON.parse(localStorage.getItem('helechos_config')||'{}'); if(c.slogan) return c.slogan; } catch(e){}
+    return 'SABOR, NATURALEZA Y TRADICIÓN';
+  }
+  function getLogo() {
+    try {
+      const s = JSON.parse(localStorage.getItem('helechos_menu_settings_v1')||'{}');
+      if (s.businessLogo) return s.businessLogo;
+    } catch(e){}
+    return localStorage.getItem('helechos_logo') || '';
+  }
+  function getItems() {
+    try { return JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){ return []; }
+  }
+  function getSettings() {
+    try { return JSON.parse(localStorage.getItem('helechos_menu_settings_v1')||'{}'); } catch(e){ return {}; }
+  }
+
+  function renderMenuFisico() {
+    const items    = getItems();
+    const settings = getSettings();
+
+    const mfCfgNow = getMFCfg();
+    document.getElementById('mfNombre').textContent    = getNombre().toUpperCase();
+    document.getElementById('mfSubtitulo').textContent = getSubtitulo();
+    document.getElementById('mfSlogan').textContent    = getSlogan().toUpperCase();
+    const cierreEl = document.getElementById('mfCierre');
+    if (cierreEl) cierreEl.textContent = mfCfgNow.cierre || 'Gracias por preferirnos';
+
+    // Membrete: si existe, ocultar el header normal y mostrar la imagen
+    const mfHeader   = document.querySelector('.mf-header');
+    let membreteWrap = document.getElementById('mfMembreteImg');
+    const membrete   = mfCfgNow.membrete || null;
+    if (membrete) {
+      if (!membreteWrap) {
+        membreteWrap = document.createElement('div');
+        membreteWrap.id = 'mfMembreteImg';
+        membreteWrap.style.cssText = 'width:100%;border-bottom:3px solid #2D5A27;overflow:hidden;position:relative;z-index:1;';
+        membreteWrap.innerHTML = `<img src="${membrete}" style="width:100%;display:block;max-height:220px;object-fit:cover;">`;
+        if (mfHeader) mfHeader.parentNode.insertBefore(membreteWrap, mfHeader);
+      } else {
+        membreteWrap.querySelector('img').src = membrete;
+      }
+      if (mfHeader) mfHeader.style.display = 'none';
+    } else {
+      if (membreteWrap) membreteWrap.remove();
+      if (mfHeader) mfHeader.style.display = '';
+      // Logo normal
+      const logoWrap = document.getElementById('mfLogoWrap');
+      const logoPh   = document.getElementById('mfLogoPh');
+      const logo     = getLogo();
+      let logoImg    = logoWrap ? logoWrap.querySelector('img') : null;
+      if (logo && logoWrap) {
+        if (!logoImg) {
+          logoImg = document.createElement('img');
+          logoImg.style.cssText = 'width:100%;height:100%;object-fit:contain;';
+          logoWrap.appendChild(logoImg);
+        }
+        logoImg.src = logo;
+        if (logoPh) logoPh.style.display = 'none';
+      } else {
+        if (logoImg) logoImg.remove();
+        if (logoPh) logoPh.style.display = '';
+      }
+    }
+
+    // Categorías (respetando ocultas del sistema Y configuración del menú físico)
+    const hidden = settings.hiddenCategories || [];
+    const mfCfgCat = getMFCfg();
+    const mfCatVis = mfCfgCat.catVisible || null;
+    const cats   = [...new Set(items.map(i => i.categoria).filter(Boolean))]
+                     .filter(c => !hidden.includes(c))
+                     .filter(c => !mfCatVis || mfCatVis[c] !== false);
+
+    // Fotos: primero usar las configuradas en index.html, luego las del menú digital
+    const mfCfg  = getMFCfg();
+    const mfFotos = (mfCfg.fotos || []).filter(Boolean);
+    const allFotos = items.map(i => i.foto).filter(Boolean);
+    const catFotos = Object.values(settings.categoryImages || {}).filter(Boolean);
+    const fotos    = mfFotos.length ? mfFotos : [...allFotos, ...catFotos].slice(0, 6);
+    const fotosL   = fotos.slice(0, 3);
+    const fotosR   = fotos.slice(3, 6);
+
+    // Categorías visibles según configuración de index.html
+    const mfCatVisible = mfCfg.catVisible || null;
+
+    // Distribuir cats en 2 columnas alternando
+    const colL = []; const colR = [];
+    cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
+
+    function renderCat(cat) {
+      const catItems = items.filter(i => i.categoria === cat);
+      if (!catItems.length) return '';
+      return `<div class="mf-section-head">
+        <div class="mf-section-head-inner">${escMF(cat)}</div>
+      </div>
+      <div>
+        ${catItems.map(item => `
+          <div class="mf-item">
+            <span class="mf-item-leaf">🌿</span>
+            <span class="mf-item-name">${escMF(item.nombre)}</span>
+            <span class="mf-item-dots"></span>
+            <span class="mf-item-price">${fmtMF(item.precioLocal || item.precioDomicilio || 0)}</span>
+          </div>`).join('')}
+      </div>`;
+    }
+
+    function renderFotos(arr) {
+      if (!arr.length) return '';
+      const cls = arr.length <= 2 ? 'cols-2' : 'cols-3';
+      return `<div class="mf-photos ${cls}">
+        ${arr.map(f => `<div class="mf-photo"><img src="${f}" alt="plato"></div>`).join('')}
+      </div>`;
+    }
+
+    const body = document.getElementById('mfBody');
+    if (!cats.length) {
+      body.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:30px;color:#999;font-size:13px;">
+        No hay platos configurados aún.</div>`;
+      return;
+    }
+
+    body.innerHTML = `
+      <div class="mf-col mf-col-left">
+        ${colL.map(renderCat).join('')}
+        ${renderFotos(fotosL)}
+      </div>
+      <div class="mf-col">
+        ${colR.map(renderCat).join('')}
+        ${renderFotos(fotosR)}
+      </div>`;
+  }
+
+  window.abrirMenuFisico = function() {
+    renderMenuFisico();
+    const overlay = document.getElementById('menuFisicoOverlay');
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden', 'false');
+    document.getElementById('startScreen').classList.add('hidden');
+    // Mostrar botón guardar solo si hay sesión de administrador activa
+    const guardarBtn = document.getElementById('mfGuardarBtn');
+    if (guardarBtn) guardarBtn.style.display = sessionStorage.getItem('mfAdmin') ? '' : 'none';
+  };
+
+  window.cerrarMenuFisico = function() {
+    const overlay = document.getElementById('menuFisicoOverlay');
+    overlay.classList.remove('show');
+    overlay.setAttribute('aria-hidden', 'true');
+    document.getElementById('startScreen').classList.remove('hidden');
+    document.getElementById('app').classList.add('hidden');
+  };
+
+  window.descargarMenuFisicoPNG = async function() {
+    if (!window.html2canvas) {
+      const s = document.createElement('script');
+      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      s.onload = () => window.descargarMenuFisicoPNG();
+      document.head.appendChild(s);
+      return;
+    }
+    const btn = document.querySelector('.mfo-dl-btn');
+    if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+    try {
+      const menu = document.getElementById('menuFisico');
+      const canvas = await html2canvas(menu, {
+        scale: 3, useCORS: true, allowTaint: true,
+        backgroundColor: '#F5EDD8', logging: false
+      });
+      const nombre = (getNombre()||'menu').replace(/\s+/g,'_').toLowerCase();
+      const link = document.createElement('a');
+      link.download = `menu_${nombre}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    } catch(err) { console.error(err); }
+    if (btn) { btn.textContent = '📥 Guardar'; btn.disabled = false; }
+  };
+
+})();
 </script>
 
 </body>
