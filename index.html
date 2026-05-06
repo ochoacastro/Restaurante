@@ -16665,7 +16665,6 @@ function mfeGuardarDesdeEditor() {
   if (mfSlogan) mfSlogan.value = cfg.slogan;
   if (mfCierre) mfCierre.value = cfg.cierre;
   _mfeFotos = cfg.fotos;
-  _mfeMembrete = _mfeMembrete2;
   if (window.showToast) showToast('✅ Menú restaurante guardado');
   if (window.fbSync)    fbSync('menuFisicoCfg', cfg);
 }
