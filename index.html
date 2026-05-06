@@ -845,6 +845,7 @@
   body.dark .drawer-handle-pill { background: #333; }
   body.dark .drawer-close-btn { background: #2A2A2A; color: #CCC; }
   body.dark .drawer-title { color: #F0F0F0; }
+  body.dark .drawer-sheet { background: #181818; }
   .drawer-body {
     flex: 1; overflow-y: auto;
     padding: 14px 14px;
@@ -1802,41 +1803,9 @@
     padding: 4px 6px; font-size: 13px; font-weight: 600;
     color: var(--negro); background: var(--fondo);
     outline: none; width: 74px; font-family: var(--font-num);
-    transition: border-color 0.2s; cursor: pointer;
+    transition: border-color 0.2s;
   }
   .horario-time-input:focus { border-color: var(--rappi); background: var(--blanco); }
-
-  /* ── TIME PICKER MODAL ── */
-  #timePickerOverlay {
-    display: none; position: fixed; inset: 0; z-index: 9999;
-    background: rgba(0,0,0,0.55); align-items: flex-end; justify-content: center;
-  }
-  #timePickerOverlay.open { display: flex; }
-  #timePickerModal {
-    width: 100%; max-width: 480px;
-    background: #1C1C1E; border-radius: 24px 24px 0 0;
-    padding: 0 0 24px;
-    box-shadow: 0 -8px 40px rgba(0,0,0,0.6);
-    animation: slideUpTP 0.28s ease;
-  }
-  @keyframes slideUpTP { from { transform: translateY(100%); } to { transform: translateY(0); } }
-  #timePickerHandle { width: 40px; height: 4px; background: #48484A; border-radius: 4px; margin: 12px auto 6px; }
-  #timePickerLabel { text-align: center; font-size: 13px; font-weight: 600; color: #8E8E93; padding: 4px 0 8px; letter-spacing: 0.3px; }
-  .tp-wheels { display: flex; align-items: center; justify-content: center; height: 216px; position: relative; overflow: hidden; }
-  .tp-wheel { width: 110px; height: 216px; overflow-y: scroll; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-  .tp-wheel::-webkit-scrollbar { display: none; }
-  .tp-wheel-item { height: 72px; display: flex; align-items: center; justify-content: center; font-size: 36px; font-weight: 700; color: #8E8E93; scroll-snap-align: center; cursor: pointer; transition: color 0.15s, font-size 0.15s; font-family: var(--font-num); user-select: none; }
-  .tp-wheel-item.selected { color: #FFFFFF; font-size: 40px; }
-  .tp-ampm-item { height: 72px; display: flex; align-items: center; justify-content: center; font-size: 28px; font-weight: 800; color: #8E8E93; scroll-snap-align: center; cursor: pointer; transition: color 0.15s; user-select: none; }
-  .tp-ampm-item.selected { color: #FFFFFF; }
-  .tp-selector { position: absolute; top: 50%; left: 0; right: 0; transform: translateY(-50%); height: 72px; pointer-events: none; border-top: 1px solid #3A3A3C; border-bottom: 1px solid #3A3A3C; }
-  .tp-fade-top, .tp-fade-bottom { position: absolute; left: 0; right: 0; height: 72px; pointer-events: none; z-index: 2; }
-  .tp-fade-top { top: 0; background: linear-gradient(to bottom, #1C1C1E, transparent); }
-  .tp-fade-bottom { bottom: 0; background: linear-gradient(to top, #1C1C1E, transparent); }
-  .tp-buttons { display: flex; gap: 10px; padding: 12px 16px 0; }
-  .tp-btn { flex: 1; padding: 16px; border: none; border-radius: 14px; font-size: 17px; font-weight: 700; font-family: inherit; cursor: pointer; }
-  .tp-btn-cancel { background: #2C2C2E; color: #EBEBF5; }
-  .tp-btn-ok     { background: #7B1FA2; color: #fff; }
   .horario-cerrado-label {
     flex: 1; font-size: 12px; font-weight: 600; color: var(--gris);
   }
@@ -2482,7 +2451,7 @@
 
   /* ── Acordeón config avanzada ── */
   .cfg-acc {
-    border: 1.5px solid var(--borde); border-radius: 16px; overflow: hidden;
+    border: 1.5px solid rgba(123,31,162,0.25); border-radius: 16px; overflow: hidden;
     margin-bottom: 10px; background: var(--blanco);
   }
   .cfg-acc-header {
@@ -2500,9 +2469,21 @@
   /* FIX: quitar overflow:hidden cuando está abierto — si no, el file picker no se puede abrir en iOS/Android */
   .cfg-acc.open .cfg-acc-body { max-height: 9999px; overflow: visible; }
   .cfg-acc-inner { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .cfg-acc.open .cfg-acc-header { background: rgba(255,68,26,.06); }
-  .cfg-acc.open .cfg-acc-title { color: var(--rappi); }
-  .cfg-acc.open .cfg-acc-arrow { color: var(--rappi); }
+  .cfg-acc.open .cfg-acc-header { background: rgba(123,31,162,0.08); border-bottom: 1px solid rgba(123,31,162,0.15); }
+  .cfg-acc.open .cfg-acc-title { color: #7B1FA2; }
+  .cfg-acc.open .cfg-acc-arrow { color: #7B1FA2; }
+
+  /* dark mode cfg-acc */
+  body.dark .cfg-acc {
+    background: #242424;
+    border-color: rgba(156,39,176,0.35);
+  }
+  body.dark .cfg-acc-title { color: #F0F0F0; }
+  body.dark .cfg-acc-sub   { color: #888; }
+  body.dark .cfg-acc-arrow { color: #888; }
+  body.dark .cfg-acc.open .cfg-acc-header { background: rgba(123,31,162,0.18); }
+  body.dark .cfg-acc.open .cfg-acc-title  { color: #CE93D8; }
+  body.dark .cfg-acc.open .cfg-acc-arrow  { color: #CE93D8; }
 
   /* ── Pagos ── */
   .payment-list { display: flex; flex-direction: column; gap: 8px; }
@@ -6060,13 +6041,6 @@ function cargarHorariosConfig() {
   return JSON.parse(JSON.stringify(HORARIOS_DEFAULT));
 }
 
-function _fmt24a12(t24) {
-  if (!t24) return '--:--';
-  var parts = t24.split(':'), h = parseInt(parts[0]), m = parseInt(parts[1]);
-  var ampm = h < 12 ? 'AM' : 'PM', h12 = h % 12 || 12;
-  return (h12 < 10 ? '0' : '') + h12 + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
-}
-
 function renderHorarios() {
   const wrap = document.getElementById('horariosWrap');
   if (!wrap) return;
@@ -6080,9 +6054,9 @@ function renderHorarios() {
       </label>
       ${h.abierto
         ? `<div class="horario-times">
-            <button type="button" class="horario-time-input" id="hdesde-${i}" data-val24="${h.desde}" onclick="abrirTimePicker('hdesde-${i}','Hora de apertura')">${_fmt24a12(h.desde)}</button>
+            <input type="time" class="horario-time-input" id="hdesde-${i}" value="${h.desde}">
             <span style="color:var(--gris);font-size:11px;">a</span>
-            <button type="button" class="horario-time-input" id="hhasta-${i}" data-val24="${h.hasta}" onclick="abrirTimePicker('hhasta-${i}','Hora de cierre')">${_fmt24a12(h.hasta)}</button>
+            <input type="time" class="horario-time-input" id="hhasta-${i}" value="${h.hasta}">
            </div>`
         : `<div class="horario-cerrado-label">Cerrado</div>`}
     </div>`).join('');
@@ -6101,8 +6075,8 @@ function leerHorariosDelForm() {
   horarios.forEach((h, i) => {
     const desdeEl = document.getElementById('hdesde-' + i);
     const hastaEl = document.getElementById('hhasta-' + i);
-    if (desdeEl && desdeEl.dataset.val24) h.desde = desdeEl.dataset.val24;
-    if (hastaEl && hastaEl.dataset.val24) h.hasta = hastaEl.dataset.val24;
+    if (desdeEl) h.desde = desdeEl.value || h.desde;
+    if (hastaEl) h.hasta = hastaEl.value || h.hasta;
   });
   return horarios;
 }
@@ -15901,129 +15875,5 @@ function renderPedido(p) {
 </div>
 <!-- fin KDS inline -->
 
-
-<!-- ═══════════════════════════════════════════════════════════
-     TIME PICKER (rueda scroll estilo iOS)
-     ═══════════════════════════════════════════════════════════ -->
-<div id="timePickerOverlay" onclick="_tpClickOutside(event)">
-  <div id="timePickerModal">
-    <div id="timePickerHandle"></div>
-    <div id="timePickerLabel">Seleccionar hora</div>
-    <div class="tp-wheels">
-      <div class="tp-fade-top"></div>
-      <div class="tp-fade-bottom"></div>
-      <div class="tp-selector"></div>
-      <div class="tp-wheel" id="tpWheelAmpm"></div>
-      <div class="tp-wheel" id="tpWheelH"></div>
-      <div class="tp-wheel" id="tpWheelM"></div>
-    </div>
-    <div class="tp-buttons">
-      <button class="tp-btn tp-btn-cancel" onclick="cerrarTimePicker()">Cancelar</button>
-      <button class="tp-btn tp-btn-ok" onclick="confirmarTimePicker()">Listo</button>
-    </div>
-  </div>
-</div>
-
-<script>
-(function() {
-  var _tpTargetId = null;
-  var ITEM_H = 72;
-  var _tpAmpm = "AM", _tpH = 8, _tpM = 0;
-
-  window._fmt24a12 = function(t24) {
-    if (!t24) return "--:--";
-    var parts = t24.split(":");
-    var h = parseInt(parts[0]), m = parseInt(parts[1]);
-    var ampm = h < 12 ? "AM" : "PM";
-    var h12 = h % 12 || 12;
-    return (h12 < 10 ? "0" : "") + h12 + ":" + (m < 10 ? "0" : "") + m + " " + ampm;
-  };
-
-  function _parse24(t24) {
-    var parts = (t24 || "08:00").split(":");
-    var h = parseInt(parts[0]), m = parseInt(parts[1]);
-    return { h: h, m: m, ampm: h < 12 ? "AM" : "PM", h12: h % 12 || 12 };
-  }
-
-  function _buildWheel(el, items, selectedIdx, cls) {
-    el.innerHTML = "<div style=\"height:72px;\"></div>" +
-      items.map(function(v, i) {
-        return "<div class=\"" + cls + (i === selectedIdx ? " selected" : "") + "\" data-idx=\"" + i + "\">" + v + "</div>";
-      }).join("") +
-      "<div style=\"height:72px;\"></div>";
-    el.scrollTop = selectedIdx * ITEM_H;
-  }
-
-  function _attachSnap(wheel, onchange) {
-    var timer;
-    wheel.addEventListener("scroll", function() {
-      clearTimeout(timer);
-      timer = setTimeout(function() {
-        var idx = Math.round(wheel.scrollTop / ITEM_H);
-        wheel.scrollTo({ top: idx * ITEM_H, behavior: "smooth" });
-        wheel.querySelectorAll("[data-idx]").forEach(function(el) {
-          var isSel = parseInt(el.dataset.idx) === idx;
-          el.classList.toggle("selected", isSel);
-        });
-        onchange(idx);
-      }, 80);
-    }, { passive: true });
-  }
-
-  window.abrirTimePicker = function(targetId, label) {
-    _tpTargetId = targetId;
-    var el = document.getElementById(targetId);
-    var val24 = el.dataset.val24 || "08:00";
-    var p = _parse24(val24);
-    _tpAmpm = p.ampm; _tpH = p.h12; _tpM = p.m;
-
-    document.getElementById("timePickerLabel").textContent = label || "Seleccionar hora";
-
-    var wAmpm = document.getElementById("tpWheelAmpm");
-    _buildWheel(wAmpm, ["AM", "PM"], _tpAmpm === "AM" ? 0 : 1, "tp-ampm-item");
-    _attachSnap(wAmpm, function(idx) { _tpAmpm = idx === 0 ? "AM" : "PM"; });
-
-    var hours = [];
-    for (var i = 1; i <= 12; i++) hours.push(i < 10 ? "0" + i : "" + i);
-    var wH = document.getElementById("tpWheelH");
-    _buildWheel(wH, hours, _tpH - 1, "tp-wheel-item");
-    _attachSnap(wH, function(idx) { _tpH = idx + 1; });
-
-    var mins = [];
-    for (var j = 0; j < 60; j++) mins.push(j < 10 ? "0" + j : "" + j);
-    var wM = document.getElementById("tpWheelM");
-    _buildWheel(wM, mins, _tpM, "tp-wheel-item");
-    _attachSnap(wM, function(idx) { _tpM = idx; });
-
-    document.getElementById("timePickerOverlay").classList.add("open");
-  };
-
-  window.cerrarTimePicker = function() {
-    document.getElementById("timePickerOverlay").classList.remove("open");
-    _tpTargetId = null;
-  };
-
-  window.confirmarTimePicker = function() {
-    if (!_tpTargetId) return;
-    var h24 = _tpH % 12;
-    if (_tpAmpm === "PM") h24 += 12;
-    var val24 = (h24 < 10 ? "0" : "") + h24 + ":" + (_tpM < 10 ? "0" : "") + _tpM;
-    var el = document.getElementById(_tpTargetId);
-    if (el) {
-      el.dataset.val24 = val24;
-      el.textContent = window._fmt24a12(val24);
-    }
-    cerrarTimePicker();
-  };
-
-  window._tpClickOutside = function(e) {
-    if (e.target.id === "timePickerOverlay") cerrarTimePicker();
-  };
-})();
-</script>
 </body>
 </html>
-
-<!-- ═══════════════════════════════════════════════════════════
-     TIME PICKER (rueda scroll estilo iOS)
-     ═══════════════════════════════════════════════════════════ -->
