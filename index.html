@@ -1796,17 +1796,40 @@
   .horario-toggle input:checked + .horario-slider::before { transform: translateX(16px); }
   .horario-times {
     display: flex; align-items: center; gap: 4px; flex: 1;
-    font-size: 12px; color: var(--gris);
   }
-  .horario-time-input {
-    border: 1.5px solid var(--borde); border-radius: 6px;
-    padding: 4px 6px; font-size: 13px; font-weight: 600;
-    color: var(--negro); background: var(--fondo);
-    outline: none; width: 90px; font-family: var(--font-num);
-    transition: border-color 0.2s; text-align: center;
-    -webkit-user-select: text; user-select: text;
+  /* ── WHEEL PICKER ── */
+  .tw-picker {
+    display: flex; align-items: center;
+    background: var(--fondo); border: 1.5px solid var(--borde);
+    border-radius: 8px; overflow: hidden; height: 38px;
+    transition: border-color 0.2s; padding: 0 4px; gap: 0;
   }
-  .horario-time-input:focus { border-color: var(--rappi); background: var(--blanco); }
+  .tw-picker:focus-within { border-color: var(--rappi); }
+  .tw-col {
+    display: flex; flex-direction: column; align-items: center;
+    overflow: hidden; height: 38px; position: relative;
+    cursor: ns-resize; flex-shrink: 0;
+  }
+  .tw-col-h  { width: 22px; }
+  .tw-col-m  { width: 22px; }
+  .tw-col-ap { width: 30px; }
+  .tw-sep { font-size: 13px; font-weight: 800; color: var(--negro); padding: 0 1px; line-height: 38px; flex-shrink: 0; }
+  .tw-drum {
+    display: flex; flex-direction: column; align-items: center;
+    will-change: transform; user-select: none;
+  }
+  .tw-item {
+    height: 38px; line-height: 38px; font-size: 13px; font-weight: 700;
+    font-family: var(--font-num); color: var(--gris); text-align: center;
+    width: 100%; flex-shrink: 0;
+  }
+  .tw-item.tw-active { color: var(--negro); }
+  .tw-col::before, .tw-col::after {
+    content: ''; position: absolute; left: 0; right: 0; height: 10px;
+    z-index: 2; pointer-events: none;
+  }
+  .tw-col::before { top: 0; background: linear-gradient(to bottom, var(--fondo), transparent); }
+  .tw-col::after  { bottom: 0; background: linear-gradient(to top, var(--fondo), transparent); }
   .horario-cerrado-label {
     flex: 1; font-size: 12px; font-weight: 600; color: var(--gris);
   }
@@ -6042,31 +6065,168 @@ function cargarHorariosConfig() {
   return JSON.parse(JSON.stringify(HORARIOS_DEFAULT));
 }
 
-// Convierte "14:30" (24h) → "2:30 PM"
-function to12h(val24) {
-  if (!val24 || !val24.includes(':')) return val24 || '';
-  let [h, m] = val24.split(':').map(Number);
-  const ampm = h >= 12 ? 'PM' : 'AM';
-  h = h % 12 || 12;
-  return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+// Convierte "14:30" (24h) → { h:2, m:30, ap:'PM' }
+function to12hParts(val24) {
+  if (!val24 || !val24.includes(':')) return { h:12, m:0, ap:'AM' };
+  let [hh, mm] = val24.split(':').map(Number);
+  const ap = hh >= 12 ? 'PM' : 'AM';
+  hh = hh % 12 || 12;
+  return { h: hh, m: mm, ap };
 }
-// Convierte texto libre "2:30 PM" / "14:30" / "2pm" → "HH:MM" 24h para guardar
+// Convierte partes → "HH:MM" 24h
+function parts24h(h, m, ap) {
+  let hh = h % 12;
+  if (ap === 'PM') hh += 12;
+  return String(hh).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+}
+// Convierte texto libre → "HH:MM" 24h (fallback)
 function parse12hTo24h(txt) {
   if (!txt) return null;
   txt = txt.trim().toUpperCase();
-  // Detectar AM/PM
-  const ampm = txt.includes('PM') ? 'PM' : txt.includes('AM') ? 'AM' : null;
-  txt = txt.replace(/AM|PM/g, '').trim();
-  // Quitar caracteres no numéricos salvo ':'
-  const parts = txt.replace(/[^0-9:]/g,'').split(':');
-  let h = parseInt(parts[0] || '0', 10);
-  let m = parseInt(parts[1] || '0', 10);
-  if (isNaN(h) || isNaN(m)) return null;
-  if (ampm === 'PM' && h !== 12) h += 12;
-  if (ampm === 'AM' && h === 12) h = 0;
-  if (h > 23) h = 23;
-  if (m > 59) m = 59;
-  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+  const ap = txt.includes('PM') ? 'PM' : txt.includes('AM') ? 'AM' : null;
+  txt = txt.replace(/AM|PM/g,'').trim();
+  const cleaned = txt.replace(/[^0-9:]/g,'');
+  if (!cleaned) return null;
+  const parts = cleaned.split(':');
+  let h = parseInt(parts[0]||'0',10);
+  let m = parseInt(parts[1]||'0',10);
+  if (isNaN(h)||isNaN(m)) return null;
+  if (ap==='PM' && h!==12) h+=12;
+  if (ap==='AM' && h===12) h=0;
+  if (h>23) h=23; if (m>59) m=59;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function to12h(val24) {
+  const {h,m,ap} = to12hParts(val24);
+  return h+':'+String(m).padStart(2,'0')+' '+ap;
+}
+
+// ── WHEEL PICKER ──────────────────────────────────────────
+function crearWheelPicker(id, val24) {
+  const {h, m, ap} = to12hParts(val24);
+  const HOURS = Array.from({length:12},(_,i)=>i+1);
+  const MINS  = Array.from({length:60},(_,i)=>i);
+  const APS   = ['AM','PM'];
+
+  let curH = HOURS.indexOf(h);   if(curH<0) curH=0;
+  let curM = MINS.indexOf(m);    if(curM<0) curM=0;
+  let curAP= APS.indexOf(ap);    if(curAP<0) curAP=0;
+
+  function buildDrum(items, cur, fmt) {
+    // 1 item above + active + 1 item below visible
+    return items.map((v,i) => {
+      const label = fmt ? String(v).padStart(2,'0') : v;
+      return `<div class="tw-item${i===cur?' tw-active':''}" data-idx="${i}">${label}</div>`;
+    }).join('');
+  }
+
+  return `<div class="tw-picker" id="twp-${id}" data-val="${parts24h(h, m, ap)}">
+    <div class="tw-col tw-col-h" data-col="h" data-cur="${curH}" data-id="${id}">
+      <div class="tw-drum">${buildDrum(HOURS,curH,false)}</div>
+    </div>
+    <span class="tw-sep">:</span>
+    <div class="tw-col tw-col-m" data-col="m" data-cur="${curM}" data-id="${id}">
+      <div class="tw-drum">${buildDrum(MINS,curM,true)}</div>
+    </div>
+    <span class="tw-sep" style="padding:0 3px;font-size:10px;color:var(--gris)"></span>
+    <div class="tw-col tw-col-ap" data-col="ap" data-cur="${curAP}" data-id="${id}">
+      <div class="tw-drum">${buildDrum(APS,curAP,false)}</div>
+    </div>
+  </div>`;
+}
+
+function initWheelPickers() {
+  document.querySelectorAll('.tw-col').forEach(col => {
+    syncDrum(col); // posicionar al índice actual
+    attachWheelEvents(col);
+  });
+}
+
+function syncDrum(col) {
+  const cur = parseInt(col.dataset.cur, 10);
+  const drum = col.querySelector('.tw-drum');
+  drum.style.transition = 'none';
+  drum.style.transform = `translateY(${-cur * 38}px)`;
+  col.querySelectorAll('.tw-item').forEach((el,i) => {
+    el.classList.toggle('tw-active', i === cur);
+  });
+}
+
+function snapDrum(col, newCur) {
+  const items = col.querySelectorAll('.tw-item');
+  newCur = Math.max(0, Math.min(items.length-1, newCur));
+  col.dataset.cur = newCur;
+  const drum = col.querySelector('.tw-drum');
+  drum.style.transition = 'transform 0.18s cubic-bezier(.25,.8,.25,1)';
+  drum.style.transform = `translateY(${-newCur * 38}px)`;
+  items.forEach((el,i) => el.classList.toggle('tw-active', i === newCur));
+  // guardar valor en atributo oculto del picker
+  savePickerValue(col);
+}
+
+function savePickerValue(col) {
+  const id = col.dataset.id;
+  const picker = document.getElementById('twp-' + id);
+  if (!picker) return;
+  const hCol  = picker.querySelector('[data-col="h"]');
+  const mCol  = picker.querySelector('[data-col="m"]');
+  const apCol = picker.querySelector('[data-col="ap"]');
+  if (!hCol||!mCol||!apCol) return;
+  const HOURS = Array.from({length:12},(_,i)=>i+1);
+  const MINS  = Array.from({length:60},(_,i)=>i);
+  const APS   = ['AM','PM'];
+  const h  = HOURS[parseInt(hCol.dataset.cur,10)]  || 12;
+  const m  = MINS [parseInt(mCol.dataset.cur,10)]  || 0;
+  const ap = APS  [parseInt(apCol.dataset.cur,10)] || 'AM';
+  picker.dataset.val = parts24h(h, m, ap);
+}
+
+function attachWheelEvents(col) {
+  let startY = 0, startCur = 0, dragging = false;
+
+  function onStart(y) {
+    startY = y; startCur = parseInt(col.dataset.cur,10); dragging = true;
+  }
+  function onMove(y) {
+    if (!dragging) return;
+    const delta = Math.round((startY - y) / 38);
+    const items = col.querySelectorAll('.tw-item');
+    const newCur = Math.max(0, Math.min(items.length-1, startCur + delta));
+    col.dataset.cur = newCur;
+    const drum = col.querySelector('.tw-drum');
+    drum.style.transition = 'none';
+    drum.style.transform = `translateY(${-newCur * 38}px)`;
+    items.forEach((el,i) => el.classList.toggle('tw-active', i === newCur));
+  }
+  function onEnd(y) {
+    if (!dragging) return; dragging = false;
+    const delta = Math.round((startY - y) / 38);
+    const items = col.querySelectorAll('.tw-item');
+    const newCur = Math.max(0, Math.min(items.length-1, startCur + delta));
+    snapDrum(col, newCur);
+  }
+
+  // Touch
+  col.addEventListener('touchstart', e => { e.preventDefault(); onStart(e.touches[0].clientY); }, {passive:false});
+  col.addEventListener('touchmove',  e => { e.preventDefault(); onMove(e.touches[0].clientY);  }, {passive:false});
+  col.addEventListener('touchend',   e => { onEnd(e.changedTouches[0].clientY); });
+
+  // Mouse
+  col.addEventListener('mousedown', e => { e.preventDefault(); onStart(e.clientY); });
+  window.addEventListener('mousemove', e => { if(dragging) onMove(e.clientY); });
+  window.addEventListener('mouseup',   e => { if(dragging) onEnd(e.clientY); });
+
+  // Wheel scroll
+  col.addEventListener('wheel', e => {
+    e.preventDefault();
+    const cur = parseInt(col.dataset.cur,10);
+    snapDrum(col, cur + (e.deltaY > 0 ? 1 : -1));
+  }, {passive:false});
+}
+
+function normalizarHoraInput(el) {
+  const val24 = parse12hTo24h(el.value);
+  if (val24) el.value = to12h(val24);
 }
 
 function renderHorarios() {
@@ -6082,21 +6242,13 @@ function renderHorarios() {
       </label>
       ${h.abierto
         ? `<div class="horario-times">
-            <input type="text" inputmode="text" class="horario-time-input" id="hdesde-${i}"
-              value="${to12h(h.desde)}" placeholder="6:00 AM"
-              onblur="normalizarHoraInput(this)">
-            <span style="color:var(--gris);font-size:11px;">a</span>
-            <input type="text" inputmode="text" class="horario-time-input" id="hhasta-${i}"
-              value="${to12h(h.hasta)}" placeholder="10:00 PM"
-              onblur="normalizarHoraInput(this)">
+            ${crearWheelPicker('desde-'+i, h.desde)}
+            <span style="color:var(--gris);font-size:11px;padding:0 2px;">a</span>
+            ${crearWheelPicker('hasta-'+i, h.hasta)}
            </div>`
         : `<div class="horario-cerrado-label">Cerrado</div>`}
     </div>`).join('');
-}
-
-function normalizarHoraInput(el) {
-  const val24 = parse12hTo24h(el.value);
-  if (val24) el.value = to12h(val24);
+  initWheelPickers();
 }
 
 function toggleHorarioDia(idx, abierto) {
@@ -6110,16 +6262,10 @@ function toggleHorarioDia(idx, abierto) {
 function leerHorariosDelForm() {
   const horarios = cargarHorariosConfig();
   horarios.forEach((h, i) => {
-    const desdeEl = document.getElementById('hdesde-' + i);
-    const hastaEl = document.getElementById('hhasta-' + i);
-    if (desdeEl) {
-      const v = parse12hTo24h(desdeEl.value);
-      if (v) h.desde = v;
-    }
-    if (hastaEl) {
-      const v = parse12hTo24h(hastaEl.value);
-      if (v) h.hasta = v;
-    }
+    const desdeEl = document.getElementById('twp-desde-'+i);
+    const hastaEl = document.getElementById('twp-hasta-'+i);
+    if (desdeEl && desdeEl.dataset.val) h.desde = desdeEl.dataset.val;
+    if (hastaEl && hastaEl.dataset.val) h.hasta = hastaEl.dataset.val;
   });
   return horarios;
 }
