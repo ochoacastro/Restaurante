@@ -4022,7 +4022,9 @@ async function addNewItem(){
       showAlertDialog('La foto es muy grande (máx. 2 MB). Usa una imagen más pequeña.');
       return;
     }
-    foto = await fileToDataUrl(photoInput.files[0]);
+    // Comprimir antes de guardar (igual que handleThemeImageInput)
+    try { foto = await comprimirImagenMenu(photoInput.files[0], 600, 0.75); }
+    catch(e) { foto = await fileToDataUrl(photoInput.files[0]); }
   }
 
   menuItems.push({ nombre, categoria, precioLocal, precioDomicilio, emoji, descripcion, foto });
@@ -4240,7 +4242,9 @@ $('#editProductPhotoInput').addEventListener('change', async (e) => {
     e.target.value = '';
     return;
   }
-  editingPhotoData = await fileToDataUrl(file);
+  // Comprimir antes de guardar
+  try { editingPhotoData = await comprimirImagenMenu(file, 600, 0.75); }
+  catch(err) { editingPhotoData = await fileToDataUrl(file); }
   updateEditPhotoPreview();
   e.target.value = '';
 });
@@ -4350,7 +4354,11 @@ $('#adminLoginModal').addEventListener('click', (e) => {
 
 
 $('#detailAddBtn').addEventListener('click', () => {
-  if(!selectedItem || mode !== 'domicilio') return;
+  if(!selectedItem) return;
+  if(mode !== 'domicilio') {
+    showAlertDialog('Para agregar desde el detalle, usa el modo Domicilio. En modo Restaurante agrega directamente desde el menú.');
+    return;
+  }
   const qty = parseInt($('#detailQtyNum')?.textContent || '1', 10) || 1;
   for(let i = 0; i < qty; i++) addItem(selectedItem);
   closeItemDetail();
@@ -4409,7 +4417,8 @@ function verificarHorario() {
 
   // Verificar festivos: formato YYYY-MM-DD
   const festivos = Array.isArray(settings.festivos) ? settings.festivos : [];
-  const hoyISO = ahora.toISOString().slice(0, 10);
+  // Usar fecha LOCAL (no UTC) para evitar desfase de timezone (ej: Colombia UTC-5)
+  const hoyISO = `${ahora.getFullYear()}-${String(ahora.getMonth()+1).padStart(2,'0')}-${String(ahora.getDate()).padStart(2,'0')}`;
   const esFestivo = festivos.find(f => f.fecha === hoyISO);
 
   const hoy = horarios[diaIdx];
@@ -4468,8 +4477,11 @@ function verificarHorario() {
               const idx = (diaIdx + i) % 7;
               if (horarios[idx] && horarios[idx].abierto) { proxDia = horarios[idx]; break; }
             }
+            // Calcular el offset correcto al próximo día abierto
+            let _offsetProx = 0;
+            for (let _i = 1; _i <= 7; _i++) { if (horarios[(diaIdx + _i) % 7]?.abierto) { _offsetProx = _i; break; } }
             msgEl.textContent = proxDia
-              ? `Volvemos ${DIAS_NOMBRE[(diaIdx + [...Array(7)].findIndex((_,i)=>horarios[(diaIdx+i+1)%7]?.abierto)+1)%7]} a las ${proxDia.desde}.`
+              ? `Volvemos ${DIAS_NOMBRE[(diaIdx + _offsetProx) % 7]} a las ${proxDia.desde}.`
               : 'Consulta nuestros horarios para volver pronto.';
           }
         }
