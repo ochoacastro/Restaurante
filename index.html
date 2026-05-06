@@ -17078,9 +17078,7 @@ window.mfIniciarPanel = function() {
       <div style="font-size:15px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📱 Vista previa · Menú digital</div>
       <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px;">Los cambios se ven en el menú en tiempo real</div>
     </div>
-    <div id="vmSaveBtn" style="display:none;">
-      <button onclick="vmGuardarCambios()" style="padding:8px 16px;background:#FF441A;color:#fff;border:none;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(255,68,26,0.4);">💾 Guardar</button>
-    </div>
+
   </div>
 
   <!-- Cuerpo: 2 columnas en landscape, apilado en portrait -->
@@ -17217,15 +17215,12 @@ window.mfIniciarPanel = function() {
 
 <script>
 /* ══ VISTA MENÚ DIGITAL ══════════════════════════════════════════════ */
-let vmCambiosPendientes = false;
 let vmCatOrder = null; // orden personalizado de categorías
 
 function abrirVistaMenu() {
   const el = document.getElementById('modalVistaMenu');
   el.style.display = 'flex';
   document.body.style.overflow = 'hidden';
-  vmCambiosPendientes = false;
-  document.getElementById('vmSaveBtn').style.display = 'none';
   vmCatOrder = null;
   vmShowTab('productos');
   vmRenderLista();
@@ -17240,9 +17235,6 @@ function abrirVistaMenu() {
 }
 
 function cerrarVistaMenu() {
-  if (vmCambiosPendientes) {
-    if (!confirm('Hay cambios sin guardar en el menú. ¿Salir de todos modos?')) return;
-  }
   document.getElementById('modalVistaMenu').style.display = 'none';
   document.body.style.overflow = '';
 }
@@ -17361,12 +17353,10 @@ function vmGuardarEdicion() {
     MENU[idx] = { ...prev, nombre, categoria: cat, precio, precioDomicilio: precioDom, descripcion };
     showToast('✅ ' + nombre + ' actualizado');
   }
-  vmCambiosPendientes = true;
-  document.getElementById('vmSaveBtn').style.display = 'block';
   vmCerrarEditPanel();
   vmRenderLista();
   vmRenderCatList();
-  vmRefrescarIframe();
+  vmGuardarCambios();
 }
 
 function vmEliminarProducto() {
@@ -17376,12 +17366,10 @@ function vmEliminarProducto() {
   if (!confirm(`¿Eliminar "${nombre}" del menú?`)) return;
   MENU.splice(idx, 1);
   showToast('🗑 ' + nombre + ' eliminado');
-  vmCambiosPendientes = true;
-  document.getElementById('vmSaveBtn').style.display = 'block';
   vmCerrarEditPanel();
   vmRenderLista();
   vmRenderCatList();
-  vmRefrescarIframe();
+  vmGuardarCambios();
 }
 
 function vmAgregarProducto() {
@@ -17407,12 +17395,10 @@ function vmAgregarProducto() {
   document.getElementById('vmNewPrecioDom').value = '';
   document.getElementById('vmNewDesc').value = '';
 
-  vmCambiosPendientes = true;
-  document.getElementById('vmSaveBtn').style.display = 'block';
   vmShowTab('productos');
   vmRenderLista();
   vmRenderCatList();
-  vmRefrescarIframe();
+  vmGuardarCambios();
 }
 
 function vmGuardarCambios() {
@@ -17421,9 +17407,7 @@ function vmGuardarCambios() {
   renderMenu();
   renderProductosConfig();
   renderPreciosConfig();
-  vmCambiosPendientes = false;
-  document.getElementById('vmSaveBtn').style.display = 'none';
-  showToast('💾 Menú guardado y sincronizado');
+  showToast('💾 Guardado automáticamente');
   vmRefrescarIframe();
 }
 
@@ -17484,8 +17468,7 @@ function vmInitCatDrag() {
 function vmSaveCatOrder() {
   const rows = document.querySelectorAll('#vmCatList .vm-cat-row');
   vmCatOrder = Array.from(rows).map(r => r.dataset.cat);
-  vmCambiosPendientes = true;
-  document.getElementById('vmSaveBtn').style.display = 'block';
+  vmGuardarCambios();
 }
 </script>
 
