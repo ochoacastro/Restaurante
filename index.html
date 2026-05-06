@@ -16294,13 +16294,16 @@ function mfDescargarPNG() {
   </div>
 
   <!-- Body: 2 paneles -->
-  <div style="flex:1;display:flex;overflow:hidden;">
+  <div style="flex:1;display:flex;overflow:hidden;position:relative;">
 
     <!-- Panel izquierdo: bloques de la plantilla -->
-    <div id="mfEditorLeft" style="width:340px;flex-shrink:0;background:#141414;border-right:1px solid #222;display:flex;flex-direction:column;overflow:hidden;">
+    <div id="mfEditorLeft" style="width:340px;flex-shrink:0;background:#141414;border-right:1px solid #222;display:flex;flex-direction:column;overflow:hidden;transition:width .25s ease;position:relative;">
+
+      <!-- Botón colapsar panel -->
+      <button id="mfeTogglePanel" onclick="mfeToggleLeftPanel()" title="Colapsar/expandir panel" style="position:absolute;right:-14px;top:50%;transform:translateY(-50%);z-index:10;width:28px;height:48px;background:#2A2A2A;border:1px solid #333;border-radius:0 10px 10px 0;color:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:3px 0 8px rgba(0,0,0,.4);">◀</button>
 
       <!-- Tabs -->
-      <div style="display:flex;border-bottom:1px solid #222;flex-shrink:0;background:#111;">
+      <div id="mfeTabsRow" style="display:flex;border-bottom:1px solid #222;flex-shrink:0;background:#111;">
         <button class="mfe-tab active" id="mfeTabDiseno" onclick="mfeShowTab('diseno')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">🎨 Diseño</button>
         <button class="mfe-tab" id="mfeTabFotos" onclick="mfeShowTab('fotos')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">📷 Fotos</button>
         <button class="mfe-tab" id="mfeTabCats" onclick="mfeShowTab('cats')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">📋 Categorías</button>
@@ -16649,6 +16652,32 @@ function mfeGuardarDesdeEditor() {
 }
 
 window.mfGuardarDesdeEditor = mfeGuardarDesdeEditor;
+
+// ── Toggle colapso del panel izquierdo ───────────────
+function mfeToggleLeftPanel() {
+  const panel = document.getElementById('mfEditorLeft');
+  const btn   = document.getElementById('mfeTogglePanel');
+  const tabs  = document.getElementById('mfeTabsRow');
+  const collapsed = panel.dataset.collapsed === '1';
+  if (collapsed) {
+    panel.style.width = '340px';
+    panel.dataset.collapsed = '0';
+    btn.textContent = '◀';
+    btn.style.right = '-14px';
+    if (tabs) tabs.style.display = 'flex';
+    ['mfePanelDiseno','mfePanelFotos','mfePanelCats','mfePanelEstilo']
+      .forEach(id => { const el = document.getElementById(id); if(el) el.style.visibility='visible'; });
+  } else {
+    panel.style.width = '0px';
+    panel.dataset.collapsed = '1';
+    btn.textContent = '▶';
+    btn.style.right = '-28px';
+    if (tabs) tabs.style.display = 'none';
+    ['mfePanelDiseno','mfePanelFotos','mfePanelCats','mfePanelEstilo']
+      .forEach(id => { const el = document.getElementById(id); if(el) el.style.visibility='hidden'; });
+  }
+}
+window.mfeToggleLeftPanel = mfeToggleLeftPanel;
 
 // ── Tabs del editor ──────────────────────────────────
 function mfeShowTab(tab) {
