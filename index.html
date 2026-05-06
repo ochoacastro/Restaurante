@@ -65,17 +65,11 @@
 </script>
 <style>
   :root {
-    /* ── Paleta Rappi: naranja coral #FF441A sobre oscuro ── */
+    /* ── Paleta Rappi: naranja coral #FF441A ── */
     --rappi:      #FF441A;
     --rappi-dark: #E03310;
     --rappi-soft: rgba(255,68,26,0.10);
     --rappi-mid:  #FF7A5C;
-    --negro:      #F0F0F0;
-    --gris-osc:   #BBBBBB;
-    --gris:       #888888;
-    --gris-cl:    #2A2A2A;
-    --fondo:      #111111;
-    --blanco:     #1A1A1A;
     --rojo:       #E53935;
     --verde-ok:   #00C853;
     --tierra:     #8b6535;
@@ -85,25 +79,35 @@
     --r:    16px;
     --r-lg: 20px;
     --r-xl: 28px;
-    --sombra-s: 0 2px 8px rgba(0,0,0,0.5);
-    --sombra-m: 0 4px 16px rgba(0,0,0,0.6);
-    --sombra-l: 0 8px 32px rgba(0,0,0,0.7);
-    --borde:    #2A2A2A;
   }
 
-  /* ── El tema base YA es oscuro — dark mode refuerza levemente ── */
+  /* ── TEMA CLARO (por defecto) ── */
+  :root, body:not(.dark) {
+    --negro:    #1A1A1A;
+    --gris-osc: #555555;
+    --gris:     #888888;
+    --gris-cl:  #F0F0F0;
+    --fondo:    #F5F5F5;
+    --blanco:   #FFFFFF;
+    --borde:    #E0E0E0;
+    --sombra-s: 0 2px 8px rgba(0,0,0,0.10);
+    --sombra-m: 0 4px 16px rgba(0,0,0,0.14);
+    --sombra-l: 0 8px 32px rgba(0,0,0,0.18);
+  }
+
+  /* ── TEMA OSCURO ── */
   body.dark {
     --negro:    #F0F0F0;
     --gris-osc: #BBBBBB;
     --gris:     #888888;
-    --gris-cl:  #222222;
-    --fondo:    #0D0D0D;
-    --blanco:   #161616;
+    --gris-cl:  #2A2A2A;
+    --fondo:    #111111;
+    --blanco:   #1A1A1A;
     --rappi-soft: rgba(255,68,26,0.10);
-    --borde:    #222222;
-    --sombra-s: 0 2px 8px rgba(0,0,0,0.6);
-    --sombra-m: 0 4px 16px rgba(0,0,0,0.7);
-    --sombra-l: 0 8px 32px rgba(0,0,0,0.8);
+    --borde:    #2A2A2A;
+    --sombra-s: 0 2px 8px rgba(0,0,0,0.5);
+    --sombra-m: 0 4px 16px rgba(0,0,0,0.6);
+    --sombra-l: 0 8px 32px rgba(0,0,0,0.7);
   }
 
   body { transition: background 0.25s ease, color 0.25s ease; }
@@ -117,9 +121,6 @@
   }
 
   body.dark .header { background: #161616; border-bottom: 1px solid #2A2A2A; box-shadow: 0 1px 0 #2A2A2A; }
-  body.dark .tabs   { background: #111111; border-bottom-color: #222; }
-  body.dark .tab    { color: rgba(255,255,255,0.45); }
-  body.dark .tab.active { background: rgba(255,68,26,0.12); color: var(--rappi); }
   body.dark .menu-item  { background: #1E1E1E; border-color: #2A2A2A; }
   body.dark .menu-item.in-cart { border-color: var(--rappi); background: var(--rappi); }
   body.dark .item-name  { color: #F0F0F0; }
@@ -338,7 +339,7 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: 0 1px 0 #EBEBEB, var(--sombra-s);
+    box-shadow: 0 1px 0 var(--borde), var(--sombra-s);
   }
   .header::after { display: none; }
 
@@ -451,17 +452,17 @@
   /* ── TABS ────────────────────────────────────────────── */
   .tabs {
     display: flex;
-    background: #1A1A1A;
-    border-bottom: 1.5px solid #2A2A2A;
+    background: var(--blanco);
+    border-bottom: 1.5px solid var(--borde);
     position: sticky;
     top: var(--header-h, 90px);
     z-index: 99;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
   }
   .tab {
     flex: 1; padding: 10px 4px 8px;
     text-align: center; font-size: 11px;
-    font-weight: 600; color: rgba(255,255,255,0.55);
+    font-weight: 600; color: var(--gris);
     cursor: pointer; border-bottom: 3px solid transparent;
     transition: all 0.2s; letter-spacing: 0.2px;
     text-transform: uppercase; position: relative;
@@ -471,6 +472,9 @@
     border-bottom-color: var(--rappi);
     background: rgba(255,68,26,0.08);
   }
+  body.dark .tabs { background: #1A1A1A; border-bottom-color: #2A2A2A; box-shadow: 0 2px 8px rgba(0,0,0,0.25); }
+  body.dark .tab  { color: rgba(255,255,255,0.45); }
+  body.dark .tab.active { background: rgba(255,68,26,0.12); color: var(--rappi); }
   .tab-icon { font-size: 20px; display: block; margin-bottom: 2px; }
 
   /* ── BOTTOM NAV FLOTANTE ────────────────────────── */
@@ -508,8 +512,8 @@
   #sidebarPanel {
     position: absolute; top: 0; left: 0; bottom: 0;
     width: 75%; max-width: 300px;
-    background: #111111;
-    border-right: 2px solid #2A2A2A;
+    background: var(--blanco);
+    border-right: 2px solid var(--borde);
     display: flex; flex-direction: column;
     transform: translateX(-100%);
     transition: transform 0.28s cubic-bezier(0.32,0.72,0,1);
@@ -520,12 +524,12 @@
   .sidebar-header {
     display: flex; align-items: center; justify-content: space-between;
     padding: 52px 20px 20px;
-    border-bottom: 1px solid #2A2A2A;
+    border-bottom: 1px solid var(--borde);
   }
   .sidebar-close {
     width: 36px; height: 36px; border-radius: 50%;
-    background: #2A2A2A; border: none;
-    color: #F0F0F0; font-size: 18px; cursor: pointer;
+    background: var(--gris-cl); border: none;
+    color: var(--negro); font-size: 18px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     flex-shrink: 0;
@@ -536,7 +540,7 @@
   }
   .sidebar-avatar {
     width: 44px; height: 44px; border-radius: 50%;
-    background: #2A2A2A;
+    background: var(--gris-cl);
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; font-weight: 800; color: var(--rappi);
     flex-shrink: 0; border: 2px solid #FF441A;
@@ -546,14 +550,14 @@
     letter-spacing: -0.2px;
   }
   .sidebar-role {
-    font-size: 11px; color: #888;
+    font-size: 11px; color: var(--gris);
     font-weight: 500; margin-top: 1px; text-transform: capitalize;
   }
   .sidebar-nav { padding: 12px 0; flex: 1; }
   .sidebar-item {
     display: flex; align-items: center; gap: 16px;
     padding: 16px 24px;
-    color: #F0F0F0; font-size: 16px; font-weight: 600;
+    color: var(--negro); font-size: 16px; font-weight: 600;
     cursor: pointer; border: none; background: transparent;
     width: 100%; text-align: left; font-family: inherit;
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
@@ -561,8 +565,15 @@
   }
   .sidebar-item:active { background: rgba(255,68,26,0.10); }
   .sidebar-item-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
-  .sidebar-divider { height: 1px; background: #2A2A2A; margin: 6px 24px; }
-  .sidebar-item.danger { color: #888; }
+  .sidebar-divider { height: 1px; background: var(--borde); margin: 6px 24px; }
+  .sidebar-item.danger { color: var(--gris); }
+  /* Sidebar en modo oscuro: reforzar fondo bien oscuro */
+  body.dark #sidebarPanel { background: #111111; }
+  body.dark .sidebar-header { border-bottom-color: #2A2A2A; }
+  body.dark .sidebar-close  { background: #2A2A2A; color: #F0F0F0; }
+  body.dark .sidebar-avatar { background: #2A2A2A; }
+  body.dark .sidebar-item   { color: #F0F0F0; }
+  body.dark .sidebar-divider { background: #2A2A2A; }
 
   /* Ocultar items según rol */
   body.rol-mesero .sidebar-admin-only { display: none !important; }
@@ -933,7 +944,7 @@
   }
   .menu-item.no-expand { border-radius: var(--r) !important; }
   .menu-units-panel {
-    background: #0D0D0D;
+    background: var(--fondo);
     border: 1.5px solid var(--rappi);
     border-top: none;
     border-radius: 0 0 var(--r) var(--r);
@@ -947,18 +958,18 @@
   .menu-unit-row {
     display: flex; align-items: center; gap: 10px;
     padding: 11px 14px;
-    border-bottom: 1px solid #1E1E1E;
+    border-bottom: 1px solid var(--borde);
   }
   .menu-unit-row:last-child { border-bottom: none; }
   .menu-unit-sq {
     width: 28px; height: 28px; border-radius: 7px;
-    border: 2px solid #333; background: #1A1A1A; flex-shrink: 0;
+    border: 2px solid var(--borde); background: var(--gris-cl); flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-size: 13px; font-weight: 900; color: #555;
+    font-size: 13px; font-weight: 900; color: var(--gris);
   }
   .menu-unit-info { flex: 1; display: flex; flex-direction: column; gap: 3px; }
-  .menu-unit-label { font-size: 13px; font-weight: 700; color: #E0E0E0; }
-  .menu-unit-nota  { font-size: 11px; color: #888; font-style: italic; }
+  .menu-unit-label { font-size: 13px; font-weight: 700; color: var(--negro); }
+  .menu-unit-nota  { font-size: 11px; color: var(--gris); font-style: italic; }
   .menu-unit-nota.has { color: #FFB300; font-style: normal; font-weight: 600; }
   .menu-unit-edit {
     font-size: 12px; font-weight: 800; color: #E53935;
@@ -1093,22 +1104,26 @@
 
   /* ── TOTALES ─────────────────────────────────────────── */
   .totales {
-    background: #2A2A2A;
+    background: var(--gris-cl);
     border-radius: var(--r); padding: 18px 16px;
     margin-bottom: 14px; box-shadow: var(--sombra-m);
   }
   .total-row {
     display: flex; justify-content: space-between;
-    padding: 4px 0; font-size: 15px; color: rgba(255,255,255,0.6);
+    padding: 4px 0; font-size: 15px; color: var(--gris-osc);
   }
-  .total-row .val { color: rgba(255,255,255,0.9); font-weight: 600; }
+  .total-row .val { color: var(--negro); font-weight: 600; }
   .total-row.grande {
-    font-size: 26px; font-weight: 800; color: #ffffff;
-    border-top: 1px solid rgba(255,255,255,0.12);
+    font-size: 26px; font-weight: 800; color: var(--negro);
+    border-top: 1px solid var(--borde);
     margin-top: 10px; padding-top: 14px;
     font-family: var(--font-num); letter-spacing: -0.5px;
   }
   .total-row.grande .val { color: var(--rappi-mid); font-family: var(--font-num); }
+  body.dark .totales { background: #2A2A2A; }
+  body.dark .total-row { color: rgba(255,255,255,0.6); }
+  body.dark .total-row .val { color: rgba(255,255,255,0.9); }
+  body.dark .total-row.grande { color: #ffffff; border-top-color: rgba(255,255,255,0.12); }
 
   /* ── BTN VER CARRITO ─────────────────────────────────── */
   .btn-ver-carrito {
@@ -1116,9 +1131,9 @@
     bottom: 80px;
     left: 14px;
     width: calc(100% - 28px);
-    background: linear-gradient(135deg, #1A1A1A 0%, #333 100%);
-    color: white;
-    border: 1px solid rgba(255,255,255,0.15);
+    background: linear-gradient(135deg, var(--negro) 0%, var(--gris-osc) 100%);
+    color: var(--blanco);
+    border: 1px solid rgba(0,0,0,0.12);
     border-radius: var(--r);
     padding: 14px 18px;
     font-size: 17px;
@@ -1130,7 +1145,7 @@
     align-items: center;
     z-index: 150;
     letter-spacing: 0.3px;
-    box-shadow: 0 6px 24px rgba(27,58,31,0.45);
+    box-shadow: 0 6px 24px rgba(0,0,0,0.20);
     touch-action: pan-y;
     -webkit-tap-highlight-color: rgba(255,255,255,0.15);
     user-select: none;
@@ -1360,7 +1375,7 @@
     to   { transform: translateY(0); }
   }
   .modal-handle {
-    width: 40px; height: 4px; background: #E8E8E8;
+    width: 40px; height: 4px; background: var(--borde);
     border-radius: 2px; margin: 14px auto 20px;
   }
   .modal h3 {
@@ -1374,7 +1389,7 @@
     display: flex; align-items: center; gap: 12px;
     padding: 14px; background: var(--fondo);
     border-radius: var(--r-sm); cursor: pointer;
-    border: 1.5px solid #E8E8E8; transition: all 0.18s;
+    border: 1.5px solid var(--borde); transition: all 0.18s;
   }
   .device-item:active { border-color: var(--rappi); background: var(--rappi-soft); }
   .device-icon { font-size: 24px; }
@@ -1979,7 +1994,7 @@
   #loginScreen.has-bg .login-sub { color: rgba(255,255,255,0.85); }
   .login-line {
     width: 100%; max-width: 340px; height: 1.5px;
-    background: linear-gradient(90deg, transparent, #E8E8E8, transparent);
+    background: linear-gradient(90deg, transparent, var(--borde), transparent);
     margin-bottom: 32px;
   }
   .user-selector { width: 100%; max-width: 340px; margin-bottom: 24px; }
@@ -12292,15 +12307,24 @@ function descargarExcelMes(yyyymm) {
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark');
   localStorage.setItem('helechos_dark', isDark ? '1' : '0');
-  document.getElementById('darkToggleBtn').textContent = isDark ? '☀️' : '🌙';
+  const btn = document.getElementById('darkToggleBtn');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
 }
 
 function initDarkMode() {
   const saved = localStorage.getItem('helechos_dark');
-  // Dark es el tema por defecto; solo se desactiva si el usuario eligió explícitamente el tema claro
-  const isDark = saved === null || saved === '1';
+  // Si el usuario guardó preferencia explícita, respetarla.
+  // Si no hay preferencia guardada, usar preferencia del sistema operativo.
+  let isDark;
+  if (saved !== null) {
+    isDark = saved === '1';
+  } else {
+    isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
   if (isDark) {
     document.body.classList.add('dark');
+  } else {
+    document.body.classList.remove('dark');
   }
   const btn = document.getElementById('darkToggleBtn');
   if (btn) btn.textContent = isDark ? '☀️' : '🌙';
@@ -14242,10 +14266,13 @@ window.addEventListener('firebase-ready', () => {
 });
 
 // Sincronizar cobros desde Firebase
+let _fbUnsubCobros = null; // Bug 4 fix: guardar referencia para evitar listeners duplicados
 function fbSyncCobros() {
   if (!window._FB || !window._FB.db) return;
+  // Cancelar listener anterior si existe
+  if (_fbUnsubCobros) { _fbUnsubCobros(); _fbUnsubCobros = null; }
   const { db, ref, onValue } = window._FB;
-  onValue(ref(db, 'helechos/cobros'), (snap) => {
+  _fbUnsubCobros = onValue(ref(db, 'helechos/cobros'), (snap) => {
     const data = snap.val();
     if (!data) return;
     const lista = Object.values(data);
@@ -14444,6 +14471,8 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
   const _kdsCerradas  = new Set();
   const _kdsAutoCierre = {};
 
+  let kdsClockIv = null; // intervalo del reloj del KDS
+
   window.abrirKDSInline = function() {
     const screen = document.getElementById('kdsScreen');
     if (!screen) return;
@@ -14451,6 +14480,8 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
     document.body.style.overflow = 'hidden';
     kdsArrancar();
     kdsTickClock();
+    // Iniciar reloj solo si no está ya corriendo
+    if (!kdsClockIv) kdsClockIv = setInterval(kdsTickClock, 1000);
   };
 
   window.cerrarKDSInline = function() {
@@ -14460,6 +14491,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
     document.body.style.overflow = '';
     if (kdsUnsub) { kdsUnsub(); kdsUnsub = null; }
     if (kdsTimerIv) { clearInterval(kdsTimerIv); kdsTimerIv = null; }
+    if (kdsClockIv) { clearInterval(kdsClockIv); kdsClockIv = null; }
     if (typeof aplicarRolUI === 'function' && window.usuarioActivo) aplicarRolUI();
   };
 
@@ -14469,7 +14501,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
     const now = new Date();
     el.textContent = now.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false });
   }
-  setInterval(kdsTickClock, 1000);
+  // NOTA: el intervalo del reloj se inicia en abrirKDSInline() y se limpia en cerrarKDSInline()
 
   function kdsActualizarRed() {
     const screen = document.getElementById('kdsScreen');
@@ -15660,7 +15692,7 @@ function renderPedido(p) {
     const hecho  = i < idxActual;
     const activo = i === idxActual;
     const dotCls = hecho ? 'hecho' : activo ? 'activo' : 'pend';
-    const dotTxt = hecho ? '✓' : paso.icon;
+    // Bug 6 fix: dotTxt era variable muerta — el valor se calcula inline abajo
     return '<div class="paso"><div class="paso-dot '+(hecho||activo?dotCls:'pend')+'"'+(activo?' style="animation:pulse 1.5s ease-in-out infinite;"':'')+'>'+(hecho?'✓':(activo?paso.icon:(i+1)))+'</div><div class="paso-info"><div class="paso-titulo" style="color:'+(activo?'#1565C0':hecho?'#00C853':'#888')+';">'+paso.label+'</div><div class="paso-sub">'+paso.sub+'</div></div></div>';
   }).join('');
 
@@ -15722,7 +15754,7 @@ function renderPedido(p) {
 
   // ── Registrar que admin abre seguimiento cuando confirma ─────────────────
   // Sobreescribir domConfirmarPedido para abrir ventana al confirmar
-  const _origConfirmar = window.domConfirmarPedido;
+  // Bug 3 fix: _origConfirmar no se usaba — se elimina la variable innecesaria
   window.domConfirmarPedido = function(sessionId) {
     window.confirmar({
       icono: '✅',
@@ -15741,9 +15773,12 @@ function renderPedido(p) {
   };
 
   // ── Escuchar cambios del cliente (reemplazos / cancelación) ──────────────
+  let _domUnsubRespuestas = null; // Bug 2 fix: guardar referencia para evitar listeners duplicados
   function domEscucharRespuestasCliente() {
     if (!window._FB || !window._FB.db) return;
-    window._FB.onValue(window._FB.ref(window._FB.db, DOM_PATH), snap => {
+    // Cancelar listener anterior si existe
+    if (_domUnsubRespuestas) { _domUnsubRespuestas(); _domUnsubRespuestas = null; }
+    _domUnsubRespuestas = window._FB.onValue(window._FB.ref(window._FB.db, DOM_PATH), snap => {
       const val = snap.val();
       if (!val) return;
       Object.entries(val).forEach(([key, p]) => {
@@ -15770,23 +15805,23 @@ function renderPedido(p) {
   }
 
   // ── Inicializar ──────────────────────────────────────────────────────────
+  let _domInicializado = false; // Bug 2 fix: evitar doble inicialización
+  function _domInit() {
+    if (_domInicializado) return;
+    _domInicializado = true;
+    domArrancar();
+    domEscucharListoKDS();
+    domEscucharRespuestasCliente();
+    domActualizarBadges();
+  }
+
   window.addEventListener('firebase-ready', () => {
-    setTimeout(() => {
-      domArrancar();
-      domEscucharListoKDS();
-      domEscucharRespuestasCliente();
-      domActualizarBadges();
-    }, 600);
+    setTimeout(_domInit, 600);
   }, { once: true });
 
   // Si Firebase ya estaba listo antes de este script
   if (window._FB && window._FB.db) {
-    setTimeout(() => {
-      domArrancar();
-      domEscucharListoKDS();
-      domEscucharRespuestasCliente();
-      domActualizarBadges();
-    }, 200);
+    setTimeout(_domInit, 200);
   }
 
 })(); // fin initDomicilios
