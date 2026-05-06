@@ -5259,6 +5259,10 @@ async function conectar(cfg) {
         heroImage: localSettings.heroImage || '',
         businessLogo: localSettings.businessLogo || '' };
       delete merged.categoryImages;
+      // Preservar preferencias personales del cliente — igual que en el listener
+      const localPrefs0 = loadLocalPrefs();
+      if (localPrefs0.uiTheme)   merged.uiTheme   = localPrefs0.uiTheme;
+      if (localPrefs0.fontScale) merged.fontScale  = localPrefs0.fontScale;
       window.settings = merged;
       localStorage.setItem(SETTINGS_KEY_M, JSON.stringify(merged));
       // No llamar applyTheme/render aquí — esperar a que decorImages también cargue
