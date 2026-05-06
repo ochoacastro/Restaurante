@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mi Restaurante · POS</title>
-<meta name="theme-color" content="#0D0D0D">
+<meta name="theme-color" content="#FF441A">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -65,11 +65,11 @@
 </script>
 <style>
   :root {
-    /* ── Paleta KDS: negro profundo + amarillo neón ─────── */
-    --rappi:      #FFD600;
-    --rappi-dark: #E6C000;
-    --rappi-soft: rgba(255,214,0,0.10);
-    --rappi-mid:  #FFE033;
+    /* ── Paleta Rappi: naranja coral #FF441A sobre oscuro ── */
+    --rappi:      #FF441A;
+    --rappi-dark: #E03310;
+    --rappi-soft: rgba(255,68,26,0.10);
+    --rappi-mid:  #FF7A5C;
     --negro:      #F0F0F0;
     --gris-osc:   #BBBBBB;
     --gris:       #888888;
@@ -99,7 +99,7 @@
     --gris-cl:  #222222;
     --fondo:    #0D0D0D;
     --blanco:   #161616;
-    --rappi-soft: rgba(255,214,0,0.10);
+    --rappi-soft: rgba(255,68,26,0.10);
     --borde:    #222222;
     --sombra-s: 0 2px 8px rgba(0,0,0,0.6);
     --sombra-m: 0 4px 16px rgba(0,0,0,0.7);
@@ -119,7 +119,7 @@
   body.dark .header { background: #161616; border-bottom: 1px solid #2A2A2A; box-shadow: 0 1px 0 #2A2A2A; }
   body.dark .tabs   { background: #111111; border-bottom-color: #222; }
   body.dark .tab    { color: rgba(255,255,255,0.45); }
-  body.dark .tab.active { background: rgba(255,214,0,0.12); color: var(--rappi); }
+  body.dark .tab.active { background: rgba(255,68,26,0.12); color: var(--rappi); }
   body.dark .menu-item  { background: #1E1E1E; border-color: #2A2A2A; }
   body.dark .menu-item.in-cart { border-color: var(--rappi); background: var(--rappi); }
   body.dark .item-name  { color: #F0F0F0; }
@@ -129,18 +129,18 @@
   body.dark .config-section { background: #1E1E1E; border-color: #2A2A2A; }
   body.dark .config-section h4, body.dark .card-section-title { color: #DDD; }
   body.dark .hist-item  { background: #1E1E1E; border-color: #2A2A2A; }
-  body.dark .hist-item:active { background: rgba(255,214,0,0.08); }
+  body.dark .hist-item:active { background: rgba(255,68,26,0.08); }
   body.dark .hist-num   { color: #F0F0F0; }
   body.dark .cat-btn    { background: #1E1E1E; border-color: #2A2A2A; color: #CCC; box-shadow: none; }
   body.dark .cat-btn.active {
     background: var(--rappi);
     color: #111;
     border-color: var(--rappi);
-    box-shadow: 0 4px 14px rgba(255,214,0,0.45);
+    box-shadow: 0 4px 14px rgba(255,68,26,0.45);
     transform: scale(1.06);
   }
   body.dark .pago-btn   { background: #1E1E1E; border-color: #2A2A2A; color: #CCC; }
-  body.dark .pago-btn.active { background: rgba(255,214,0,0.12); border-color: var(--rappi); color: var(--rappi); }
+  body.dark .pago-btn.active { background: rgba(255,68,26,0.12); border-color: var(--rappi); color: var(--rappi); }
   body.dark .config-input, body.dark .form-input { background: #252525; border-color: #333; color: #F0F0F0; }
   body.dark .config-input:focus, body.dark .form-input:focus { background: #2A2A2A; border-color: var(--rappi); }
   body.dark .modal       { background: #1E1E1E; }
@@ -149,23 +149,23 @@
   body.dark .modal-btn-cancel { background: #2A2A2A; color: #CCC; }
   body.dark .btn-modal-close  { background: #2A2A2A; color: #CCC; }
   body.dark .pin-key     { background: #2A2A2A; border-color: #333; color: #F0F0F0; }
-  body.dark .pin-key:active { background: rgba(255,214,0,0.15); }
+  body.dark .pin-key:active { background: rgba(255,68,26,0.15); }
   body.dark .user-card   { background: #252525; border-color: #333; }
   body.dark .role-master { background: rgba(123,31,162,0.2); color: #CE93D8; border-color: rgba(123,31,162,0.4); }
-  body.dark .user-card:active, body.dark .user-card.selected { background: rgba(255,214,0,0.12); border-color: var(--rappi); }
+  body.dark .user-card:active, body.dark .user-card.selected { background: rgba(255,68,26,0.12); border-color: var(--rappi); }
   body.dark .user-name   { color: #F0F0F0; }
   body.dark #loginScreen { background: #0D0D0D; }
   body.dark .login-brand { color: #F0F0F0; }
   body.dark .login-sub   { color: #888; }
   body.dark .login-line  { background: linear-gradient(90deg, transparent, #333, transparent); }
-  body.dark .factura-chip { background: rgba(255,214,0,0.10); border-color: rgba(255,214,0,0.25); }
+  body.dark .factura-chip { background: rgba(255,68,26,0.10); border-color: rgba(255,68,26,0.25); }
   body.dark .header-title { color: #F0F0F0; }
   body.dark .header-fecha { color: #CCCCCC; }
   body.dark .consecutivo-display { background: #252525; border-color: #333; }
-  body.dark .printer-saved { background: rgba(255,214,0,0.08); border-color: rgba(255,214,0,0.2); }
+  body.dark .printer-saved { background: rgba(255,68,26,0.08); border-color: rgba(255,68,26,0.2); }
   body.dark .ticket-preview { background: #1E1E1E; border-color: #2A2A2A; color: #CCC; }
   body.dark .device-item { background: #252525; border-color: #333; }
-  body.dark .device-item:active { background: rgba(255,214,0,0.10); }
+  body.dark .device-item:active { background: rgba(255,68,26,0.10); }
   body.dark .seccion-label { color: #DDD; }
   body.dark .seccion-label::after { background: linear-gradient(90deg, #333, transparent); }
   body.dark .qty-btn, body.dark .menu-qty-btn:not(.plus) { border-color: #444; background: #252525; color: #DDD; }
@@ -177,7 +177,7 @@
   body.dark .user-mgmt-item { border-bottom-color: #2A2A2A; }
   body.dark .user-mgmt-name { color: #F0F0F0; }
   body.dark .role-opt { background: #252525; border-color: #333; color: #CCC; }
-  body.dark .role-opt.active-admin  { background: rgba(255,214,0,0.12); border-color: var(--rappi); color: var(--rappi); }
+  body.dark .role-opt.active-admin  { background: rgba(255,68,26,0.12); border-color: var(--rappi); color: var(--rappi); }
   body.dark .role-opt.active-mesero { background: rgba(46,125,50,0.2);  border-color: #4CAF50; color: #4CAF50; }
   body.dark .role-opt.active-cocina  { background: rgba(255,152,0,0.18); border-color: #FF9800; color: #FF9800; }
   body.dark .role-opt.active-cajero  { background: rgba(21,101,192,0.2);  border-color: #1976D2; color: #64B5F6; }
@@ -195,7 +195,7 @@
   body.dark .printer-status-btn { background: #252525; border-color: #333; }
   body.dark .toast { background: #333; border-color: #444; }
   body.dark { --fe-bg: #0D1E2E; --fe-text: #E8F4FF; --fe-sub: #9DC8EE; }
-  body.dark .btn-scan { background: rgba(255,214,0,0.08); }
+  body.dark .btn-scan { background: rgba(255,68,26,0.08); }
   body.dark .offline-bar { background: #8B0000; }
   body.dark .btn-ver-carrito {
     background: linear-gradient(135deg, #FFFFFF 0%, #F0F0F0 100%);
@@ -242,7 +242,7 @@
   }
   body.dark .stats-barra-track { background: #2A2A2A; }
   .stats-barra-fill {
-    height: 100%; background: linear-gradient(90deg, #FFD600, #FFE033);
+    height: 100%; background: linear-gradient(90deg, #FF441A, #FF7A5C);
     border-radius: 6px; transition: width 0.4s ease;
     display: flex; align-items: center; padding-left: 6px;
   }
@@ -357,11 +357,11 @@
     width: 36px; height: 36px;
     background: #111;
     border-radius: 10px;
-    border: 2px solid #FFD600;
+    border: 2px solid #FF441A;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px;
     flex-shrink: 0;
-    box-shadow: 0 2px 8px rgba(255,214,0,0.20);
+    box-shadow: 0 2px 8px rgba(255,68,26,0.20);
   }
   .header-title {
     font-family: 'Inter', sans-serif;
@@ -385,7 +385,7 @@
     align-items: center;
     gap: 4px;
     background: var(--rappi-soft);
-    border: 1.5px solid rgba(255,214,0,0.15);
+    border: 1.5px solid rgba(255,68,26,0.15);
     border-radius: var(--r-sm);
     padding: 6px 12px;
     white-space: nowrap;
@@ -433,7 +433,7 @@
     -webkit-tap-highlight-color: transparent; user-select: none;
   }
   .printer-status-btn:active { background: #EBEBEB; }
-  .printer-status-btn.connected { border-color: rgba(255,214,0,0.35); background: var(--rappi-soft); }
+  .printer-status-btn.connected { border-color: rgba(255,68,26,0.35); background: var(--rappi-soft); }
   .printer-status-icon { font-size: 15px; line-height: 1; transition: transform 0.2s; }
   .printer-status-btn.connecting .printer-status-icon { animation: printerPulse 0.8s ease-in-out infinite alternate; }
   @keyframes printerPulse {
@@ -469,7 +469,7 @@
   .tab.active {
     color: var(--rappi);
     border-bottom-color: var(--rappi);
-    background: rgba(255,214,0,0.08);
+    background: rgba(255,68,26,0.08);
   }
   .tab-icon { font-size: 20px; display: block; margin-bottom: 2px; }
 
@@ -539,10 +539,10 @@
     background: #2A2A2A;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; font-weight: 800; color: var(--rappi);
-    flex-shrink: 0; border: 2px solid #FFD600;
+    flex-shrink: 0; border: 2px solid #FF441A;
   }
   .sidebar-username {
-    font-size: 15px; font-weight: 800; color: #FFD600;
+    font-size: 15px; font-weight: 800; color: #FF441A;
     letter-spacing: -0.2px;
   }
   .sidebar-role {
@@ -559,7 +559,7 @@
     touch-action: manipulation; -webkit-tap-highlight-color: transparent;
     transition: background 0.15s;
   }
-  .sidebar-item:active { background: rgba(255,214,0,0.10); }
+  .sidebar-item:active { background: rgba(255,68,26,0.10); }
   .sidebar-item-icon { font-size: 20px; width: 28px; text-align: center; flex-shrink: 0; }
   .sidebar-divider { height: 1px; background: #2A2A2A; margin: 6px 24px; }
   .sidebar-item.danger { color: #888; }
@@ -578,17 +578,8 @@
   body.app-hidden #drawerOverlay,
   body.app-hidden #sidebar { display: none !important; }
 
-  /* Rol cocina: al iniciar sesión redirige a cocina.html.
-     Bug 5 fix: usar visibility:hidden en lugar de display:none en el body
-     para evitar pantalla en blanco total si la redirección falla.
-     Solo se ocultan los paneles de la UI, no el body entero. */
-  body.rol-cocina .header,
-  body.rol-cocina .tabs,
-  body.rol-cocina .panel,
-  body.rol-cocina #panel-home,
-  body.rol-cocina #bottomBar,
-  body.rol-cocina #bottomBarHome,
-  body.rol-cocina #sidebarOverlay { display: none !important; }
+  /* Rol cocina: al iniciar sesión redirige a cocina.html */
+  body.rol-cocina { display: none !important; }
 
   /* ── MASTER PERMISSIONS PANEL ────────────────────────── */
   #masterPermPanel {
@@ -884,7 +875,7 @@
     background: var(--rappi);
     color: var(--blanco);
     border-color: var(--rappi);
-    box-shadow: 0 4px 12px rgba(255,214,0,0.30);
+    box-shadow: 0 4px 12px rgba(255,68,26,0.30);
     transform: scale(1.06);
   }
   /* Estado activo cuando hay búsqueda en curso */
@@ -915,7 +906,7 @@
   .menu-item.in-cart {
     border-color: var(--rappi);
     background: var(--rappi);
-    box-shadow: 0 4px 16px rgba(255,214,0,0.30);
+    box-shadow: 0 4px 16px rgba(255,68,26,0.30);
   }
   .menu-item.in-cart .item-name  { color: #111; }
   .menu-item.in-cart .item-cat   { color: rgba(0,0,0,0.55); }
@@ -1015,7 +1006,7 @@
   .menu-qty-btn.plus {
     background: var(--rappi); color: var(--blanco);
     border-color: var(--rappi);
-    box-shadow: 0 3px 10px rgba(255,214,0,0.35);
+    box-shadow: 0 3px 10px rgba(255,68,26,0.35);
   }
   .menu-qty-btn:active { opacity: 0.7; transform: scale(0.92); }
   .menu-qty-num {
@@ -1096,7 +1087,7 @@
   .pago-btn.active {
     background: var(--rappi-soft);
     color: var(--rappi); border-color: var(--rappi);
-    box-shadow: 0 3px 10px rgba(255,214,0,0.15);
+    box-shadow: 0 3px 10px rgba(255,68,26,0.15);
   }
   .pago-btn span { display: block; font-size: 22px; margin-bottom: 3px; }
 
@@ -1396,7 +1387,7 @@
     color: var(--rappi); font-size: 14px; font-weight: 700;
     cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.18s;
   }
-  .btn-scan:active { background: rgba(255,214,0,0.10); }
+  .btn-scan:active { background: rgba(255,68,26,0.10); }
 
   /* ── CONFIG ──────────────────────────────────────────── */
   .config-section {
@@ -1428,7 +1419,7 @@
   }
   .config-input:focus {
     border-color: var(--rappi);
-    box-shadow: 0 0 0 3px rgba(255,214,0,0.08);
+    box-shadow: 0 0 0 3px rgba(255,68,26,0.08);
     background: var(--blanco);
   }
   .btn-save-config {
@@ -1438,7 +1429,7 @@
     font-size: 15px; font-weight: 700;
     font-family: 'Inter', sans-serif; cursor: pointer;
     transition: all 0.2s; letter-spacing: -0.2px;
-    box-shadow: 0 4px 14px rgba(255,214,0,0.35);
+    box-shadow: 0 4px 14px rgba(255,68,26,0.35);
   }
   .btn-save-config:active { opacity: 0.85; transform: scale(0.99); }
   .consecutivo-display {
@@ -1469,7 +1460,7 @@
   }
   .precio-input:focus {
     border-color: var(--rappi);
-    box-shadow: 0 0 0 3px rgba(255,214,0,0.08); background: var(--blanco);
+    box-shadow: 0 0 0 3px rgba(255,68,26,0.08); background: var(--blanco);
   }
 
   /* ── MODAL TIPO ORDEN ───────────────────────────────────── */
@@ -1488,7 +1479,7 @@
   .orden-tipo-card .ot-sub   { font-size: 11px; color: var(--gris); font-weight: 500; text-align:center; }
   body.dark .orden-tipo-card { background: #1E1E1E; border-color: #333; }
   body.dark .orden-tipo-card.mesa { background: rgba(123,31,162,0.15); border-color: #7B1FA2; }
-  body.dark .orden-tipo-card.dom  { background: rgba(255,214,0,0.08); border-color: var(--rappi); }
+  body.dark .orden-tipo-card.dom  { background: rgba(255,68,26,0.08); border-color: var(--rappi); }
 
   /* ── ÓRDENES GUARDADAS (MESA) ───────────────────────────── */
   .ordenes-guardadas-wrap { margin-top: 12px; }
@@ -1559,7 +1550,7 @@
     font-weight: 700;
     color: var(--rappi);
     background: var(--rappi-soft);
-    border: 1.5px solid rgba(255,214,0,0.15);
+    border: 1.5px solid rgba(255,68,26,0.15);
     border-radius: 999px;
     padding: 3px 10px;
     animation: arrowPulse 1.8s ease-in-out 3;
@@ -1813,7 +1804,7 @@
   }
   .precio-modal-input:focus {
     border-color: var(--rappi);
-    box-shadow: 0 0 0 3px rgba(255,214,0,0.08); background: var(--blanco);
+    box-shadow: 0 0 0 3px rgba(255,68,26,0.08); background: var(--blanco);
   }
   .modal-btns { display: flex; gap: 10px; }
   .modal-btn-cancel {
@@ -1827,7 +1818,7 @@
     border: none; border-radius: var(--r-sm);
     font-size: 14px; font-weight: 700; cursor: pointer;
     font-family: 'Inter', sans-serif; color: white;
-    box-shadow: 0 4px 14px rgba(255,214,0,0.35);
+    box-shadow: 0 4px 14px rgba(255,68,26,0.35);
   }
 
   /* ── OBS INPUT (carrito: cliente, dirección, observaciones) ─── */
@@ -1841,7 +1832,7 @@
   }
   .obs-input:focus {
     border-color: var(--rappi);
-    box-shadow: 0 0 0 3px rgba(255,214,0,0.08);
+    box-shadow: 0 0 0 3px rgba(255,68,26,0.08);
     background: var(--blanco);
   }
   body.dark .obs-input {
@@ -1854,7 +1845,7 @@
   /* ── IMPRESORA GUARDADA ──────────────────────────────── */
   .printer-saved {
     display: flex; align-items: center; gap: 12px;
-    background: var(--rappi-soft); border: 1.5px solid rgba(255,214,0,0.20);
+    background: var(--rappi-soft); border: 1.5px solid rgba(255,68,26,0.20);
     border-radius: var(--r-sm); padding: 12px 14px; margin-bottom: 10px;
   }
   .printer-saved-info { flex: 1; }
@@ -1924,7 +1915,7 @@
     color: var(--rappi); font-weight: 700; font-size: 13px;
     cursor: pointer; transition: all 0.18s; font-family: 'Inter', sans-serif;
   }
-  .logo-upload-btn:active { background: rgba(255,214,0,0.10); }
+  .logo-upload-btn:active { background: rgba(255,68,26,0.10); }
 
   @keyframes masterFadeIn {
     from { opacity: 0; transform: translateY(-8px) scale(0.97); }
@@ -1958,20 +1949,20 @@
   #loginScreen::before {
     content: ''; position: absolute;
     width: 400px; height: 400px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,214,0,0.06), transparent 70%);
+    background: radial-gradient(circle, rgba(255,68,26,0.06), transparent 70%);
     top: -120px; right: -120px; pointer-events: none;
   }
   #loginScreen::after {
     content: ''; position: absolute;
     width: 300px; height: 300px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(255,214,0,0.04), transparent 70%);
+    background: radial-gradient(circle, rgba(255,68,26,0.04), transparent 70%);
     bottom: -80px; left: -80px; pointer-events: none;
   }
   .login-logo {
     width: 72px; height: 72px; background: var(--rappi);
     border-radius: 22px; display: flex; align-items: center;
     justify-content: center; font-size: 36px; margin-bottom: 20px;
-    box-shadow: 0 10px 32px rgba(255,214,0,0.35); flex-shrink: 0;
+    box-shadow: 0 10px 32px rgba(255,68,26,0.35); flex-shrink: 0;
   }
   .login-brand {
     font-family: 'Inter', sans-serif; font-size: 28px;
@@ -2015,7 +2006,7 @@
   .login-rol-card.rol-admin  { border-left: 4px solid var(--rappi); }
   .login-rol-card.rol-mesero { border-left: 4px solid var(--verde-ok); }
   .login-rol-card.rol-cocina { border-left: 4px solid #FF9800; }
-  .login-rol-card.rol-admin:active  { background: rgba(255,214,0,0.05); border-color: var(--rappi); }
+  .login-rol-card.rol-admin:active  { background: rgba(255,68,26,0.05); border-color: var(--rappi); }
   .login-rol-card.rol-mesero:active { background: rgba(46,125,50,0.06); border-color: var(--verde-ok); }
   .login-rol-card.rol-cocina:active { background: rgba(255,152,0,0.06); border-color: #FF9800; }
   .login-rol-icon {
@@ -2023,7 +2014,7 @@
     display: flex; align-items: center; justify-content: center;
     flex-shrink: 0;
   }
-  .rol-admin  .login-rol-icon { background: rgba(255,214,0,0.08); }
+  .rol-admin  .login-rol-icon { background: rgba(255,68,26,0.08); }
   .rol-mesero .login-rol-icon { background: rgba(46,125,50,0.1); }
   .rol-cocina .login-rol-icon { background: rgba(255,152,0,0.1); }
   .login-rol-info { flex: 1; }
@@ -2061,7 +2052,7 @@
     padding: 2px 9px; border-radius: 50px;
     font-weight: 700; letter-spacing: 0.3px; margin-top: 3px;
   }
-  .role-admin  { background: rgba(255,214,0,0.08); color: var(--rappi); }
+  .role-admin  { background: rgba(255,68,26,0.08); color: var(--rappi); }
   .role-mesero { background: rgba(46,125,50,0.12); color: var(--verde-ok); }
   .role-cocina { background: rgba(255,152,0,0.12); color: #FF9800; border: 1px solid rgba(255,152,0,0.3); }
   .role-cajero { background: rgba(21,101,192,0.1); color: #1565C0; border: 1px solid rgba(21,101,192,0.3); }
@@ -2098,7 +2089,7 @@
     width: 14px; height: 14px; border-radius: 50%;
     border: 2px solid #DDDDDD; background: transparent; transition: all 0.15s;
   }
-  .pin-dot.filled { background: var(--rappi); border-color: var(--rappi); box-shadow: 0 0 10px rgba(255,214,0,0.35); }
+  .pin-dot.filled { background: var(--rappi); border-color: var(--rappi); box-shadow: 0 0 10px rgba(255,68,26,0.35); }
   .pin-dot.error  { background: var(--rojo); border-color: var(--rojo); }
   .pin-pad {
     display: grid; grid-template-columns: repeat(3, 1fr);
@@ -2116,7 +2107,7 @@
   .pin-key.del { font-size: 20px; opacity: 0.6; }
   .pin-key.enter {
     background: var(--rappi); border-color: var(--rappi);
-    color: #111; box-shadow: 0 4px 14px rgba(255,214,0,0.35);
+    color: #111; box-shadow: 0 4px 14px rgba(255,68,26,0.35);
     transition: all 0.2s;
   }
   .pin-key.enter:active { opacity: 0.85; transform: scale(0.95); }
@@ -2193,7 +2184,7 @@
     outline: none; transition: all 0.2s; background: var(--fondo); font-weight: 500;
   }
   .form-input:focus {
-    border-color: var(--rappi); box-shadow: 0 0 0 3px rgba(255,214,0,0.08); background: var(--blanco);
+    border-color: var(--rappi); box-shadow: 0 0 0 3px rgba(255,68,26,0.08); background: var(--blanco);
   }
   .role-selector { display: flex; gap: 8px; }
   .role-opt {
@@ -2206,7 +2197,7 @@
     position: relative;
   }
   .role-opt:active { transform: scale(0.96); }
-  .role-opt.active-admin  { background: var(--rappi-soft); border-color: var(--rappi); color: var(--rappi); box-shadow: 0 2px 10px rgba(255,214,0,0.20); }
+  .role-opt.active-admin  { background: var(--rappi-soft); border-color: var(--rappi); color: var(--rappi); box-shadow: 0 2px 10px rgba(255,68,26,0.20); }
   .role-opt.active-mesero { background: rgba(46,125,50,0.1); border-color: var(--verde-ok); color: var(--verde-ok); box-shadow: 0 2px 10px rgba(46,125,50,0.2); }
   .role-opt.active-cocina { background: rgba(255,152,0,0.1); border-color: #FF9800; color: #FF9800; box-shadow: 0 2px 10px rgba(255,152,0,0.2); }
   .color-picker-row { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -2302,7 +2293,7 @@
     background: var(--rappi-soft); border-color: var(--rappi); color: var(--rappi);
   }
   body.dark .tipo-orden-btn { background: #252525; border-color: #333; color: #CCC; }
-  body.dark .tipo-orden-btn.active { background: rgba(255,214,0,0.10); border-color: var(--rappi); color: var(--rappi); }
+  body.dark .tipo-orden-btn.active { background: rgba(255,68,26,0.10); border-color: var(--rappi); color: var(--rappi); }
 
   /* ── DESCUENTO ───────────────────────────────────────── */
   .descuento-row {
@@ -2319,7 +2310,7 @@
     background: var(--rappi-soft); border-color: var(--rappi); color: var(--rappi);
   }
   body.dark .descuento-tipo-btn { background: #252525; border-color: #333; color: #CCC; }
-  body.dark .descuento-tipo-btn.active { background: rgba(255,214,0,0.10); border-color: var(--rappi); color: var(--rappi); }
+  body.dark .descuento-tipo-btn.active { background: rgba(255,68,26,0.10); border-color: var(--rappi); color: var(--rappi); }
 
   /* ── CONTADOR SESIÓN ─────────────────────────────────── */
   .sesion-stats {
@@ -2346,7 +2337,7 @@
     font-weight: 600; outline: none; background: var(--fondo); color: var(--negro);
     transition: all 0.2s;
   }
-  .cierre-fecha-sel select:focus { border-color: var(--rappi); box-shadow: 0 0 0 3px rgba(255,214,0,0.08); }
+  .cierre-fecha-sel select:focus { border-color: var(--rappi); box-shadow: 0 0 0 3px rgba(255,68,26,0.08); }
   body.dark .cierre-fecha-sel select { background: #252525; border-color: #333; color: #F0F0F0; }
 
   /* ── FACTURA ELECTRÓNICA ─────────────────────────────── */
@@ -2420,7 +2411,7 @@
     position: relative; width: 100%; border-radius: 16px; overflow: hidden;
   }
   .edit-photo-wrap:not(.has-photo) {
-    border: 2px dashed var(--rappi); background: rgba(255,214,0,.06);
+    border: 2px dashed var(--rappi); background: rgba(255,68,26,.06);
   }
   .edit-photo-preview { width: 100%; display: none; }
   .edit-photo-preview img {
@@ -2462,7 +2453,7 @@
   /* FIX: quitar overflow:hidden cuando está abierto — si no, el file picker no se puede abrir en iOS/Android */
   .cfg-acc.open .cfg-acc-body { max-height: 9999px; overflow: visible; }
   .cfg-acc-inner { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 10px; }
-  .cfg-acc.open .cfg-acc-header { background: rgba(255,214,0,.06); }
+  .cfg-acc.open .cfg-acc-header { background: rgba(255,68,26,.06); }
   .cfg-acc.open .cfg-acc-title { color: var(--rappi); }
   .cfg-acc.open .cfg-acc-arrow { color: var(--rappi); }
 
@@ -2524,7 +2515,7 @@
   .recibo-card:active { transform: scale(0.98); }
   .recibo-card.urgente { border-color: var(--rappi); background: var(--rappi-soft); }
   body.dark .recibo-card { background: #1E1E1E; border-color: #2A2A2A; }
-  body.dark .recibo-card.urgente { border-color: var(--rappi); background: rgba(255,214,0,0.08); }
+  body.dark .recibo-card.urgente { border-color: var(--rappi); background: rgba(255,68,26,0.08); }
   .recibo-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
   .recibo-mesa { font-size: 16px; font-weight: 900; color: var(--negro); }
   .recibo-total { font-size: 16px; font-weight: 900; color: var(--rappi); font-family: var(--font-num); }
@@ -2537,7 +2528,7 @@
   .pago-combinado-item { background: var(--fondo); border: 1.5px solid var(--borde); border-radius: 12px; padding: 10px 12px; display: flex; flex-direction: column; gap: 0; }
   .pago-combinado-item.activo { border-color: var(--rappi); background: var(--rappi-soft); }
   body.dark .pago-combinado-item { background: #252525; border-color: #333; }
-  body.dark .pago-combinado-item.activo { border-color: var(--rappi); background: rgba(255,214,0,0.08); }
+  body.dark .pago-combinado-item.activo { border-color: var(--rappi); background: rgba(255,68,26,0.08); }
   .cob-exacto-btn { border: 1.5px solid var(--rappi); background: transparent; color: var(--rappi); border-radius: 8px; padding: 5px 9px; font-size: 11px; font-weight: 800; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; flex-shrink: 0; transition: all 0.15s; }
   .cob-exacto-btn:active { background: var(--rappi); color: #111; }
   body.dark .cob-exacto-btn { border-color: var(--rappi); color: var(--rappi); }
@@ -2545,7 +2536,7 @@
   body.dark .cob-chips-row { border-top-color: rgba(255,255,255,0.06); }
   .cob-chip { border: 1.5px solid var(--borde); background: var(--blanco); color: var(--negro); border-radius: 20px; padding: 5px 10px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: var(--font-num); transition: all 0.15s; }
   .cob-chip:active { background: var(--rappi); color: #111; border-color: var(--rappi); transform: scale(0.96); }
-  .cob-chip-exacto { background: rgba(255,214,0,0.06); border-color: rgba(255,214,0,0.25); color: var(--rappi); }
+  .cob-chip-exacto { background: rgba(255,68,26,0.06); border-color: rgba(255,68,26,0.25); color: var(--rappi); }
   body.dark .cob-chip { background: #1A1A1A; border-color: #444; color: #EEE; }
   .pago-comb-label { flex: 1; font-size: 13px; font-weight: 700; color: var(--negro); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .pago-comb-input { width: 110px; padding: 8px 10px; border: 1.5px solid var(--borde); border-radius: 10px; font-size: 14px; font-family: var(--font-num); font-weight: 700; text-align: right; background: var(--blanco); color: var(--negro); outline: none; flex-shrink: 0; }
@@ -2611,7 +2602,7 @@
     </div>
     <!-- PASO 2: Datos -->
     <div id="nuevaOrdenPaso2" style="display:none;">
-      <div id="nuevaOrdenTipoIndicador" style="display:flex;align-items:center;gap:8px;background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.15);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:13px;font-weight:700;color:var(--rappi);cursor:pointer;" onclick="volverPaso1NuevaOrden()">
+      <div id="nuevaOrdenTipoIndicador" style="display:flex;align-items:center;gap:8px;background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.15);border-radius:10px;padding:8px 12px;margin-bottom:14px;font-size:13px;font-weight:700;color:var(--rappi);cursor:pointer;" onclick="volverPaso1NuevaOrden()">
         <span id="nuevaOrdenTipoIcon">🍽️</span>
         <span id="nuevaOrdenTipoLabel">Restaurante</span>
         <span style="margin-left:auto;font-size:11px;opacity:0.7;">✏️ Cambiar</span>
@@ -2633,7 +2624,7 @@
         <!-- fix #11: nuevaOrdenTelefonoWrap eliminado — era código muerto.
              El teléfono en domicilio se captura reutilizando #nuevaOrdenCliente. -->
       </div>
-      <div id="nuevaOrdenError" style="display:none;background:#1A1A0D;border:1.5px solid #FFD600;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:13px;font-weight:600;color:#C0340E;line-height:1.45;"></div>
+      <div id="nuevaOrdenError" style="display:none;background:#1A1A0D;border:1.5px solid #FF441A;border-radius:12px;padding:11px 14px;margin-bottom:12px;font-size:13px;font-weight:600;color:#C0340E;line-height:1.45;"></div>
       <div class="nueva-orden-actions">
         <button class="btn-cancelar-orden" onclick="cerrarModalNuevaOrden()">Cancelar</button>
         <button class="btn-confirmar-orden" onclick="confirmarNuevaOrden()">✅ Crear orden</button>
@@ -2694,14 +2685,14 @@
       📌 Ve a <strong>console.firebase.google.com</strong> → tu proyecto → ⚙️ Configuración → Aplicaciones web → Mostrar config
     </p>
     <button onclick="guardarConfigFirebase()"
-      style="width:100%;margin-top:18px;padding:14px;background:linear-gradient(135deg,#FFD600,#E6C000);color:#111;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
+      style="width:100%;margin-top:18px;padding:14px;background:linear-gradient(135deg,#FF441A,#E03310);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
       ✅ Conectar Firebase
     </button>
     <button onclick="document.getElementById('modalFirebaseSetup').style.display='none';"
       style="width:100%;margin-top:10px;padding:12px;background:var(--gris-cl);color:var(--gris-osc);border:none;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit;">
       Cancelar
     </button>
-    <p id="fbSetupError" style="color:#E6C000;font-size:12px;text-align:center;margin-top:10px;display:none;"></p>
+    <p id="fbSetupError" style="color:#E03310;font-size:12px;text-align:center;margin-top:10px;display:none;"></p>
   </div>
 </div>
 
@@ -2715,7 +2706,7 @@
   <div class="login-brand" id="loginBrandText">Mi Restaurante</div>
   <div class="login-sub" id="loginSubText">Sistema POS</div>
   <!-- Banner de primer uso -->
-  <div id="firstRunBanner" style="display:none;margin:10px 20px 0;padding:10px 14px;background:rgba(255,214,0,0.08);border:1.5px solid rgba(255,214,0,0.25);border-radius:12px;text-align:center;font-size:12px;color:var(--rappi);font-weight:600;line-height:1.5;">
+  <div id="firstRunBanner" style="display:none;margin:10px 20px 0;padding:10px 14px;background:rgba(255,68,26,0.08);border:1.5px solid rgba(255,68,26,0.25);border-radius:12px;text-align:center;font-size:12px;color:var(--rappi);font-weight:600;line-height:1.5;">
     ⚙️ Personaliza el nombre y logo del restaurante<br>
     <span style="font-weight:400;color:var(--gris);font-size:11px;">Inicia sesión como <b>Master</b> → Configuración → Datos del restaurante</span>
   </div>
@@ -2856,7 +2847,7 @@
   font-weight: 900;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: #FFD600;
+  color: #FF441A;
   white-space: nowrap;
   flex-shrink: 0;
 }
@@ -2886,10 +2877,10 @@
   letter-spacing: 1px;
   white-space: nowrap;
 }
-.kds-stat-pill b { color: #FFD600; margin-right: 3px; }
+.kds-stat-pill b { color: #FF441A; margin-right: 3px; }
 #kdsBtnVolver {
   flex: 1;
-  background: #FFD600;
+  background: #FF441A;
   border: none;
   color: #111;
   border-radius: 8px;
@@ -3044,7 +3035,7 @@
 .kds-item-qty {
   font-size: 22px;
   font-weight: 800;
-  color: #FFD600;
+  color: #FF441A;
   min-width: 28px;
   line-height: 1;
 }
@@ -3138,7 +3129,7 @@
   bottom: 28px;
   left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: #FFD600;
+  background: #FF441A;
   color: #000;
   padding: 12px 28px;
   border-radius: 40px;
@@ -3207,7 +3198,7 @@
 .dom-estado-badge.pago        { background:rgba(244,81,30,.10);  color:#BF360C; }
 .dom-estado-badge.cocina      { background:rgba(255,152,0,.12);  color:#E65100; }
 .dom-estado-badge.listo       { background:rgba(0,200,83,.10);   color:#1B5E20; }
-.dom-estado-badge.despachado  { background:rgba(255,214,0,.12);  color:var(--rappi-dark); }
+.dom-estado-badge.despachado  { background:rgba(255,68,26,.12);  color:var(--rappi-dark); }
 .dom-estado-badge.entregado   { background:rgba(0,200,83,.10);   color:#1B5E20; }
 .dom-estado-badge.cancelado   { background:var(--gris-cl);       color:var(--gris); }
 
@@ -3539,7 +3530,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
       color:white;border:none;border-radius:20px;
       font-size:18px;font-weight:900;font-family:inherit;
       cursor:pointer;display:flex;align-items:center;justify-content:center;
-      gap:12px;box-shadow:0 6px 24px rgba(255,214,0,0.30);
+      gap:12px;box-shadow:0 6px 24px rgba(255,68,26,0.30);
       touch-action:manipulation;-webkit-tap-highlight-color:transparent;
       transition:transform 0.15s,opacity 0.15s;
     " ontouchstart="this.style.transform='scale(0.97)'" ontouchend="this.style.transform=''">
@@ -4046,7 +4037,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
             Configura los días y horas en que el menú digital está disponible. Fuera de este horario los clientes verán un aviso de "Cerrado".
           </div>
           <div id="horariosWrap" style="display:flex;flex-direction:column;gap:6px;"></div>
-          <div style="margin-top:10px;padding:10px 12px;background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.12);border-radius:var(--r-sm);font-size:12px;color:var(--rappi);font-weight:600;">
+          <div style="margin-top:10px;padding:10px 12px;background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.12);border-radius:var(--r-sm);font-size:12px;color:var(--rappi);font-weight:600;">
             💡 Deja "Cerrado" los días que no atiendes. El menú digital mostrará el aviso automáticamente.
           </div>
         </div>
@@ -4204,7 +4195,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     <div class="cfg-acc-body">
       <div class="cfg-acc-inner">
         <p style="font-size:12px;color:var(--gris);margin-bottom:12px;line-height:1.5;">Sincroniza menú, historial, usuarios y logo en tiempo real entre todos los dispositivos.</p>
-        <button class="btn-save-config" onclick="abrirConfigFirebase()" style="background:linear-gradient(135deg,#FFD600,#E6C000);box-shadow:0 4px 14px rgba(255,214,0,0.30);">⚙️ Configurar Firebase</button>
+        <button class="btn-save-config" onclick="abrirConfigFirebase()" style="background:linear-gradient(135deg,#FF441A,#E03310);box-shadow:0 4px 14px rgba(255,68,26,0.30);">⚙️ Configurar Firebase</button>
       </div>
     </div>
   </div>
@@ -4367,7 +4358,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 <div class="panel" id="panel-menu">
   <!-- Indicador de tipo de orden activo -->
   <div id="tipoOrdenBar" style="display:none;align-items:center;gap:8px;margin-bottom:10px;padding:8px 10px;
-       background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.15);border-radius:var(--r-sm);">
+       background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.15);border-radius:var(--r-sm);">
     <span id="tipoOrdenBarIcon" style="font-size:18px;"></span>
     <span id="tipoOrdenBarLabel" style="font-size:13px;font-weight:700;color:var(--rappi);flex:1;"></span>
   </div>
@@ -4407,7 +4398,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
       font-size:16px;font-weight:700;font-family:inherit;
       cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
       touch-action:manipulation;-webkit-tap-highlight-color:transparent;
-      box-shadow:0 4px 16px rgba(255,214,0,0.25);
+      box-shadow:0 4px 16px rgba(255,68,26,0.25);
     ">
       ← Volver al inicio
     </button>
@@ -4906,11 +4897,11 @@ let editPrecioIdx = -1;
 
 // ── SISTEMA DE USUARIOS ───────────────────────────────────────────────
 
-const AVATAR_COLORS = ['#FFD600','#E53935','#8E24AA','#1E88E5','#00897B','#F4511E','#3949AB','#43A047'];
+const AVATAR_COLORS = ['#FF441A','#E53935','#8E24AA','#1E88E5','#00897B','#F4511E','#3949AB','#43A047'];
 
 const USUARIOS_DEFAULT = [
   { id: 0, nombre: 'Master',        pin: '999999', rol: 'master', color: '#7B1FA2' },
-  { id: 1, nombre: 'Administrador', pin: '1234',   rol: 'admin',  color: '#FFD600' },
+  { id: 1, nombre: 'Administrador', pin: '1234',   rol: 'admin',  color: '#FF441A' },
   { id: 2, nombre: 'Mesero',        pin: '0000',   rol: 'mesero', color: '#8b6535' },
   { id: 3, nombre: 'Cocina',        pin: '1111',   rol: 'cocina', color: '#FF9800' },
 ];
@@ -6848,7 +6839,7 @@ function abrirPedidosPanel() {
         return typeof o.timestamp === 'string' ? o.timestamp : '';
       })();
       const usuarioDueno = usuarios.find(u => u.id === o.usuarioId);
-      const userColor = ensureVibrante((usuarioDueno && usuarioDueno.color) || (o.usuarioColor && o.usuarioColor !== '#888888' ? o.usuarioColor : null) || usuarioActivo?.color || '#FFD600');
+      const userColor = ensureVibrante((usuarioDueno && usuarioDueno.color) || (o.usuarioColor && o.usuarioColor !== '#888888' ? o.usuarioColor : null) || usuarioActivo?.color || '#FF441A');
 
       const itemsPreview = o.items.slice(0, 3).map(i =>
         `<span style="display:inline-block;background:rgba(255,255,255,0.22);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:4px;margin-top:4px;">${i.cantidad}× ${i.nombre}</span>`
@@ -7109,7 +7100,7 @@ function renderPedidos() {
     // ── Color del usuario propietario ──────────────────────────────────
     // Buscar el color ACTUAL del usuario por ID (evita colores desactualizados en la orden)
     const usuarioDueno = usuarios.find(u => u.id === o.usuarioId);
-    const userColor = ensureVibrante((usuarioDueno && usuarioDueno.color) || (o.usuarioColor && o.usuarioColor !== '#888888' ? o.usuarioColor : null) || usuarioActivo?.color || '#FFD600');
+    const userColor = ensureVibrante((usuarioDueno && usuarioDueno.color) || (o.usuarioColor && o.usuarioColor !== '#888888' ? o.usuarioColor : null) || usuarioActivo?.color || '#FF441A');
 
     const itemsPreview = o.items.slice(0, 3).map(i =>
       `<span style="display:inline-block;background:rgba(255,255,255,0.22);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:4px;margin-top:4px;">${i.cantidad}× ${i.nombre}</span>`
@@ -7734,7 +7725,7 @@ function renderCarrito() {
 
   // Color del DUEÑO de la orden activa (no del usuario logueado)
   const ucDueno = usuarios.find(u => u.id === ordenActiva?.usuarioId);
-  const uc = ensureVibrante((ucDueno && ucDueno.color) || ordenActiva?.usuarioColor || usuarioActivo?.color || '#FFD600');
+  const uc = ensureVibrante((ucDueno && ucDueno.color) || ordenActiva?.usuarioColor || usuarioActivo?.color || '#FF441A');
   const ucSoft = uc + '18';
   const ucMid  = uc + '33';
 
@@ -7888,7 +7879,7 @@ function renderCarrito() {
             <span style="font-size:13px;font-weight:800;color:var(--rappi);font-family:var(--font-num);">${totalServidos}/${totalUnidades}</span>
           </div>
           <div style="width:100%;height:7px;background:var(--borde);border-radius:999px;overflow:hidden;margin-bottom:8px;">
-            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--rappi),#FFE033);border-radius:999px;transition:width 0.4s ease;"></div>
+            <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,var(--rappi),#FF7A5C);border-radius:999px;transition:width 0.4s ease;"></div>
           </div>
           <div style="font-size:11px;color:var(--gris);text-align:center;">Marca el ✓ de cada plato al entregarlo · el botón de pago aparecerá al completar todos</div>
         </div>`;
@@ -7933,7 +7924,7 @@ function renderPago() {
 
   const esAdmin = usuarioActivo?.rol === 'admin' || usuarioActivo?.rol === 'master';
   const ucDueno = usuarios.find(u => u.id === ordenActiva?.usuarioId);
-  const uc = ensureVibrante((ucDueno && ucDueno.color) || ordenActiva?.usuarioColor || usuarioActivo?.color || '#FFD600');
+  const uc = ensureVibrante((ucDueno && ucDueno.color) || ordenActiva?.usuarioColor || usuarioActivo?.color || '#FF441A');
   const ucSoft = uc + '18';
 
   const subtotal = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
@@ -8422,8 +8413,8 @@ function confirmarNuevaOrden() {
       errEl.style.display = 'block';
     }
     if (inputEl) {
-      inputEl.style.borderColor = '#FFD600';
-      inputEl.style.background = 'rgba(255,214,0,0.05)';
+      inputEl.style.borderColor = '#FF441A';
+      inputEl.style.background = 'rgba(255,68,26,0.05)';
       inputEl.focus();
       inputEl.select();
       inputEl.style.animation = 'none';
@@ -8455,7 +8446,7 @@ function crearNuevaOrden(mesa, cliente, tipo, telefono, direccion) {
     descuentoValor: 0,
     usuarioId: usuarioActivo?.id ?? null,
     usuarioNombre: usuarioActivo?.nombre ?? '',
-    usuarioColor: usuarioActivo?.color ?? '#FFD600'
+    usuarioColor: usuarioActivo?.color ?? '#FF441A'
   };
   ordenes.push(nuevaOrden);
   ordenActivaId = nuevaOrden.id;
@@ -8812,7 +8803,7 @@ function renderHistorial() {
 
         return `
         <!-- Encabezado colapsable del día -->
-        <div onclick="histToggleDia('${grupo.fecha}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:linear-gradient(135deg,var(--rappi-soft),rgba(255,214,0,0.03));border:1.5px solid rgba(255,214,0,0.20);border-radius:var(--r-sm);margin-bottom:${colapsado?'6':'8'}px;margin-top:4px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;">
+        <div onclick="histToggleDia('${grupo.fecha}')" style="display:flex;align-items:center;justify-content:space-between;padding:11px 14px;background:linear-gradient(135deg,var(--rappi-soft),rgba(255,68,26,0.03));border:1.5px solid rgba(255,68,26,0.20);border-radius:var(--r-sm);margin-bottom:${colapsado?'6':'8'}px;margin-top:4px;cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;">
           <div style="display:flex;align-items:center;gap:8px;">
             <span style="font-size:16px;">📅</span>
             <div>
@@ -8836,10 +8827,10 @@ function renderHistorial() {
       <button onclick="showTab('home')" title="Cerrar" style="width:36px;height:36px;display:flex;align-items:center;justify-content:center;background:var(--gris-cl);border:none;border-radius:50%;font-size:18px;font-weight:700;color:var(--gris-osc);cursor:pointer;font-family:inherit;touch-action:manipulation;line-height:1;">✕</button>
     </div>
     ${!esCajero && !esMeseroHist && historialVisible.length > 0 ? `
-    <button onclick="abrirCierreDia()" style="width:100%;padding:14px;margin-bottom:14px;background:linear-gradient(135deg,var(--rappi),var(--rappi-dark));color:#111;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,214,0,0.25);display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px;">
+    <button onclick="abrirCierreDia()" style="width:100%;padding:14px;margin-bottom:14px;background:linear-gradient(135deg,var(--rappi),var(--rappi-dark));color:#111;border:none;border-radius:var(--r);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 4px 16px rgba(255,68,26,0.25);display:flex;align-items:center;justify-content:center;gap:8px;letter-spacing:0.3px;">
       📊 Cierre del Día · ${hoyCount > 0 ? hoyCount + ' factura' + (hoyCount>1?'s':'') + ' hoy' : 'ver por fecha'}
     </button>` : esCajero && historialVisible.length > 0 ? `
-    <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.15);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--rappi);font-weight:600;">
+    <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.15);border-radius:var(--r-sm);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--rappi);font-weight:600;">
       🧾 Mostrando tus ${historialVisible.length} factura${historialVisible.length>1?'s':''} · ${hoyCount > 0 ? hoyCount + ' hoy' : 'ninguna hoy'}
     </div>` : esMeseroHist && historialVisible.length > 0 ? `
     <div style="background:rgba(46,125,50,0.08);border:1.5px solid rgba(46,125,50,0.25);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:14px;">
@@ -8861,7 +8852,7 @@ function renderHistorial() {
           ${hayFiltroActivo ? '<span style=\"background:var(--rappi);color:#111;font-size:10px;font-weight:700;border-radius:20px;padding:2px 8px;letter-spacing:0.3px;\">ACTIVO</span>' : ''}
         </div>
         <div style="display:flex;align-items:center;gap:8px;">
-          ${hayFiltroActivo ? `<button onclick="event.stopPropagation();histLimpiarFiltros()" style="font-size:11px;font-weight:700;color:var(--rappi);background:var(--rappi-soft);border:1px solid rgba(255,214,0,0.20);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:inherit;">✕ Limpiar</button>` : ''}
+          ${hayFiltroActivo ? `<button onclick="event.stopPropagation();histLimpiarFiltros()" style="font-size:11px;font-weight:700;color:var(--rappi);background:var(--rappi-soft);border:1px solid rgba(255,68,26,0.20);border-radius:20px;padding:3px 10px;cursor:pointer;font-family:inherit;">✕ Limpiar</button>` : ''}
           <span style="font-size:20px;color:var(--gris);transition:transform 0.25s;display:inline-block;transform:${window._histAcordeonAbierto?'rotate(180deg)':'rotate(0deg)'};">⌄</span>
         </div>
       </button>
@@ -9003,7 +8994,7 @@ function renderHistorial() {
 
     <!-- ── RESUMEN FILTRADO ─────────────────────────────────────── -->
     ${hayFiltroActivo ? `
-    <div style="background:linear-gradient(135deg,var(--rappi-soft),rgba(255,214,0,0.04));border:1.5px solid rgba(255,214,0,0.20);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
+    <div style="background:linear-gradient(135deg,var(--rappi-soft),rgba(255,68,26,0.04));border:1.5px solid rgba(255,68,26,0.20);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--rappi);margin-bottom:2px;">Resultado del filtro</div>
         <div style="font-size:13px;color:var(--negro);font-weight:600;">${filtradas.length} factura${filtradas.length!==1?'s':''} · <span style="color:var(--rappi);font-family:var(--font-num);">${fmt(totalFiltrado)}</span></div>
@@ -9256,7 +9247,7 @@ function abrirCierreDia(fechaFiltro) {
     <div class="detalle-items">${productosHtml}</div>
     <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gris);margin:12px 0 6px;">Facturas del día</div>
     <div class="detalle-items">${facturasHtml}</div>
-    <button onclick="imprimirCierreDia()" style="margin-top:16px;width:100%;padding:13px;background:linear-gradient(135deg,var(--rappi),var(--rappi-dark));color:#111;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.3px;box-shadow:0 3px 12px rgba(255,214,0,0.25);">
+    <button onclick="imprimirCierreDia()" style="margin-top:16px;width:100%;padding:13px;background:linear-gradient(135deg,var(--rappi),var(--rappi-dark));color:#111;border:none;border-radius:var(--r-sm);font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;letter-spacing:0.3px;box-shadow:0 3px 12px rgba(255,68,26,0.25);">
       🖨️ Imprimir cierre del día
     </button>`}`;
   document.getElementById('modalDetalle').classList.add('show');
@@ -9323,7 +9314,7 @@ function verDetalleFactura(numeroFactura) {
           ⏳ Pendiente de envío a la DIAN
         </div>
         <button onclick="feReintentarEnvio('${f.numero}')" style="width:100%;margin-top:6px;padding:8px;background:linear-gradient(135deg,#E65100,#F57C00);color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">🔄 Reintentar ahora</button>` : `
-        <div style="margin-top:8px;background:rgba(255,214,0,0.07);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--gris);font-style:italic;">
+        <div style="margin-top:8px;background:rgba(255,68,26,0.07);border-radius:6px;padding:6px 8px;font-size:11px;color:var(--gris);font-style:italic;">
           Sin CUFE — backend no conectado aún
         </div>`}
     </div>` : ''}
@@ -9391,7 +9382,7 @@ function limpiarHistorial() {
     <p style="font-size:13px;color:var(--gris-osc);line-height:1.6;margin-bottom:14px;">
       Si borras el historial <strong>perderás todos los datos de ventas</strong> y los informes del módulo 📈 Stats quedarán vacíos. Esta acción <strong>no se puede deshacer</strong>.
     </p>
-    <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.20);border-radius:var(--r-sm);padding:12px;margin-bottom:16px;font-size:12px;line-height:1.7;font-family:var(--font-num);color:var(--negro);">
+    <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.20);border-radius:var(--r-sm);padding:12px;margin-bottom:16px;font-size:12px;line-height:1.7;font-family:var(--font-num);color:var(--negro);">
       <div style="font-weight:700;margin-bottom:4px;font-family:'Inter',sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--rappi);">Datos que se perderán:</div>
       ${resumenMeses.split('\n').map(l=>`<div>📅 ${l}</div>`).join('')}
     </div>
@@ -9850,13 +9841,13 @@ function abrirModalImprimirPorNumero(numeroFactura) {
   const btGuardado  = !!savedPrinterName;
 
   const opcionBT = btConectado
-    ? `<div class="device-item" onclick="cerrarModal('modalBt');reimprimirBluetooth(historial.find(x=>x.numero==='${numeroFactura}'));" style="border-color:rgba(255,214,0,0.35);">
+    ? `<div class="device-item" onclick="cerrarModal('modalBt');reimprimirBluetooth(historial.find(x=>x.numero==='${numeroFactura}'));" style="border-color:rgba(255,68,26,0.35);">
         <span class="device-icon">🖨️</span>
         <div><div class="device-name">Impresora Bluetooth</div>
         <div class="device-mac">✅ ${savedPrinterName || 'Conectada'} — imprimir ahora</div></div>
        </div>`
     : btGuardado
-      ? `<div class="device-item" onclick="cerrarModal('modalBt');_btConectarParaImprimir().then(ok=>{if(ok)reimprimirBluetooth(historial.find(x=>x.numero==='${numeroFactura}'));});" style="border-color:rgba(255,214,0,0.30);">
+      ? `<div class="device-item" onclick="cerrarModal('modalBt');_btConectarParaImprimir().then(ok=>{if(ok)reimprimirBluetooth(historial.find(x=>x.numero==='${numeroFactura}'));});" style="border-color:rgba(255,68,26,0.30);">
           <span class="device-icon">🖨️</span>
           <div><div class="device-name">Impresora Bluetooth</div>
           <div class="device-mac">⚪ ${savedPrinterName} — reconectar e imprimir</div></div>
@@ -10189,13 +10180,13 @@ function abrirModalImprimir() {
   const btGuardado  = !!savedPrinterName;
 
   const opcionBT = btConectado
-    ? `<div class="device-item" onclick="cerrarModal('modalBt');imprimirBluetooth();" style="border-color:rgba(255,214,0,0.35);">
+    ? `<div class="device-item" onclick="cerrarModal('modalBt');imprimirBluetooth();" style="border-color:rgba(255,68,26,0.35);">
         <span class="device-icon">🖨️</span>
         <div><div class="device-name">Impresora Bluetooth</div>
         <div class="device-mac">✅ ${savedPrinterName || 'Conectada'} — imprimir ahora</div></div>
        </div>`
     : btGuardado
-      ? `<div class="device-item" onclick="cerrarModal('modalBt');reconectarEImprimir();" style="border-color:rgba(255,214,0,0.30);">
+      ? `<div class="device-item" onclick="cerrarModal('modalBt');reconectarEImprimir();" style="border-color:rgba(255,68,26,0.30);">
           <span class="device-icon">🖨️</span>
           <div><div class="device-name">Impresora Bluetooth</div>
           <div class="device-mac">⚪ ${savedPrinterName} — reconectar e imprimir</div></div>
@@ -10764,7 +10755,7 @@ function actualizarManifestConLogo(logoSrc) {
       start_url: './',
       display: 'standalone',
       background_color: '#FFFFFF',
-      theme_color: '#FFD600',
+      theme_color: '#FF441A',
       orientation: 'portrait',
       icons: [
         { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%230D0D0D'/%3E%3Ctext x='50%25' y='55%25' font-size='110' text-anchor='middle' dominant-baseline='middle'%3E%F0%9F%8D%BD%3C/text%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' },
@@ -10921,7 +10912,7 @@ function renderProductosConfig() {
       <div class="user-mgmt-info" style="flex:1;min-width:0;">
         <div class="user-mgmt-name" style="font-size:14px;">${esc(item.nombre)}</div>
         <div class="user-mgmt-sub" style="display:flex;gap:8px;align-items:center;margin-top:3px;flex-wrap:wrap;">
-          <span style="background:#f0f8f1;color:var(--rappi);border:1px solid rgba(255,214,0,0.15);border-radius:20px;padding:1px 8px;font-size:10px;font-weight:600;">${esc(item.categoria)}</span>
+          <span style="background:#f0f8f1;color:var(--rappi);border:1px solid rgba(255,68,26,0.15);border-radius:20px;padding:1px 8px;font-size:10px;font-weight:600;">${esc(item.categoria)}</span>
           <span style="font-family:var(--font-num);font-size:12px;font-weight:700;color:var(--rappi);">${fmt(item.precio)}</span>
           ${item.descripcion ? `<span style="font-size:10px;color:var(--gris);font-style:italic;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;">${esc(item.descripcion)}</span>` : ''}
         </div>
@@ -13836,8 +13827,8 @@ function renderModalCobro(total, subtotal, descMonto) {
     <div style="background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;">
       <div style="font-size:10px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">🏷️ Descuento</div>
       <div class="descuento-row">
-        <button class="descuento-tipo-btn ${descuentoTipo==='pct'?'active':''}" onclick="setDescuentoTipo('pct');abrirModalCobro();" style="${descuentoTipo==='pct'?'background:rgba(255,214,0,0.08);border-color:var(--rappi);color:var(--rappi);':''}">%</button>
-        <button class="descuento-tipo-btn ${descuentoTipo==='fijo'?'active':''}" onclick="setDescuentoTipo('fijo');abrirModalCobro();" style="${descuentoTipo==='fijo'?'background:rgba(255,214,0,0.08);border-color:var(--rappi);color:var(--rappi);':''}">$</button>
+        <button class="descuento-tipo-btn ${descuentoTipo==='pct'?'active':''}" onclick="setDescuentoTipo('pct');abrirModalCobro();" style="${descuentoTipo==='pct'?'background:rgba(255,68,26,0.08);border-color:var(--rappi);color:var(--rappi);':''}">%</button>
+        <button class="descuento-tipo-btn ${descuentoTipo==='fijo'?'active':''}" onclick="setDescuentoTipo('fijo');abrirModalCobro();" style="${descuentoTipo==='fijo'?'background:rgba(255,68,26,0.08);border-color:var(--rappi);color:var(--rappi);':''}">$</button>
         <input class="obs-input" type="number" inputmode="numeric"
           placeholder="${descuentoTipo==='pct'?'0 – 100':'Monto fijo'}"
           value="${descuentoValor > 0 ? descuentoValor : ''}"
@@ -13849,7 +13840,7 @@ function renderModalCobro(total, subtotal, descMonto) {
     </div>` : ''}
 
     <!-- Totales + IVA -->
-    <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,214,0,0.15);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;">
+    <div style="background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.15);border-radius:var(--r);padding:12px 14px;margin-bottom:12px;">
       ${descMonto > 0 ? `<div style="display:flex;justify-content:space-between;font-size:13px;color:var(--gris-osc);margin-bottom:3px;"><span>Subtotal</span><span style="font-family:var(--font-num);">${fmt(subtotal)}</span></div>
       <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--rappi);margin-bottom:6px;"><span>Descuento</span><span style="font-family:var(--font-num);">-${fmt(descMonto)}</span></div>` : ''}
       ${ivaEntradas.map(([tasa, v]) => `
@@ -13860,7 +13851,7 @@ function renderModalCobro(total, subtotal, descMonto) {
         <span>${Number(tasa)===8?'Impoconsumo 8% (incl.)':'IVA '+tasa+'% (incl.)'}</span>
         <span style="font-family:var(--font-num);font-weight:700;">${fmt(v.imp)}</span>
       </div>`).join('')}
-      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1.5px solid rgba(255,214,0,0.15);padding-top:8px;margin-top:4px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;border-top:1.5px solid rgba(255,68,26,0.15);padding-top:8px;margin-top:4px;">
         <span style="font-size:14px;font-weight:800;color:var(--gris-osc);">TOTAL A PAGAR</span>
         <span style="font-size:30px;font-weight:900;color:var(--rappi);font-family:var(--font-num);">${fmt(total)}</span>
       </div>
@@ -15222,7 +15213,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
             <button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domCerrarPedido('${p.sessionId}')">✅ Cerrar pedido</button>`;
         } else {
           btns = `
-            <div style="background:rgba(255,214,0,.08);border:1.5px solid rgba(255,214,0,.4);border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:center;">
+            <div style="background:rgba(255,68,26,.08);border:1.5px solid rgba(255,68,26,.4);border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:center;">
               <div style="font-size:20px;margin-bottom:4px;">⏳</div>
               <div style="font-size:14px;font-weight:800;color:#E65100;">Esperando confirmación del cliente</div>
               <div style="font-size:11px;color:#555;margin-top:3px;">El cliente debe tocar "Confirmar que recibí" en su pantalla</div>
@@ -15669,15 +15660,15 @@ function renderPedido(p) {
     const hecho  = i < idxActual;
     const activo = i === idxActual;
     const dotCls = hecho ? 'hecho' : activo ? 'activo' : 'pend';
-    // dotCls ya cubre todos los casos (hecho/activo/pend), no se necesita condición extra
-    return '<div class="paso"><div class="paso-dot '+dotCls+'"'+(activo?' style="animation:pulse 1.5s ease-in-out infinite;"':'')+'>'+(hecho?'✓':(activo?paso.icon:(i+1)))+'</div><div class="paso-info"><div class="paso-titulo" style="color:'+(activo?'#1565C0':hecho?'#00C853':'#888')+';">'+paso.label+'</div><div class="paso-sub">'+paso.sub+'</div></div></div>';
+    const dotTxt = hecho ? '✓' : paso.icon;
+    return '<div class="paso"><div class="paso-dot '+(hecho||activo?dotCls:'pend')+'"'+(activo?' style="animation:pulse 1.5s ease-in-out infinite;"':'')+'>'+(hecho?'✓':(activo?paso.icon:(i+1)))+'</div><div class="paso-info"><div class="paso-titulo" style="color:'+(activo?'#1565C0':hecho?'#00C853':'#888')+';">'+paso.label+'</div><div class="paso-sub">'+paso.sub+'</div></div></div>';
   }).join('');
 
   const itemsHtml = (p.items||[]).map(i => {
     const sin = (p.sinStock||[]).includes(i.nombre);
     return '<div class="item-row">'
       +'<span style="font-weight:600;'+(sin?'text-decoration:line-through;color:#888;':'')+'">'+esc(i.nombre)+(sin?' (sin stock)':'')+'</span>'
-      +'<span style="font-weight:700;color:#FFD600;">'+i.cantidad+'× '+fmt(i.precio)+'</span>'
+      +'<span style="font-weight:700;color:#FF441A;">'+i.cantidad+'× '+fmt(i.precio)+'</span>'
       +'</div>';
   }).join('');
 
@@ -15693,7 +15684,7 @@ function renderPedido(p) {
     +'<div class="item-list">'+itemsHtml+'</div>'
     +'<div style="display:flex;justify-content:space-between;align-items:center;border-top:1.5px solid #f0f0f0;padding-top:10px;margin-top:8px;">'
     +'<span style="font-size:14px;font-weight:700;">Total</span>'
-    +'<span style="font-size:20px;font-weight:900;color:#FFD600;">'+fmt(total)+'</span>'
+    +'<span style="font-size:20px;font-weight:900;color:#FF441A;">'+fmt(total)+'</span>'
     +'</div></div>'
     +'<div class="card">'
     +'<div class="lbl" style="margin-bottom:6px;">Tus datos</div>'
@@ -15704,44 +15695,24 @@ function renderPedido(p) {
 
   // Re-attach event handlers
   window.enviarCambio = function() {
-    // Bug 3 fix: guard contra Firebase no disponible
-    if (typeof update === 'undefined' || typeof ref === 'undefined' || typeof db === 'undefined') {
-      alert('Error: no hay conexión con el servidor. Recarga la página e intenta de nuevo.');
-      return;
-    }
-    try {
-      const checks = document.querySelectorAll('#changeForm input[type=checkbox]:checked');
-      const reemplazos = [...checks].map(c => c.value);
-      update(ref(db, 'helechos/domicilios/'+sessionId), {
-        reemplazos,
-        estado: 'verificando',
-        sinStock: [],
-        clienteRespondio: true,
-        notifAdmin: { tipo: 'cliente_cambio', ts: Date.now(), reemplazos }
-      });
-      cambioEnviado = true;
-      document.getElementById('changeForm').innerHTML = '<div style="text-align:center;padding:16px;color:#2E7D32;font-weight:800;">✅ ¡Gracias! Actualizamos tu pedido.</div>';
-    } catch(e) {
-      console.error('enviarCambio error:', e);
-      alert('Ocurrió un error al enviar el cambio. Intenta de nuevo.');
-    }
+    const checks = document.querySelectorAll('#changeForm input[type=checkbox]:checked');
+    const reemplazos = [...checks].map(c => c.value);
+    update(ref(db, 'helechos/domicilios/'+sessionId), {
+      reemplazos,
+      estado: 'verificando',
+      sinStock: [],
+      clienteRespondio: true,
+      notifAdmin: { tipo: 'cliente_cambio', ts: Date.now(), reemplazos }
+    });
+    cambioEnviado = true;
+    document.getElementById('changeForm').innerHTML = '<div style="text-align:center;padding:16px;color:#2E7D32;font-weight:800;">✅ ¡Gracias! Actualizamos tu pedido.</div>';
   };
   window.cancelarPedido = function() {
     if (!confirm('¿Seguro que quieres cancelar tu pedido?')) return;
-    // Bug 3 fix: guard contra Firebase no disponible
-    if (typeof update === 'undefined' || typeof ref === 'undefined' || typeof db === 'undefined') {
-      alert('Error: no hay conexión con el servidor. Recarga la página e intenta de nuevo.');
-      return;
-    }
-    try {
-      update(ref(db, 'helechos/domicilios/'+sessionId), {
-        estado: 'cancelado',
-        notifAdmin: { tipo: 'cliente_cancela', ts: Date.now() }
-      });
-    } catch(e) {
-      console.error('cancelarPedido error:', e);
-      alert('Ocurrió un error al cancelar. Intenta de nuevo.');
-    }
+    update(ref(db, 'helechos/domicilios/'+sessionId), {
+      estado: 'cancelado',
+      notifAdmin: { tipo: 'cliente_cancela', ts: Date.now() }
+    });
   };
 }
 <\/script>
@@ -15799,26 +15770,23 @@ function renderPedido(p) {
   }
 
   // ── Inicializar ──────────────────────────────────────────────────────────
-  // Bug 4 fix: usar flag para evitar doble inicialización cuando Firebase
-  // ya estaba listo al momento de registrar el listener.
-  let _domIniciado = false;
-  function _domInit() {
-    if (_domIniciado) return;
-    _domIniciado = true;
-    domArrancar();
-    domEscucharListoKDS();
-    domEscucharRespuestasCliente();
-    domActualizarBadges();
-  }
+  window.addEventListener('firebase-ready', () => {
+    setTimeout(() => {
+      domArrancar();
+      domEscucharListoKDS();
+      domEscucharRespuestasCliente();
+      domActualizarBadges();
+    }, 600);
+  }, { once: true });
 
+  // Si Firebase ya estaba listo antes de este script
   if (window._FB && window._FB.db) {
-    // Firebase ya listo — inicializar directamente
-    setTimeout(_domInit, 200);
-  } else {
-    // Esperar el evento
-    window.addEventListener('firebase-ready', () => {
-      setTimeout(_domInit, 600);
-    }, { once: true });
+    setTimeout(() => {
+      domArrancar();
+      domEscucharListoKDS();
+      domEscucharRespuestasCliente();
+      domActualizarBadges();
+    }, 200);
   }
 
 })(); // fin initDomicilios
