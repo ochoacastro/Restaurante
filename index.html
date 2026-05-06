@@ -4157,82 +4157,53 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 
 
   <!-- ═══════════════════════════════════════
-       MENÚ FÍSICO — editor desde index.html
+       MENÚ RESTAURANTE — editor tipo plantilla
   ═══════════════════════════════════════ -->
   <div class="cfg-acc" id="cfgacc-menufisico">
     <div class="cfg-acc-header" data-cfgacc="cfgacc-menufisico">
       <div class="cfg-acc-left">
-        <span class="cfg-acc-icon">🌿</span>
+        <span class="cfg-acc-icon">🍽️</span>
         <div>
-          <div class="cfg-acc-title">Menú Físico (impreso)</div>
-          <div class="cfg-acc-sub">Slogan, sede, fotos, categorías visibles</div>
+          <div class="cfg-acc-title">Menú Restaurante</div>
+          <div class="cfg-acc-sub">Editor visual · se refleja en el menú digital</div>
         </div>
       </div>
       <span class="cfg-acc-arrow">▼</span>
     </div>
     <div class="cfg-acc-body">
-      <div class="cfg-acc-inner">
+      <div class="cfg-acc-inner" style="padding:0;">
 
-        <div style="font-size:12px;color:var(--gris);line-height:1.5;padding:8px 10px;background:var(--fondo);border-radius:var(--r-sm);border:1px solid var(--borde);">
-          Estos datos se muestran en el <b>menú impreso</b> que los clientes ven al tocar "🍽 Restaurante" en el menú digital.
-          Los platos y precios se toman automáticamente del menú digital.
-        </div>
-
-        <div class="config-field">
-          <label>🖼️ Imagen de membrete (encabezado del menú)</label>
-          <div style="font-size:11px;color:var(--gris);margin-bottom:8px;line-height:1.5;">
-            Si subes una imagen, reemplaza el encabezado (logo + nombre + eslogan) en el menú físico. Ideal para usar tu membrete oficial ya diseñado.
-          </div>
-          <div id="mfMembretePreviewWrap" style="display:none;margin-bottom:8px;border-radius:8px;overflow:hidden;border:1.5px solid var(--borde);">
-            <img id="mfMembretePreview" style="width:100%;display:block;max-height:180px;object-fit:cover;">
-          </div>
-          <label class="logo-upload-btn" style="margin-bottom:6px;">
-            🖼️ <span id="mfMembreteUploadTxt">Subir imagen de membrete</span>
-            <input type="file" id="mfMembreteInput" accept="image/*" style="display:none" onchange="mfSubirMembrete(this)">
-          </label>
-          <button id="mfMembreteQuitarBtn" style="display:none;width:100%;padding:9px;background:white;border:1.5px solid rgba(192,57,43,0.35);color:var(--rojo);border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="mfQuitarMembrete()">🗑️ Quitar membrete (usar diseño automático)</button>
-        </div>
-
-        <div class="config-field">
-          <label>📍 Sede / Sucursal (subtítulo del menú físico)</label>
-          <input class="config-input" id="mfSede" placeholder="Ej: La Tupia">
-        </div>
-
-        <div class="config-field">
-          <label>✨ Eslogan del menú físico</label>
-          <input class="config-input" id="mfSlogan" placeholder="Ej: Sabor, Naturaleza y Tradición">
-        </div>
-
-        <div class="config-field">
-          <label>💬 Texto de cierre (pie del menú)</label>
-          <input class="config-input" id="mfCierre" placeholder="Ej: Gracias por preferirnos">
-        </div>
-
-        <!-- Fotos para el menú físico -->
-        <div class="config-field">
-          <label>📷 Fotos de platos (máx 6 para el menú físico)</label>
-          <div style="font-size:11px;color:var(--gris);margin-bottom:8px;">
-            Estas fotos aparecen en el cuerpo del menú impreso. Máximo 3 por columna.
-          </div>
-          <div id="mfFotosGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
-          <button onclick="mfImportarFotos()" style="margin-top:8px;width:100%;padding:9px;background:var(--fondo);border:1.5px dashed var(--borde);border-radius:var(--r-sm);font-size:12px;font-weight:700;color:var(--gris);cursor:pointer;">
-            ↙️ Importar fotos del menú digital
+        <!-- Botón principal para abrir el editor completo -->
+        <div style="padding:12px;">
+          <button onclick="mfAbrirEditorCompleto()" style="width:100%;padding:18px 16px;background:linear-gradient(135deg,#1A1A1A,#333);color:#fff;border:none;border-radius:16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:12px;box-shadow:0 4px 18px rgba(0,0,0,0.22);">
+            <span style="font-size:26px;">🍽️</span>
+            <div style="text-align:left;">
+              <div>Diseñar menú del restaurante</div>
+              <div style="font-size:11px;font-weight:500;opacity:0.6;margin-top:2px;">Editor visual completo — vista previa en tiempo real</div>
+            </div>
+            <span style="margin-left:auto;font-size:18px;">→</span>
           </button>
         </div>
 
-        <!-- Categorías visibles -->
-        <div class="config-field">
-          <label>📋 Categorías visibles en el menú físico</label>
-          <div style="font-size:11px;color:var(--gris);margin-bottom:8px;">
-            Activa solo las que quieres mostrar en el menú impreso.
-          </div>
-          <div id="mfCatToggles" style="display:flex;flex-direction:column;gap:4px;"></div>
+        <!-- Accesos rápidos -->
+        <div style="padding:0 12px 12px;display:flex;gap:8px;">
+          <button class="btn-save-config" style="flex:1;font-size:12px;" onclick="guardarMenuFisicoCfg()">💾 Guardar</button>
+          <button class="btn-save-config" style="flex:1;font-size:12px;background:#2D5A27;color:#fff;border:none;" onclick="mfDescargarPNG()">📥 Descargar PNG</button>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <button class="btn-save-config" style="flex:1;" onclick="guardarMenuFisicoCfg()">💾 Guardar</button>
-          <button class="btn-save-config" style="flex:1;background:var(--verde,#2D5A27);" onclick="mfDescargarPNG()">📥 Descargar PNG</button>
+        <!-- Campos legacy ocultos (compatibilidad con funciones existentes) -->
+        <div style="display:none;">
+          <input id="mfSede">
+          <input id="mfSlogan">
+          <input id="mfCierre">
+          <div id="mfFotosGrid"></div>
+          <div id="mfCatToggles"></div>
+          <div id="mfMembretePreviewWrap"><img id="mfMembretePreview"></div>
+          <span id="mfMembreteUploadTxt"></span>
+          <button id="mfMembreteQuitarBtn"></button>
+          <input id="mfMembreteInput" type="file" accept="image/*" onchange="mfSubirMembrete(this)">
         </div>
+
       </div>
     </div>
   </div>
@@ -16304,6 +16275,693 @@ function mfDescargarPNG() {
     document.body.removeChild(wrap);
   }, 600);
 }
+
+</script>
+
+<!-- ══════════════════════════════════════════════════════════════
+     EDITOR MENÚ RESTAURANTE — pantalla completa tipo plantilla
+══════════════════════════════════════════════════════════════ -->
+<div id="mfEditorScreen" style="display:none;position:fixed;inset:0;z-index:9800;background:#0F0F0F;flex-direction:column;">
+
+  <!-- Header -->
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#1A1A1A;border-bottom:1px solid #2A2A2A;flex-shrink:0;">
+    <button onclick="mfCerrarEditorCompleto()" style="width:36px;height:36px;border:none;background:#2A2A2A;border-radius:50%;color:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
+    <div style="flex:1;min-width:0;">
+      <div style="font-size:15px;font-weight:900;color:#fff;">🍽️ Editor · Menú Restaurante</div>
+      <div style="font-size:11px;color:rgba(255,255,255,.4);margin-top:1px;">Vista previa en tiempo real · los cambios se reflejan en el menú digital</div>
+    </div>
+    <button onclick="mfGuardarDesdeEditor()" style="padding:9px 18px;background:#FF441A;color:#fff;border:none;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(255,68,26,0.4);white-space:nowrap;">💾 Guardar</button>
+  </div>
+
+  <!-- Body: 2 paneles -->
+  <div style="flex:1;display:flex;overflow:hidden;">
+
+    <!-- Panel izquierdo: bloques de la plantilla -->
+    <div id="mfEditorLeft" style="width:340px;flex-shrink:0;background:#141414;border-right:1px solid #222;display:flex;flex-direction:column;overflow:hidden;">
+
+      <!-- Tabs -->
+      <div style="display:flex;border-bottom:1px solid #222;flex-shrink:0;background:#111;">
+        <button class="mfe-tab active" id="mfeTabDiseno" onclick="mfeShowTab('diseno')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">🎨 Diseño</button>
+        <button class="mfe-tab" id="mfeTabFotos" onclick="mfeShowTab('fotos')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">📷 Fotos</button>
+        <button class="mfe-tab" id="mfeTabCats" onclick="mfeShowTab('cats')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">📋 Categorías</button>
+        <button class="mfe-tab" id="mfeTabEstilo" onclick="mfeShowTab('estilo')" style="flex:1;padding:11px 4px;font-size:10px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">✨ Estilo</button>
+      </div>
+
+      <!-- ── TAB: DISEÑO ── -->
+      <div id="mfePanelDiseno" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;">
+
+        <!-- Membrete -->
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">🖼️ Membrete (encabezado personalizado)</div>
+          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:10px;line-height:1.5;">Sube una imagen de tu membrete para reemplazar el encabezado automático.</div>
+          <div id="mfeMembretePreviewWrap" style="display:none;margin-bottom:8px;border-radius:8px;overflow:hidden;border:1px solid #333;">
+            <img id="mfeMembretePreview" style="width:100%;display:block;max-height:120px;object-fit:cover;">
+          </div>
+          <div style="display:flex;gap:8px;">
+            <label style="flex:1;cursor:pointer;">
+              <div style="text-align:center;padding:9px;background:#2A2A2A;border-radius:10px;font-size:12px;font-weight:700;color:#ddd;border:1.5px dashed #444;">📷 <span id="mfeMembreteUploadTxt">Subir membrete</span></div>
+              <input type="file" id="mfeMembreteInput" accept="image/*" style="display:none" onchange="mfeSubirMembrete(this)">
+            </label>
+            <button id="mfeMembreteQuitarBtn" style="display:none;padding:9px 12px;background:#2A2A2A;border:1.5px solid rgba(229,57,53,.4);color:#E53935;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="mfeQuitarMembrete()">✕ Quitar</button>
+          </div>
+        </div>
+
+        <!-- Textos -->
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">✏️ Textos del encabezado</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Sede / Sucursal</div>
+              <input id="mfeSede" placeholder="Ej: La Tupia · Sede Norte" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;box-sizing:border-box;" oninput="mfeActualizarPreview()">
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Eslogan</div>
+              <input id="mfeSlogan" placeholder="Ej: Sabor, Naturaleza y Tradición" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;box-sizing:border-box;" oninput="mfeActualizarPreview()">
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Texto de cierre (pie)</div>
+              <input id="mfeCierre" placeholder="Ej: Gracias por preferirnos" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;box-sizing:border-box;" oninput="mfeActualizarPreview()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Diseño del encabezado (cuando no hay membrete) -->
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">🏷️ Estilo del encabezado automático</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color primario (categorías y bordes)</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="color" id="mfeColorPrimario" value="#2D5A27" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
+                <span id="mfeColorPrimarioLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#2D5A27</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color del nombre del restaurante</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="color" id="mfeColorNombre" value="#E8520A" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
+                <span id="mfeColorNombreLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#E8520A</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color de fondo del menú</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="color" id="mfeColorFondo" value="#F5EDD8" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
+                <span id="mfeColorFondoLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#F5EDD8</span>
+              </div>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color del eslogan / banner</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="color" id="mfeColorEslogan" value="#6B3A2A" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
+                <span id="mfeColorEsloganLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#6B3A2A</span>
+              </div>
+            </div>
+          </div>
+          <!-- Presets de color -->
+          <div style="margin-top:10px;">
+            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Paletas rápidas</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button onclick="mfeAplicarPaleta('campestre')" title="Campestre" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2D5A27,#E8520A);border:2px solid #444;cursor:pointer;" ></button>
+              <button onclick="mfeAplicarPaleta('clasico')" title="Clásico" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1A1A1A,#C0392B);border:2px solid #444;cursor:pointer;"></button>
+              <button onclick="mfeAplicarPaleta('elegante')" title="Elegante" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2C3E50,#D4AF37);border:2px solid #444;cursor:pointer;"></button>
+              <button onclick="mfeAplicarPaleta('tropical')" title="Tropical" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1B6CA8,#F39C12);border:2px solid #444;cursor:pointer;"></button>
+              <button onclick="mfeAplicarPaleta('rosa')" title="Rosado" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#8E44AD,#E91E8C);border:2px solid #444;cursor:pointer;"></button>
+              <button onclick="mfeAplicarPaleta('neutro')" title="Neutro" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#555,#888);border:2px solid #444;cursor:pointer;"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Decorativos -->
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">🌿 Decorativos</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="mfeDecorFernos" checked onchange="mfeActualizarPreview()" style="accent-color:#FF441A;width:16px;height:16px;">
+              <span style="font-size:13px;color:#ddd;">Mostrar emojis decorativos en esquinas</span>
+            </label>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="mfeDecorLeaf" checked onchange="mfeActualizarPreview()" style="accent-color:#FF441A;width:16px;height:16px;">
+              <span style="font-size:13px;color:#ddd;">🌿 junto a cada plato</span>
+            </label>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Emoji decorativo (esquinas)</div>
+              <input id="mfeDecorEmoji" value="🌿" maxlength="4" style="width:80px;padding:8px 10px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:20px;font-family:inherit;background:#111;color:#fff;outline:none;text-align:center;" oninput="mfeActualizarPreview()">
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ── TAB: FOTOS ── -->
+      <div id="mfePanelFotos" style="flex:1;overflow-y:auto;padding:14px;display:none;">
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;line-height:1.5;">Las fotos aparecen intercaladas entre las categorías. Máximo 6.</div>
+        <div id="mfeFotosGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;"></div>
+        <button onclick="mfeImportarFotos()" style="width:100%;padding:10px;background:#1E1E1E;border:1.5px dashed #333;border-radius:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">↙️ Importar fotos del menú digital</button>
+      </div>
+
+      <!-- ── TAB: CATEGORÍAS ── -->
+      <div id="mfePanelCats" style="flex:1;overflow-y:auto;padding:14px;display:none;">
+        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px;line-height:1.5;">Selecciona qué categorías mostrar en el menú del restaurante.</div>
+        <div id="mfeCatToggles2" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <!-- ── TAB: ESTILO TEXTO ── -->
+      <div id="mfePanelEstilo" style="flex:1;overflow-y:auto;padding:14px;display:none;flex-direction:column;gap:14px;">
+
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">🔤 Tipografía</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Fuente del nombre del restaurante</div>
+              <select id="mfeFuenteNombre" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;" onchange="mfeActualizarPreview()">
+                <option value="Oswald">Oswald (negrita impactante)</option>
+                <option value="Playfair Display">Playfair Display (elegante)</option>
+                <option value="Bebas Neue">Bebas Neue (condensada)</option>
+                <option value="Lobster">Lobster (cursiva)</option>
+                <option value="Montserrat">Montserrat (moderna)</option>
+                <option value="Raleway">Raleway (delgada premium)</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Fuente de los platos</div>
+              <select id="mfeFuentePlatos" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;" onchange="mfeActualizarPreview()">
+                <option value="Lato">Lato (clara y legible)</option>
+                <option value="Open Sans">Open Sans (estándar)</option>
+                <option value="Merriweather">Merriweather (serif)</option>
+                <option value="Nunito">Nunito (redondeada)</option>
+                <option value="Roboto Condensed">Roboto Condensed (compacta)</option>
+              </select>
+            </div>
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Tamaño del texto de platos</div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <input type="range" id="mfeTamanoTexto" min="9" max="16" value="12" style="flex:1;accent-color:#FF441A;" oninput="mfeTamanoLabel.textContent=this.value+'px';mfeActualizarPreview()">
+                <span id="mfeTamanoLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;width:30px;">12px</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
+          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">📐 Layout</div>
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div>
+              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Columnas del menú</div>
+              <div style="display:flex;gap:6px;">
+                <button id="mfeColBtn1" onclick="mfeSetCols(1)" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid #2A2A2A;background:#111;color:#ddd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">1 col</button>
+                <button id="mfeColBtn2" onclick="mfeSetCols(2)" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid #FF441A;background:rgba(255,68,26,.12);color:#FF441A;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">2 col ✓</button>
+              </div>
+            </div>
+            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
+              <input type="checkbox" id="mfeMostrarDesc" onchange="mfeActualizarPreview()" style="accent-color:#FF441A;width:16px;height:16px;">
+              <span style="font-size:13px;color:#ddd;">Mostrar descripción de los platos</span>
+            </label>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- Panel derecho: preview del menú -->
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000;">
+      <!-- Toolbar -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111;border-bottom:1px solid #1A1A1A;flex-shrink:0;">
+        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;">Vista previa</span>
+        <div style="flex:1;"></div>
+        <button onclick="mfeActualizarPreview()" style="padding:6px 10px;border:1.5px solid #2A2A2A;background:transparent;color:rgba(255,255,255,.5);border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;">↺</button>
+        <div style="display:flex;gap:3px;padding:3px;background:#1A1A1A;border-radius:8px;border:1px solid #2A2A2A;">
+          <button onclick="mfeSetPreviewMode('mobile')" id="mfeBtnMobile" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:#FF441A;color:#fff;">📱</button>
+          <button onclick="mfeSetPreviewMode('tablet')" id="mfeBtnTablet" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:rgba(255,255,255,.4);">📟</button>
+          <button onclick="mfeSetPreviewMode('full')" id="mfeBtnFull" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:rgba(255,255,255,.4);">🖥</button>
+        </div>
+      </div>
+      <!-- Preview container -->
+      <div style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:#0A0A0A;" id="mfePreviewWrap">
+        <div id="mfePhoneFrame" style="width:375px;border-radius:32px;overflow:hidden;box-shadow:0 0 0 10px #1A1A1A,0 0 0 12px #2A2A2A,0 30px 80px rgba(0,0,0,0.8);flex-shrink:0;transition:width .3s ease;">
+          <div id="mfePreviewContent" style="width:100%;min-height:700px;background:#F5EDD8;overflow-y:auto;font-family:Lato,sans-serif;"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<!-- fin editor menú restaurante -->
+
+<style>
+.mfe-tab.active { color:#FF441A !important; border-bottom-color:#FF441A !important; background:rgba(255,68,26,.08) !important; }
+</style>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// EDITOR MENÚ RESTAURANTE — lógica completa
+// ══════════════════════════════════════════════════════════
+
+const MFE_CFG_KEY = 'helechos_menu_fisico_cfg';
+let _mfeFotos  = [null,null,null,null,null,null];
+let _mfeMembrete2 = null;
+let _mfeCols = 2;
+let _mfePreviewMode = 'mobile';
+
+function mfeGetCfg() {
+  try { return JSON.parse(localStorage.getItem(MFE_CFG_KEY)||'{}'); } catch(e){ return {}; }
+}
+
+function mfeAbrirEditorCompleto() {
+  const screen = document.getElementById('mfEditorScreen');
+  if (!screen) return;
+  screen.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  mfeCargarEstado();
+  mfeActualizarPreview();
+  // Cargar fuentes
+  if (!document.getElementById('mfeFontLink2')) {
+    const link = document.createElement('link');
+    link.id = 'mfeFontLink2';
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Bebas+Neue&family=Lobster&family=Montserrat:wght@700;900&family=Raleway:wght@700&family=Lato:wght@400;700&family=Open+Sans:wght@400;700&family=Merriweather:wght@400;700&family=Nunito:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap';
+    document.head.appendChild(link);
+  }
+}
+
+window.mfAbrirEditorCompleto = mfeAbrirEditorCompleto;
+
+function mfeCerrarEditorCompleto() {
+  const screen = document.getElementById('mfEditorScreen');
+  if (screen) screen.style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+function mfeCargarEstado() {
+  const cfg = mfeGetCfg();
+  // Textos
+  const sede   = document.getElementById('mfeSede');
+  const slogan = document.getElementById('mfeSlogan');
+  const cierre = document.getElementById('mfeCierre');
+  if (sede)   sede.value   = cfg.sede   || '';
+  if (slogan) slogan.value = cfg.slogan || '';
+  if (cierre) cierre.value = cfg.cierre || 'Gracias por preferirnos';
+
+  // Colores
+  const cp = document.getElementById('mfeColorPrimario');
+  const cn = document.getElementById('mfeColorNombre');
+  const cf = document.getElementById('mfeColorFondo');
+  const ce = document.getElementById('mfeColorEslogan');
+  if (cp) { cp.value = cfg.colorPrimario || '#2D5A27'; document.getElementById('mfeColorPrimarioLabel').textContent = cp.value; }
+  if (cn) { cn.value = cfg.colorNombre   || '#E8520A'; document.getElementById('mfeColorNombreLabel').textContent = cn.value; }
+  if (cf) { cf.value = cfg.colorFondo    || '#F5EDD8'; document.getElementById('mfeColorFondoLabel').textContent = cf.value; }
+  if (ce) { ce.value = cfg.colorEslogan  || '#6B3A2A'; document.getElementById('mfeColorEsloganLabel').textContent = ce.value; }
+
+  // Decorativos
+  const dfn = document.getElementById('mfeDecorFernos');
+  const dfl = document.getElementById('mfeDecorLeaf');
+  const de  = document.getElementById('mfeDecorEmoji');
+  if (dfn) dfn.checked  = cfg.decorFernos !== false;
+  if (dfl) dfl.checked  = cfg.decorLeaf   !== false;
+  if (de)  de.value     = cfg.decorEmoji  || '🌿';
+
+  // Fuentes y layout
+  const fn = document.getElementById('mfeFuenteNombre');
+  const fp = document.getElementById('mfeFuentePlatos');
+  const tt = document.getElementById('mfeTamanoTexto');
+  const md = document.getElementById('mfeMostrarDesc');
+  if (fn) fn.value = cfg.fuenteNombre || 'Oswald';
+  if (fp) fp.value = cfg.fuentePlatos || 'Lato';
+  if (tt) { tt.value = cfg.tamanoTexto || 12; document.getElementById('mfeTamanoLabel').textContent = tt.value + 'px'; }
+  if (md) md.checked = !!cfg.mostrarDesc;
+
+  // Cols
+  _mfeCols = cfg.cols || 2;
+  mfeUpdateColBtns();
+
+  // Membrete
+  _mfeMembrete2 = cfg.membrete || null;
+  mfeActualizarMembreteUI(_mfeMembrete2);
+
+  // Fotos
+  _mfeFotos = (cfg.fotos || [null,null,null,null,null,null]).slice();
+  while (_mfeFotos.length < 6) _mfeFotos.push(null);
+  mfeRenderFotos();
+
+  // Categorías
+  mfeRenderCatToggles(cfg.catVisible || {});
+}
+
+function mfeGuardarDesdeEditor() {
+  const cp = document.getElementById('mfeColorPrimario');
+  const cn = document.getElementById('mfeColorNombre');
+  const cf = document.getElementById('mfeColorFondo');
+  const ce = document.getElementById('mfeColorEslogan');
+  const cfg = {
+    sede:          (document.getElementById('mfeSede')   ||{}).value || '',
+    slogan:        (document.getElementById('mfeSlogan') ||{}).value || '',
+    cierre:        (document.getElementById('mfeCierre') ||{}).value || 'Gracias por preferirnos',
+    colorPrimario: cp ? cp.value : '#2D5A27',
+    colorNombre:   cn ? cn.value : '#E8520A',
+    colorFondo:    cf ? cf.value : '#F5EDD8',
+    colorEslogan:  ce ? ce.value : '#6B3A2A',
+    decorFernos:   (document.getElementById('mfeDecorFernos')||{}).checked !== false,
+    decorLeaf:     (document.getElementById('mfeDecorLeaf')  ||{}).checked !== false,
+    decorEmoji:    (document.getElementById('mfeDecorEmoji') ||{}).value || '🌿',
+    fuenteNombre:  (document.getElementById('mfeFuenteNombre')||{}).value || 'Oswald',
+    fuentePlatos:  (document.getElementById('mfeFuentePlatos')||{}).value || 'Lato',
+    tamanoTexto:   parseInt((document.getElementById('mfeTamanoTexto')||{}).value) || 12,
+    mostrarDesc:   !!(document.getElementById('mfeMostrarDesc')||{}).checked,
+    cols:          _mfeCols,
+    fotos:         _mfeFotos,
+    catVisible:    mfeLeerCatVisible2(),
+    membrete:      _mfeMembrete2 || null
+  };
+  localStorage.setItem(MFE_CFG_KEY, JSON.stringify(cfg));
+  // Sincronizar con campos legacy para compatibilidad
+  const mfSede   = document.getElementById('mfSede');
+  const mfSlogan = document.getElementById('mfSlogan');
+  const mfCierre = document.getElementById('mfCierre');
+  if (mfSede)   mfSede.value   = cfg.sede;
+  if (mfSlogan) mfSlogan.value = cfg.slogan;
+  if (mfCierre) mfCierre.value = cfg.cierre;
+  _mfeFotos = cfg.fotos;
+  _mfeMembrete = _mfeMembrete2;
+  if (window.showToast) showToast('✅ Menú restaurante guardado');
+  if (window.fbSync)    fbSync('menuFisicoCfg', cfg);
+}
+
+window.mfGuardarDesdeEditor = mfeGuardarDesdeEditor;
+
+// ── Tabs del editor ──────────────────────────────────
+function mfeShowTab(tab) {
+  ['diseno','fotos','cats','estilo'].forEach(t => {
+    const panel = document.getElementById('mfePanelDiseno'.replace('diseno', t.charAt(0).toUpperCase() + t.slice(1)));
+    const btn   = document.getElementById('mfeTab' + t.charAt(0).toUpperCase() + t.slice(1));
+    const pid   = { diseno:'mfePanelDiseno', fotos:'mfePanelFotos', cats:'mfePanelCats', estilo:'mfePanelEstilo' }[t];
+    const p = document.getElementById(pid);
+    const b = document.getElementById({ diseno:'mfeTabDiseno', fotos:'mfeTabFotos', cats:'mfeTabCats', estilo:'mfeTabEstilo' }[t]);
+    if (p) p.style.display = t === tab ? (t === 'estilo' ? 'flex' : 'block') : 'none';
+    if (b) b.classList.toggle('active', t === tab);
+  });
+}
+
+// ── Layout columnas ──────────────────────────────────
+function mfeSetCols(n) {
+  _mfeCols = n;
+  mfeUpdateColBtns();
+  mfeActualizarPreview();
+}
+function mfeUpdateColBtns() {
+  [1,2].forEach(n => {
+    const btn = document.getElementById('mfeColBtn' + n);
+    if (!btn) return;
+    const on = _mfeCols === n;
+    btn.style.borderColor  = on ? '#FF441A' : '#2A2A2A';
+    btn.style.background   = on ? 'rgba(255,68,26,.12)' : '#111';
+    btn.style.color        = on ? '#FF441A' : '#ddd';
+    btn.textContent        = n + ' col' + (on ? ' ✓' : '');
+  });
+}
+
+// ── Preview mode ──────────────────────────────────────
+function mfeSetPreviewMode(mode) {
+  _mfePreviewMode = mode;
+  const frame = document.getElementById('mfePhoneFrame');
+  if (!frame) return;
+  ['mobile','tablet','full'].forEach(m => {
+    const btn = document.getElementById({ mobile:'mfeBtnMobile', tablet:'mfeBtnTablet', full:'mfeBtnFull' }[m]);
+    if (btn) {
+      btn.style.background = m === mode ? '#FF441A' : 'transparent';
+      btn.style.color      = m === mode ? '#fff' : 'rgba(255,255,255,.4)';
+    }
+  });
+  if (mode === 'mobile') {
+    frame.style.width = '375px'; frame.style.borderRadius = '32px';
+    frame.style.boxShadow = '0 0 0 10px #1A1A1A, 0 0 0 12px #2A2A2A, 0 30px 80px rgba(0,0,0,0.8)';
+  } else if (mode === 'tablet') {
+    frame.style.width = '720px'; frame.style.borderRadius = '18px';
+    frame.style.boxShadow = '0 0 0 8px #1A1A1A, 0 20px 60px rgba(0,0,0,0.7)';
+  } else {
+    frame.style.width = '900px'; frame.style.borderRadius = '8px';
+    frame.style.boxShadow = '0 8px 40px rgba(0,0,0,0.5)';
+  }
+}
+
+// ── Paletas rápidas ───────────────────────────────────
+const MFE_PALETAS = {
+  campestre: { colorPrimario:'#2D5A27', colorNombre:'#E8520A', colorFondo:'#F5EDD8', colorEslogan:'#6B3A2A' },
+  clasico:   { colorPrimario:'#1A1A1A', colorNombre:'#C0392B', colorFondo:'#FAFAFA', colorEslogan:'#222' },
+  elegante:  { colorPrimario:'#2C3E50', colorNombre:'#D4AF37', colorFondo:'#F8F6F0', colorEslogan:'#2C3E50' },
+  tropical:  { colorPrimario:'#1B6CA8', colorNombre:'#F39C12', colorFondo:'#EEF7FF', colorEslogan:'#1B6CA8' },
+  rosa:      { colorPrimario:'#8E44AD', colorNombre:'#E91E8C', colorFondo:'#FEF6FF', colorEslogan:'#6A1B9A' },
+  neutro:    { colorPrimario:'#555',    colorNombre:'#333',    colorFondo:'#F7F7F7', colorEslogan:'#444' }
+};
+function mfeAplicarPaleta(nombre) {
+  const p = MFE_PALETAS[nombre];
+  if (!p) return;
+  const cp = document.getElementById('mfeColorPrimario');
+  const cn = document.getElementById('mfeColorNombre');
+  const cf = document.getElementById('mfeColorFondo');
+  const ce = document.getElementById('mfeColorEslogan');
+  if (cp) { cp.value = p.colorPrimario; document.getElementById('mfeColorPrimarioLabel').textContent = p.colorPrimario; }
+  if (cn) { cn.value = p.colorNombre;   document.getElementById('mfeColorNombreLabel').textContent = p.colorNombre; }
+  if (cf) { cf.value = p.colorFondo;    document.getElementById('mfeColorFondoLabel').textContent = p.colorFondo; }
+  if (ce) { ce.value = p.colorEslogan;  document.getElementById('mfeColorEsloganLabel').textContent = p.colorEslogan; }
+  mfeActualizarPreview();
+}
+
+// ── Color labels live update ──────────────────────────
+document.addEventListener('input', (e) => {
+  const map = {
+    mfeColorPrimario:'mfeColorPrimarioLabel',
+    mfeColorNombre:'mfeColorNombreLabel',
+    mfeColorFondo:'mfeColorFondoLabel',
+    mfeColorEslogan:'mfeColorEsloganLabel'
+  };
+  if (map[e.target.id]) {
+    document.getElementById(map[e.target.id]).textContent = e.target.value;
+  }
+});
+
+// ── Membrete ──────────────────────────────────────────
+function mfeSubirMembrete(input) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 5 * 1024 * 1024) { if(window.showToast) showToast('⚠️ Imagen muy grande (máx 5MB)'); return; }
+  const reader = new FileReader();
+  reader.onload = e => { _mfeMembrete2 = e.target.result; mfeActualizarMembreteUI(_mfeMembrete2); mfeActualizarPreview(); };
+  reader.readAsDataURL(file);
+}
+function mfeQuitarMembrete() { _mfeMembrete2 = null; mfeActualizarMembreteUI(null); mfeActualizarPreview(); }
+function mfeActualizarMembreteUI(data) {
+  const wrap = document.getElementById('mfeMembretePreviewWrap');
+  const prev = document.getElementById('mfeMembretePreview');
+  const txt  = document.getElementById('mfeMembreteUploadTxt');
+  const btn  = document.getElementById('mfeMembreteQuitarBtn');
+  if (wrap)  wrap.style.display = data ? '' : 'none';
+  if (prev)  prev.src = data || '';
+  if (txt)   txt.textContent = data ? 'Cambiar membrete' : 'Subir membrete';
+  if (btn)   btn.style.display = data ? '' : 'none';
+}
+
+// ── Fotos ─────────────────────────────────────────────
+function mfeRenderFotos() {
+  const grid = document.getElementById('mfeFotosGrid');
+  if (!grid) return;
+  grid.innerHTML = _mfeFotos.map((f, i) => `
+    <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#1A1A1A;border:1.5px dashed #333;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="document.getElementById('mfeFotoInput${i}').click()">
+      <input type="file" id="mfeFotoInput${i}" accept="image/*" style="display:none" onchange="mfeSubirFoto(this,${i})">
+      ${f ? `<img src="${f}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
+             <div onclick="event.stopPropagation();mfeBorrarFoto(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;z-index:2;">✕</div>`
+           : `<span style="font-size:22px;color:#444;">📷</span>`}
+    </div>`).join('');
+}
+function mfeSubirFoto(input, idx) {
+  const file = input.files && input.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) { if(window.showToast) showToast('⚠️ Imagen muy grande (máx 3MB)'); return; }
+  const reader = new FileReader();
+  reader.onload = e => { _mfeFotos[idx] = e.target.result; mfeRenderFotos(); mfeActualizarPreview(); };
+  reader.readAsDataURL(file);
+}
+function mfeBorrarFoto(idx) { _mfeFotos[idx] = null; mfeRenderFotos(); mfeActualizarPreview(); }
+function mfeImportarFotos() {
+  let items = [], settings = {};
+  try { items    = JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){}
+  try { settings = JSON.parse(localStorage.getItem(MENU_SETTINGS_KEY||'helechos_menu_settings_v1')||'{}'); } catch(e){}
+  const fotos = [...items.map(i=>i.foto).filter(Boolean), ...Object.values(settings.categoryImages||{}).filter(Boolean)].slice(0,6);
+  if (!fotos.length) { if(window.showToast) showToast('⚠️ No hay fotos en el menú digital'); return; }
+  fotos.forEach((f,i) => { _mfeFotos[i] = f; });
+  mfeRenderFotos(); mfeActualizarPreview();
+  if(window.showToast) showToast('✅ ' + fotos.length + ' fotos importadas');
+}
+
+// ── Categorías ────────────────────────────────────────
+function mfeRenderCatToggles(catVisible) {
+  let items = [];
+  try { items = JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){}
+  const cats = [...new Set(items.map(i=>i.categoria).filter(Boolean))];
+  const wrap = document.getElementById('mfeCatToggles2');
+  if (!wrap) return;
+  if (!cats.length) { wrap.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.35);">Sin categorías aún.</div>'; return; }
+  wrap.innerHTML = cats.map(c => {
+    const checked = catVisible[c] !== false;
+    const count   = items.filter(i => i.categoria === c).length;
+    return `<label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:#1E1E1E;border-radius:9px;border:1px solid #2A2A2A;cursor:pointer;">
+      <input type="checkbox" ${checked?'checked':''} data-mfcat2="${c.replace(/"/g,'&quot;')}" style="accent-color:#FF441A;width:16px;height:16px;flex-shrink:0;">
+      <span style="font-size:13px;flex:1;color:#ddd;">${c}</span>
+      <span style="font-size:11px;color:rgba(255,255,255,.3);">${count} platos</span>
+    </label>`;
+  }).join('');
+}
+function mfeLeerCatVisible2() {
+  const result = {};
+  document.querySelectorAll('[data-mfcat2]').forEach(cb => { result[cb.dataset.mfcat2] = cb.checked; });
+  return result;
+}
+
+// ── GENERAR PREVIEW HTML ──────────────────────────────
+function mfeActualizarPreview() {
+  const preview = document.getElementById('mfePreviewContent');
+  if (!preview) return;
+
+  // Leer valores actuales
+  const cp = (document.getElementById('mfeColorPrimario')||{}).value || '#2D5A27';
+  const cn = (document.getElementById('mfeColorNombre')  ||{}).value || '#E8520A';
+  const cf = (document.getElementById('mfeColorFondo')   ||{}).value || '#F5EDD8';
+  const ce = (document.getElementById('mfeColorEslogan') ||{}).value || '#6B3A2A';
+  const sede   = (document.getElementById('mfeSede')  ||{}).value || '';
+  const slogan = (document.getElementById('mfeSlogan')||{}).value || '';
+  const cierre = (document.getElementById('mfeCierre')||{}).value || 'Gracias por preferirnos';
+  const fuenteNombre = (document.getElementById('mfeFuenteNombre')||{}).value || 'Oswald';
+  const fuentePlatos = (document.getElementById('mfeFuentePlatos')||{}).value || 'Lato';
+  const tamano = parseInt((document.getElementById('mfeTamanoTexto')||{}).value) || 12;
+  const decorFernos = (document.getElementById('mfeDecorFernos')||{}).checked !== false;
+  const decorLeaf   = (document.getElementById('mfeDecorLeaf')  ||{}).checked !== false;
+  const decorEmoji  = (document.getElementById('mfeDecorEmoji') ||{}).value || '🌿';
+  const mostrarDesc = !!(document.getElementById('mfeMostrarDesc')||{}).checked;
+
+  // Datos del menú
+  let items = [], configData = {}, settings = {};
+  try { items      = JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){}
+  try { configData = JSON.parse(localStorage.getItem('helechos_config')||'{}'); } catch(e){}
+  try { settings   = JSON.parse(localStorage.getItem('helechos_menu_settings_v1')||'{}'); } catch(e){}
+
+  const logo    = settings.businessLogo || localStorage.getItem('helechos_logo') || '';
+  const nombre  = (configData.nombre && configData.nombre !== 'Mi Restaurante' ? configData.nombre : 'MI RESTAURANTE').toUpperCase();
+  const catVis  = mfeLeerCatVisible2();
+  const hidden  = settings.hiddenCategories || [];
+  const cats    = [...new Set(items.map(i=>i.categoria).filter(Boolean))]
+                    .filter(c => !hidden.includes(c))
+                    .filter(c => catVis[c] !== false);
+  const fotos   = _mfeFotos.filter(Boolean);
+
+  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  function fmt(n) { return '$' + Number(n||0).toLocaleString('es-CO'); }
+
+  function renderCat(cat) {
+    const catItems = items.filter(i => i.categoria === cat && i.disponible !== false);
+    if (!catItems.length) return '';
+    return `<div style="margin:10px 0 4px;">
+      <div style="display:inline-block;background:${cp};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:${Math.max(9,tamano-1)}px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;">${esc(cat)}</div>
+    </div>
+    <div>${catItems.map(it => `
+      <div style="display:flex;align-items:baseline;padding:2px 0;">
+        ${decorLeaf ? `<span style="color:${cp};font-size:9px;margin-right:3px;">${decorEmoji}</span>` : ''}
+        <div style="flex:1;min-width:0;">
+          <span style="font-size:${tamano}px;color:#1A1A1A;font-family:'${fuentePlatos}',sans-serif;">${esc(it.nombre)}</span>
+          ${mostrarDesc && it.descripcion ? `<div style="font-size:${Math.max(8,tamano-2)}px;color:#888;line-height:1.3;">${esc(it.descripcion)}</div>` : ''}
+        </div>
+        <span style="flex:0 0 auto;min-width:12px;border-bottom:1.5px dotted rgba(0,0,0,.2);margin:0 3px 3px;align-self:flex-end;flex-grow:1;"></span>
+        <span style="font-size:${tamano}px;font-weight:700;font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;color:#1A1A1A;">${fmt(it.precio||it.precioLocal||0)}</span>
+      </div>`).join('')}</div>`;
+  }
+
+  function renderFotos(arr) {
+    if (!arr.length) return '';
+    const cols = arr.length <= 2 ? '1fr 1fr' : '1fr 1fr 1fr';
+    return `<div style="display:grid;grid-template-columns:${cols};gap:4px;margin:8px 0;">
+      ${arr.map(f=>`<div style="aspect-ratio:1.1;border-radius:5px;overflow:hidden;background:#ddd;">
+        <img src="${f}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
+      </div>`).join('')}
+    </div>`;
+  }
+
+  let bodyHtml = '';
+  if (_mfeCols === 1) {
+    // 1 columna
+    bodyHtml = `<div style="padding:0 10px 12px;">
+      ${cats.map(c => renderCat(c)).join('')}
+      ${renderFotos(fotos)}
+    </div>`;
+  } else {
+    // 2 columnas
+    const colL = [], colR = [];
+    cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
+    const fotosL = fotos.slice(0, 3), fotosR = fotos.slice(3, 6);
+    bodyHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 8px 12px;">
+      <div style="padding:0 4px;border-right:1.5px solid rgba(0,0,0,.1);">
+        ${colL.map(c => renderCat(c)).join('')}
+        ${renderFotos(fotosL)}
+      </div>
+      <div style="padding:0 4px;">
+        ${colR.map(c => renderCat(c)).join('')}
+        ${renderFotos(fotosR)}
+      </div>
+    </div>`;
+  }
+
+  // Encabezado
+  let headerHtml = '';
+  if (_mfeMembrete2) {
+    headerHtml = `<div style="width:100%;border-bottom:3px solid ${cp};">
+      <img src="${_mfeMembrete2}" style="width:100%;display:block;max-height:200px;object-fit:cover;">
+    </div>`;
+  } else {
+    const logoHtml = logo
+      ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">`
+      : `<span style="font-size:10px;color:#aaa;">Logo</span>`;
+    headerHtml = `<div style="display:flex;align-items:center;gap:10px;padding:14px 12px 10px;border-bottom:3px solid ${cp};">
+      <div style="width:72px;height:72px;flex-shrink:0;border-radius:50%;border:3px solid ${cp};background:#EDE0C4;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 2px ${cf},0 0 0 4px ${cp};">
+        ${logoHtml}
+      </div>
+      <div style="flex:1;text-align:center;">
+        <div style="font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;color:${cp};letter-spacing:2px;text-transform:uppercase;">RESTAURANTE</div>
+        <div style="font-family:'${fuenteNombre}',sans-serif;font-size:28px;font-weight:900;color:${cn};line-height:1;text-transform:uppercase;">${esc(nombre)}</div>
+        ${sede ? `<div style="font-family:'Playfair Display',serif;font-size:11px;font-style:italic;color:#1A1A1A;">${esc(sede)}</div>` : ''}
+        ${slogan ? `<div style="margin-top:4px;"><span style="background:${ce};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:7px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;">${esc(slogan.toUpperCase())}</span></div>` : ''}
+      </div>
+    </div>`;
+  }
+
+  // Decorativos de esquinas
+  const fernosHtml = decorFernos ? `
+    <div style="position:absolute;top:4px;left:4px;font-size:24px;opacity:.18;transform:rotate(-30deg);pointer-events:none;">${decorEmoji}</div>
+    <div style="position:absolute;top:4px;right:4px;font-size:24px;opacity:.18;transform:rotate(30deg);pointer-events:none;">${decorEmoji}</div>
+    <div style="position:absolute;bottom:4px;left:4px;font-size:24px;opacity:.18;transform:rotate(150deg);pointer-events:none;">${decorEmoji}</div>
+    <div style="position:absolute;bottom:4px;right:4px;font-size:24px;opacity:.18;transform:rotate(-150deg);pointer-events:none;">${decorEmoji}</div>` : '';
+
+  preview.innerHTML = `
+    <div style="min-height:100%;background:${cf};position:relative;overflow:hidden;">
+      ${fernosHtml}
+      ${headerHtml}
+      ${cats.length ? bodyHtml : `<div style="text-align:center;padding:30px;color:#999;font-size:12px;">Sin platos en el menú aún.</div>`}
+      <div style="text-align:center;padding:8px 10px 14px;border-top:2px solid ${cp};position:relative;z-index:1;">
+        <div style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:${ce};">${esc(cierre)}</div>
+      </div>
+    </div>`;
+
+  // Forzar carga de fuente en el preview
+  preview.style.fontFamily = `'${fuentePlatos}', sans-serif`;
+}
+
+// ── Sincronizar con menu.html via localStorage ────────
+// El render de menu.html ya lee helechos_menu_fisico_cfg,
+// así que solo necesitamos guardar para que se refleje.
+
+// ── Compatibilidad: mfIniciarPanel ya no hace nada crítico ──
+const _mfIniciarPanelOrig = window.mfIniciarPanel;
+window.mfIniciarPanel = function() {
+  // No hacer nada (los campos legacy están ocultos)
+};
 
 </script>
 
