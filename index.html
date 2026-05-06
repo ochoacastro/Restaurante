@@ -17204,6 +17204,7 @@ window.mfIniciarPanel = function() {
         <div>
           <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Categoría</label>
           <select id="vmEditCat" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:14px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;"></select>
+          <input id="vmEditCatNueva" placeholder="Nombre de la nueva categoría…" maxlength="40" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px dashed #FF441A;border-radius:10px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;display:none;">
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
           <div>
@@ -17341,7 +17342,10 @@ function vmFillCatSelects() {
     if (ni) ni.style.display = newCat.value === '__nueva__' ? 'block' : 'none';
   }; }
   const editCat = document.getElementById('vmEditCat');
-  if (editCat) { editCat.innerHTML = makeOpts(''); }
+  if (editCat) { editCat.innerHTML = makeOpts(''); editCat.onchange = () => {
+    const ni = document.getElementById('vmEditCatNueva');
+    if (ni) ni.style.display = editCat.value === '__nueva__' ? 'block' : 'none';
+  }; }
 }
 
 function vmAbrirEditar(idx) {
@@ -17366,9 +17370,10 @@ function vmCerrarEditPanel() {
 function vmGuardarEdicion() {
   const idx = parseInt(document.getElementById('vmEditIdx').value);
   const nombre = document.getElementById('vmEditNombre').value.trim();
-  const cat = document.getElementById('vmEditCat').value;
-  const precio = parseInt(document.getElementById('vmEditPrecio').value.replace(/\./g,'').replace(/[^0-9]/g,''));
-  const precioDomRaw = document.getElementById('vmEditPrecioDom').value.replace(/\./g,'').replace(/[^0-9]/g,'');
+  let cat = document.getElementById('vmEditCat').value;
+  if (cat === '__nueva__') cat = (document.getElementById('vmEditCatNueva')?.value || '').trim();
+  const precio = parseInt(document.getElementById('vmEditPrecio').value.replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,''));
+  const precioDomRaw = document.getElementById('vmEditPrecioDom').value.replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,'');
   const precioDom = precioDomRaw ? parseInt(precioDomRaw) : precio;
   const descripcion = document.getElementById('vmEditDesc').value.trim();
 
@@ -17404,8 +17409,8 @@ function vmAgregarProducto() {
   const nombre = document.getElementById('vmNewNombre').value.trim();
   let cat = document.getElementById('vmNewCat').value;
   if (cat === '__nueva__') cat = (document.getElementById('vmNewCatNueva').value || '').trim();
-  const precio = parseInt((document.getElementById('vmNewPrecio').value || '').replace(/\./g,'').replace(/[^0-9]/g,''));
-  const precioDomRaw = (document.getElementById('vmNewPrecioDom').value || '').replace(/\./g,'').replace(/[^0-9]/g,'');
+  const precio = parseInt((document.getElementById('vmNewPrecio').value || '').replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,''));
+  const precioDomRaw = (document.getElementById('vmNewPrecioDom').value || '').replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,'');
   const precioDom = precioDomRaw ? parseInt(precioDomRaw) : precio;
   const descripcion = document.getElementById('vmNewDesc').value.trim();
 
@@ -17435,8 +17440,8 @@ function vmGuardarCambios() {
   renderMenu();
   renderProductosConfig();
   renderPreciosConfig();
-  showToast('💾 Guardado automáticamente');
   vmRefrescarIframe();
+  showToast('💾 Guardado automáticamente');
 }
 
 function vmRefrescarIframe() {
@@ -17453,7 +17458,8 @@ function vmRefrescarIframe() {
     localStorage.setItem('helechos_menu', JSON.stringify(data));
   } catch(e) {}
   const iframe = document.getElementById('vmIframe');
-  iframe.src = iframe.src; // reload
+  const baseUrl = iframe.src.split('?')[0];
+  iframe.src = baseUrl + '?t=' + Date.now(); // fuerza recarga real en todos los navegadores
 }
 
 function vmSetDevice(mode) {
