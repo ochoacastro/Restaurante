@@ -1802,8 +1802,9 @@
     border: 1.5px solid var(--borde); border-radius: 6px;
     padding: 4px 6px; font-size: 13px; font-weight: 600;
     color: var(--negro); background: var(--fondo);
-    outline: none; width: 74px; font-family: var(--font-num);
-    transition: border-color 0.2s;
+    outline: none; width: 90px; font-family: var(--font-num);
+    transition: border-color 0.2s; text-align: center;
+    -webkit-user-select: text; user-select: text;
   }
   .horario-time-input:focus { border-color: var(--rappi); background: var(--blanco); }
   .horario-cerrado-label {
@@ -6041,6 +6042,33 @@ function cargarHorariosConfig() {
   return JSON.parse(JSON.stringify(HORARIOS_DEFAULT));
 }
 
+// Convierte "14:30" (24h) → "2:30 PM"
+function to12h(val24) {
+  if (!val24 || !val24.includes(':')) return val24 || '';
+  let [h, m] = val24.split(':').map(Number);
+  const ampm = h >= 12 ? 'PM' : 'AM';
+  h = h % 12 || 12;
+  return `${h}:${String(m).padStart(2,'0')} ${ampm}`;
+}
+// Convierte texto libre "2:30 PM" / "14:30" / "2pm" → "HH:MM" 24h para guardar
+function parse12hTo24h(txt) {
+  if (!txt) return null;
+  txt = txt.trim().toUpperCase();
+  // Detectar AM/PM
+  const ampm = txt.includes('PM') ? 'PM' : txt.includes('AM') ? 'AM' : null;
+  txt = txt.replace(/AM|PM/g, '').trim();
+  // Quitar caracteres no numéricos salvo ':'
+  const parts = txt.replace(/[^0-9:]/g,'').split(':');
+  let h = parseInt(parts[0] || '0', 10);
+  let m = parseInt(parts[1] || '0', 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  if (ampm === 'PM' && h !== 12) h += 12;
+  if (ampm === 'AM' && h === 12) h = 0;
+  if (h > 23) h = 23;
+  if (m > 59) m = 59;
+  return `${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`;
+}
+
 function renderHorarios() {
   const wrap = document.getElementById('horariosWrap');
   if (!wrap) return;
@@ -6054,12 +6082,21 @@ function renderHorarios() {
       </label>
       ${h.abierto
         ? `<div class="horario-times">
-            <input type="time" class="horario-time-input" id="hdesde-${i}" value="${h.desde}">
+            <input type="text" inputmode="text" class="horario-time-input" id="hdesde-${i}"
+              value="${to12h(h.desde)}" placeholder="6:00 AM"
+              onblur="normalizarHoraInput(this)">
             <span style="color:var(--gris);font-size:11px;">a</span>
-            <input type="time" class="horario-time-input" id="hhasta-${i}" value="${h.hasta}">
+            <input type="text" inputmode="text" class="horario-time-input" id="hhasta-${i}"
+              value="${to12h(h.hasta)}" placeholder="10:00 PM"
+              onblur="normalizarHoraInput(this)">
            </div>`
         : `<div class="horario-cerrado-label">Cerrado</div>`}
     </div>`).join('');
+}
+
+function normalizarHoraInput(el) {
+  const val24 = parse12hTo24h(el.value);
+  if (val24) el.value = to12h(val24);
 }
 
 function toggleHorarioDia(idx, abierto) {
@@ -6075,8 +6112,14 @@ function leerHorariosDelForm() {
   horarios.forEach((h, i) => {
     const desdeEl = document.getElementById('hdesde-' + i);
     const hastaEl = document.getElementById('hhasta-' + i);
-    if (desdeEl) h.desde = desdeEl.value || h.desde;
-    if (hastaEl) h.hasta = hastaEl.value || h.hasta;
+    if (desdeEl) {
+      const v = parse12hTo24h(desdeEl.value);
+      if (v) h.desde = v;
+    }
+    if (hastaEl) {
+      const v = parse12hTo24h(hastaEl.value);
+      if (v) h.hasta = v;
+    }
   });
   return horarios;
 }
@@ -6191,7 +6234,7 @@ function renderClosedHorarioOverlay() {
     <div style="display:flex;justify-content:space-between;align-items:center;font-size:7.5px;color:#2a2a2a;padding:1.5px 3px;border-radius:3px;${!h.abierto ? 'opacity:0.4;' : ''}background:${h.abierto ? 'rgba(92,122,58,0.07)' : 'transparent'};">
       <span style="font-weight:700;min-width:22px;">${h.dia}</span>
       ${h.abierto
-        ? `<span style="color:#1a5c1a;font-weight:600;">${h.desde}–${h.hasta}</span>`
+        ? `<span style="color:#1a5c1a;font-weight:600;">${to12h(h.desde)}–${to12h(h.hasta)}</span>`
         : `<span style="color:#b44;font-style:italic;font-size:7px;">Cerrado</span>`}
     </div>`).join('');
 }
