@@ -16293,7 +16293,8 @@ function mfDescargarPNG() {
       <button id="mfeTabCats" onclick="mfeToggleTab('cats')" class="mfe-tab-h" style="padding:7px 12px;font-size:11px;font-weight:800;border:none;border-radius:8px;background:#2A2A2A;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">📋 Categorías</button>
       <button id="mfeTabEstilo" onclick="mfeToggleTab('estilo')" class="mfe-tab-h" style="padding:7px 12px;font-size:11px;font-weight:800;border:none;border-radius:8px;background:#2A2A2A;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✨ Estilo</button>
     </div>
-    <button onclick="mfGuardarDesdeEditor()" style="padding:8px 16px;background:#FF441A;color:#fff;border:none;border-radius:999px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(255,68,26,0.4);white-space:nowrap;flex-shrink:0;">💾 Guardar</button>
+  <!-- Notificación de auto-guardado -->
+  <div id="mfeAutoSaveToast" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(30,30,30,0.95);color:#fff;padding:7px 16px;border-radius:999px;font-size:12px;font-weight:700;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid #333;z-index:9999;pointer-events:none;white-space:nowrap;transition:opacity .3s ease;">💾 Guardado automáticamente</div>
   </div>
 
   <!-- Body: 2 paneles -->
@@ -16665,12 +16666,36 @@ function mfeGuardarDesdeEditor() {
   if (mfSlogan) mfSlogan.value = cfg.slogan;
   if (mfCierre) mfCierre.value = cfg.cierre;
   _mfeFotos = cfg.fotos;
-  if (window.showToast) showToast('✅ Menú restaurante guardado');
-  if (window.fbSync)    fbSync('menuFisicoCfg', cfg);
+  if (window.fbSync) fbSync('menuFisicoCfg', cfg);
 }
 
 window.mfGuardarDesdeEditor = mfeGuardarDesdeEditor;
 window.mfCerrarEditorCompleto = mfeCerrarEditorCompleto;
+
+// ── Auto-guardado con debounce ───────────────────────
+let _mfeAutoSaveTimer = null;
+function mfeMostrarAutoSaveToast() {
+  const t = document.getElementById('mfeAutoSaveToast');
+  if (!t) return;
+  t.style.display = 'block';
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => {
+    t.style.opacity = '0';
+    setTimeout(() => { t.style.display = 'none'; }, 300);
+  }, 1800);
+}
+function mfeAutoGuardar() {
+  clearTimeout(_mfeAutoSaveTimer);
+  _mfeAutoSaveTimer = setTimeout(() => {
+    mfeGuardarDesdeEditor();
+    mfeMostrarAutoSaveToast();
+  }, 800);
+}
+function mfeGuardarYNotificar() {
+  mfeGuardarDesdeEditor();
+  mfeMostrarAutoSaveToast();
+}
 
 // ── Toggle colapso del panel izquierdo ───────────────
 let _mfeActiveTab = null; // tab actualmente abierto
@@ -17019,6 +17044,9 @@ function mfeActualizarPreview() {
 
   // Forzar carga de fuente en el preview
   preview.style.fontFamily = `'${fuentePlatos}', sans-serif`;
+
+  // Auto-guardado con debounce (800ms tras el último cambio)
+  mfeAutoGuardar();
 }
 
 // ── Sincronizar con menu.html via localStorage ────────
