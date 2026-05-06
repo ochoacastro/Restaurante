@@ -1630,6 +1630,82 @@
     letter-spacing: 1px;
   }
 
+  /* ── PANTALLA CIERRE AMIGABLE ── */
+  #cierreAmigableOverlay {
+    display: none;
+    position: fixed; inset: 0; z-index: 9990;
+    background: linear-gradient(160deg, #1a0a2e 0%, #2d1b4e 50%, #1a2a1a 100%);
+    flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 32px; text-align: center;
+    animation: cierreEntra 0.8s cubic-bezier(0.22,1,0.36,1);
+  }
+  #cierreAmigableOverlay.show { display: flex; }
+  @keyframes cierreEntra {
+    from { opacity: 0; transform: scale(0.96); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .cierre-emoji {
+    font-size: 72px; margin-bottom: 20px;
+    animation: cierreFlota 3s ease-in-out infinite;
+  }
+  @keyframes cierreFlota {
+    0%,100% { transform: translateY(0); }
+    50%      { transform: translateY(-10px); }
+  }
+  .cierre-titulo {
+    font-size: 28px; font-weight: 900; color: #fff;
+    letter-spacing: -0.5px; margin-bottom: 10px; line-height: 1.2;
+  }
+  .cierre-sub {
+    font-size: 15px; color: rgba(255,255,255,0.72);
+    line-height: 1.7; margin-bottom: 28px; max-width: 300px;
+  }
+  .cierre-horario-card {
+    background: rgba(255,255,255,0.10);
+    border: 1.5px solid rgba(255,255,255,0.18);
+    border-radius: 18px; padding: 18px 24px;
+    width: 100%; max-width: 300px; margin-bottom: 28px;
+  }
+  .cierre-horario-card-title {
+    font-size: 11px; font-weight: 800; color: rgba(255,255,255,0.5);
+    text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 12px;
+  }
+  .cierre-proximo {
+    font-size: 17px; font-weight: 900; color: #A5D6A7;
+    margin-bottom: 4px;
+  }
+  .cierre-proximo-hora {
+    font-size: 13px; color: rgba(255,255,255,0.6);
+  }
+  .cierre-stars {
+    font-size: 13px; color: rgba(255,255,255,0.35);
+    letter-spacing: 4px; margin-top: 8px;
+  }
+
+
+  #cierreCountdownBar {
+    display: none;
+    align-items: center; justify-content: center; gap: 8px;
+    padding: 7px 16px;
+    font-size: 13px; font-weight: 800;
+    letter-spacing: 0.2px;
+    border-top: 1px solid var(--gris-cl);
+    transition: background 0.5s, color 0.5s;
+  }
+  #cierreCountdownBar.urgente {
+    background: #FFF3E0; color: #E65100;
+    animation: cierreParpadeo 1s ease-in-out infinite;
+  }
+  #cierreCountdownBar.normal { background: #F1F8E9; color: #33691E; }
+  #cierreCountdownBar.cerrado-blq { background: #FFEBEE; color: #B71C1C; }
+  @keyframes cierreParpadeo {
+    0%,100% { opacity: 1; } 50% { opacity: 0.6; }
+  }
+  #cierreCountdownTime {
+    font-family: 'DM Mono', 'Courier New', monospace;
+    font-size: 15px; font-weight: 900; letter-spacing: 1.5px;
+  }
+
   /* ── TIPO DOCUMENTO ─── */
   .doc-opt {
     display: flex; align-items: center; gap: 12px;
@@ -1740,6 +1816,21 @@
     <div style="margin-top:24px;font-size:13px;color:rgba(255,255,255,0.5);">¡Te esperamos pronto! 🌿</div>
   </div>
 
+  <!-- Pantalla de cierre amigable (aparece al llegar a cero) -->
+  <div id="cierreAmigableOverlay">
+    <div class="cierre-emoji">🌙</div>
+    <div class="cierre-titulo">¡Gracias por visitarnos!</div>
+    <div class="cierre-sub" id="cierreAmigableSub">
+      Hemos cerrado por hoy. Tu preferencia es lo que nos impulsa a seguir.<br>¡Te esperamos con las puertas abiertas muy pronto!
+    </div>
+    <div class="cierre-horario-card">
+      <div class="cierre-horario-card-title">📅 Próxima apertura</div>
+      <div class="cierre-proximo" id="cierreProximoDia">Mañana</div>
+      <div class="cierre-proximo-hora" id="cierreProximoHora">—</div>
+    </div>
+    <div class="cierre-stars">✦ &nbsp; ✦ &nbsp; ✦</div>
+  </div>
+
   <!-- Bloque inferior: copy + botones -->
   <div class="start-bottom">
     <div class="start-eyebrow" id="startEyebrow">🍽️ Bienvenido</div>
@@ -1805,6 +1896,11 @@
       <span class="clock-date" id="clockDate"></span>
       <div class="clock-sep"></div>
       <span class="clock-time" id="clockTime"></span>
+    </div>
+    <div id="cierreCountdownBar">
+      <span id="cierreCountdownIcon">🕐</span>
+      <span id="cierreCountdownLabel">Cierra en</span>
+      <span id="cierreCountdownTime">--:--:--</span>
     </div>
   </header>
 
@@ -4523,6 +4619,156 @@ render();
 verificarHorario();
 // Re-verificar cada minuto por si cambia el horario mientras está abierta la página
 setInterval(verificarHorario, 60000);
+
+// ── CUENTA REGRESIVA DE CIERRE ────────────────────────────────────────────
+(function initCierreCountdown() {
+  var _cierreInterval = null;
+  var _restauranteCerrado = false;
+
+  function _getMinutosHastaCierre() {
+    try {
+      var raw = localStorage.getItem('helechos_menu_settings_v1') || '';
+      if (!raw) return null;
+      var ms = raw ? JSON.parse(raw) : {};
+      var horarios = (Array.isArray(ms.horarios) && ms.horarios.length === 7) ? ms.horarios : null;
+      if (!horarios) return null;
+
+      var ahora = new Date();
+      var diaIdx = ahora.getDay();
+      var hActual = ahora.getHours() * 60 + ahora.getMinutes();
+      var segActual = ahora.getSeconds();
+
+      // Festivos
+      var festivos = Array.isArray(ms.festivos) ? ms.festivos : [];
+      var hoyISO = ahora.getFullYear() + '-' +
+        String(ahora.getMonth()+1).padStart(2,'0') + '-' +
+        String(ahora.getDate()).padStart(2,'0');
+      var esFestivo = festivos.some(function(f){ return f.fecha === hoyISO; });
+
+      var hoy = horarios[diaIdx];
+      if (esFestivo || !hoy || !hoy.abierto || !hoy.hasta) return null;
+
+      var partesCierre = hoy.hasta.split(':').map(Number);
+      var minCierre = partesCierre[0] * 60 + partesCierre[1];
+
+      if (hActual >= minCierre) return 0; // Ya cerró
+      if (hActual < (horarios[diaIdx].desde ? (function(d){ var p=d.split(':').map(Number); return p[0]*60+p[1]; })(hoy.desde) : 0)) return null; // Aún no abre
+
+      // Segundos exactos hasta el cierre
+      var segHastaCierre = (minCierre - hActual) * 60 - segActual;
+      return segHastaCierre > 0 ? segHastaCierre : 0;
+    } catch(e) { return null; }
+  }
+
+  function _fmtTiempo(seg) {
+    var h = Math.floor(seg / 3600);
+    var m = Math.floor((seg % 3600) / 60);
+    var s = seg % 60;
+    if (h > 0) return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+    return String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+  }
+
+  function _bloquearEnvio(bloqueado) {
+    _restauranteCerrado = bloqueado;
+    var domBtn = document.getElementById('domBtn');
+    var waBtn  = document.getElementById('waBtn');
+    if (domBtn) {
+      domBtn.disabled = bloqueado;
+      domBtn.style.opacity = bloqueado ? '0.4' : '';
+      domBtn.title = bloqueado ? '⛔ El restaurante ya cerró' : '';
+    }
+    if (waBtn) {
+      waBtn.disabled = bloqueado;
+      waBtn.style.opacity = bloqueado ? '0.4' : '';
+      waBtn.title = bloqueado ? '⛔ El restaurante ya cerró' : '';
+    }
+  }
+
+  function _mostrarCierreAmigable() {
+    // Rellenar próxima apertura
+    try {
+      var raw = localStorage.getItem('helechos_menu_settings_v1') || '';
+      var ms  = raw ? JSON.parse(raw) : {};
+      var horarios = (Array.isArray(ms.horarios) && ms.horarios.length === 7) ? ms.horarios : null;
+      if (horarios) {
+        var DIAS = ['Domingo','Lunes','Martes','Miércoles','Jueves','Viernes','Sábado'];
+        var hoy  = new Date().getDay();
+        for (var i = 1; i <= 7; i++) {
+          var idx = (hoy + i) % 7;
+          if (horarios[idx] && horarios[idx].abierto) {
+            var nombreDia = i === 1 ? 'Mañana' : DIAS[idx];
+            document.getElementById('cierreProximoDia').textContent  = nombreDia;
+            document.getElementById('cierreProximoHora').textContent = 'Abrimos a las ' + horarios[idx].desde;
+            break;
+          }
+        }
+      }
+    } catch(e) {}
+
+    // Bloquear botones silenciosamente
+    _bloquearEnvio(true);
+
+    // Ocultar barra countdown
+    var bar = document.getElementById('cierreCountdownBar');
+    if (bar) bar.style.display = 'none';
+
+    // Cerrar carrito si está abierto
+    var cartSheet = document.getElementById('cartSheet');
+    if (cartSheet) cartSheet.classList.remove('show');
+
+    // Mostrar overlay amigable con animación
+    var overlay = document.getElementById('cierreAmigableOverlay');
+    if (overlay) overlay.classList.add('show');
+  }
+
+  function _tick() {
+    var bar     = document.getElementById('cierreCountdownBar');
+    var timeEl  = document.getElementById('cierreCountdownTime');
+    var iconEl  = document.getElementById('cierreCountdownIcon');
+    var labelEl = document.getElementById('cierreCountdownLabel');
+    if (!bar || !timeEl) return;
+
+    var seg = _getMinutosHastaCierre();
+
+    if (seg === null) {
+      bar.style.display = 'none';
+      _bloquearEnvio(false);
+      return;
+    }
+
+    if (seg === 0) {
+      _mostrarCierreAmigable();
+      clearInterval(_cierreInterval);
+      return;
+    }
+
+    bar.style.display = 'flex';
+    _bloquearEnvio(false);
+    timeEl.textContent = _fmtTiempo(seg);
+
+    if (seg <= 10 * 60) {
+      bar.className = 'urgente';
+      iconEl.textContent = '⚠️';
+      labelEl.textContent = 'Cierra en';
+    } else {
+      bar.className = 'normal';
+      iconEl.textContent = '🕐';
+      labelEl.textContent = 'Cierra en';
+    }
+  }
+
+  // Arrancar cuando el DOM esté listo
+  function _start() {
+    _tick();
+    _cierreInterval = setInterval(_tick, 1000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _start);
+  } else {
+    _start();
+  }
+})();
 initAccordion();
 
 // ── Restaurar modo automáticamente al recargar la página ──────────────
