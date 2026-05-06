@@ -5320,23 +5320,33 @@ async function pinEnter() {
     // Login correcto: resetear contador
     _pinIntentosFallidos = 0;
     _pinBloqueadoHasta   = 0;
-    // Verificar si ya hay sesión activa para este usuario en otro dispositivo
-    const sesionOcupada = await fbVerificarSesion(loginTargetUser.id);
-    if (sesionOcupada) {
-      document.getElementById('modalSesionOcupada').style.display = 'flex';
-      return; // Esperar decisión del usuario (forzar o cancelar)
-    }
     usuarioActivo = loginTargetUser;
-    await fbRegistrarSesion(loginTargetUser.id);
     if (usuarioActivo.rol === 'cocina') {
       aplicarRolUI(); // muestra el panel cocina dentro del loginScreen
+      // Firebase en segundo plano para cocina
+      fbVerificarSesion(loginTargetUser.id).then(sesionOcupada => {
+        if (sesionOcupada) {
+          document.getElementById('modalSesionOcupada').style.display = 'flex';
+        } else {
+          fbRegistrarSesion(loginTargetUser.id);
+        }
+      });
       return;
     }
+    // Mostrar app INMEDIATAMENTE — sin esperar Firebase
     document.body.classList.remove('app-hidden');
     document.getElementById('loginScreen').style.display = 'none';
     aplicarRolUI();
     actualizarHeaderUsuario();
     init();
+    // Firebase en segundo plano: verificar sesión y registrar sin bloquear la UI
+    fbVerificarSesion(loginTargetUser.id).then(sesionOcupada => {
+      if (sesionOcupada) {
+        document.getElementById('modalSesionOcupada').style.display = 'flex';
+      } else {
+        fbRegistrarSesion(loginTargetUser.id);
+      }
+    });
   } else {
     // PIN incorrecto
     _pinIntentosFallidos++;
@@ -11538,11 +11548,11 @@ async function fbInit() {
   const saved = localStorage.getItem('helechos_fb_config');
   if (!saved) return false;
 
-  // Esperar máx 3 s a que el módulo esté listo
+  // Esperar máx 800 ms a que el módulo esté listo
   await new Promise(res => {
     if (window._FB) { res(); return; }
     window.addEventListener('firebase-ready', res, { once: true });
-    setTimeout(res, 3000);
+    setTimeout(res, 800);
   });
   return !!(window._FB && window._FB.db);
 }
@@ -11654,20 +11664,20 @@ async function fbLiberarSesion(userId) {
 async function forzarAccesoSesion() {
   document.getElementById('modalSesionOcupada').style.display = 'none';
   if (!loginTargetUser) return;
-  // Liberar la sesión anterior y registrar la nueva
-  await fbLiberarSesion(loginTargetUser.id);
   usuarioActivo = loginTargetUser;
-  await fbRegistrarSesion(loginTargetUser.id);
   if (usuarioActivo.rol === 'cocina') {
-    document.getElementById('modalSesionOcupada').style.display = 'none';
     aplicarRolUI();
+    fbLiberarSesion(loginTargetUser.id).then(() => fbRegistrarSesion(loginTargetUser.id));
     return;
   }
+  // Mostrar app INMEDIATAMENTE
   document.body.classList.remove('app-hidden');
   document.getElementById('loginScreen').style.display = 'none';
   aplicarRolUI();
   actualizarHeaderUsuario();
   init();
+  // Firebase en segundo plano
+  fbLiberarSesion(loginTargetUser.id).then(() => fbRegistrarSesion(loginTargetUser.id));
 }
 
 // ── Cancelar todos los listeners ──────────────────────────────────────
@@ -12031,14 +12041,17 @@ setInterval(() => { if (usuarioActivo) renderEstadoFirebase(); }, 3000);
 
 // ── Hook en init() para arrancar listeners ────────────────────────────
 const _origInit = init;
-init = async function() {
-  await _origInit();
-  const ok = await fbInit();
-  if (ok) {
-    await fbPrimerSync();
-    fbEscucharCambios();
-  }
-  renderEstadoFirebase();
+init = function() {
+  _origInit();
+  // Firebase completamente en segundo plano — no bloquea la UI
+  setTimeout(async () => {
+    const ok = await fbInit();
+    if (ok) {
+      await fbPrimerSync();
+      fbEscucharCambios();
+    }
+    renderEstadoFirebase();
+  }, 0);
 };
 
 // Liberar sesión si el usuario cierra la pestaña/navegador
