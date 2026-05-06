@@ -1342,7 +1342,7 @@
     transform: translateX(-50%) translateY(-80px);
     background: var(--negro); color: white;
     padding: 11px 22px; border-radius: 50px;
-    font-size: 13px; font-weight: 600; z-index: 999;
+    font-size: 13px; font-weight: 600; z-index: 10000;
     transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
     white-space: nowrap; max-width: 90vw;
     text-align: center; box-shadow: 0 6px 24px rgba(0,0,0,0.3);
@@ -1768,20 +1768,19 @@
 
   /* ── HORARIOS ───────────────────────────────────────── */
   .horario-row {
-    display: flex; align-items: flex-start; gap: 8px;
-    padding: 10px 10px; background: var(--blanco);
+    display: flex; align-items: flex-start;
+    padding: 10px 12px; background: var(--blanco);
     border: 1.5px solid var(--borde); border-radius: var(--r-sm);
-    transition: border-color 0.2s;
+    transition: border-color 0.2s; position: relative;
   }
-  .horario-row.cerrado { align-items: center; opacity: 0.55; }
+  .horario-row.cerrado { opacity: 0.55; min-height: 48px; }
   .horario-dia {
-    width: 36px; font-size: 12px; font-weight: 800;
-    color: var(--negro); flex-shrink: 0; text-align: center;
-    margin-top: 4px;
+    font-size: 11px; font-weight: 800;
+    color: var(--gris); flex-shrink: 0; text-align: right;
+    letter-spacing: .3px; text-transform: uppercase;
   }
   .horario-toggle {
     position: relative; width: 36px; height: 20px; flex-shrink: 0;
-    margin-top: 4px;
   }
   .horario-toggle input { opacity: 0; width: 0; height: 0; }
   .horario-slider {
@@ -1796,9 +1795,13 @@
   }
   .horario-toggle input:checked + .horario-slider { background: var(--rappi); }
   .horario-toggle input:checked + .horario-slider::before { transform: translateX(16px); }
+  .horario-dia-toggle {
+    position: absolute; top: 10px; right: 12px;
+    display: flex; align-items: center; gap: 6px;
+  }
   .horario-times {
-    display: flex; flex-direction: column; gap: 5px; flex: 1;
-    font-size: 12px; color: var(--gris);
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 12px; color: var(--gris); flex: 1;
   }
   .horario-times-fila {
     display: flex; align-items: center; gap: 4px;
@@ -1822,6 +1825,7 @@
   .horario-time-sel.sel-ap { width: 52px; }
   .horario-cerrado-label {
     flex: 1; font-size: 12px; font-weight: 600; color: var(--gris);
+    padding-top: 2px;
   }
 
   /* ── MODAL PRECIO ────────────────────────────────────── */
@@ -6186,11 +6190,6 @@ function renderHorarios() {
   const horarios = cargarHorariosConfig();
   wrap.innerHTML = horarios.map((h, i) => `
     <div class="horario-row${h.abierto ? '' : ' cerrado'}" id="hrow-${i}">
-      <div class="horario-dia">${h.dia}</div>
-      <label class="horario-toggle">
-        <input type="checkbox" ${h.abierto ? 'checked' : ''} onchange="toggleHorarioDia(${i}, this.checked)">
-        <span class="horario-slider"></span>
-      </label>
       ${h.abierto
         ? `<div class="horario-times">
             <div class="horario-times-fila">
@@ -6203,6 +6202,13 @@ function renderHorarios() {
             </div>
            </div>`
         : `<div class="horario-cerrado-label">Cerrado</div>`}
+      <div class="horario-dia-toggle">
+        <div class="horario-dia">${h.dia}</div>
+        <label class="horario-toggle">
+          <input type="checkbox" ${h.abierto ? 'checked' : ''} onchange="toggleHorarioDia(${i}, this.checked)">
+          <span class="horario-slider"></span>
+        </label>
+      </div>
     </div>`).join('');
 }
 
