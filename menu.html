@@ -6641,7 +6641,7 @@ window.renderCategoryGridSafe = function() {
     const items    = getItems();
     const settings = getSettings();
 
-    // Leer config del editor visual (mismos campos que index.html)
+    // Leer config del editor visual
     const cp           = cfg.colorPrimario || '#2D5A27';
     const cn           = cfg.colorNombre   || '#E8520A';
     const cf           = cfg.colorFondo    || '#F5EDD8';
@@ -6668,64 +6668,139 @@ window.renderCategoryGridSafe = function() {
                        .filter(c => !hidden.includes(c))
                        .filter(c => catVis[c] !== false);
 
-    const logo  = getLogo();
+    const logo   = getLogo();
     const nombre = getNombre();
+
+    // ── Utilidades de color ──────────────────────────────────────
+    function hexToRgb(hex) {
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      return isNaN(r) ? '0,0,0' : `${r},${g},${b}`;
+    }
+    const cpRgb = hexToRgb(cp);
 
     // ── Encabezado ──────────────────────────────────────────────
     let headerHtml = '';
     if (membrete) {
-      headerHtml = `<div style="width:100%;border-bottom:3px solid ${cp};overflow:hidden;">
-        <img src="${membrete}" style="width:100%;display:block;max-height:220px;object-fit:cover;">
-      </div>`;
+      headerHtml = `
+        <div style="width:100%;overflow:hidden;position:relative;">
+          <img src="${membrete}" style="width:100%;display:block;max-height:220px;object-fit:cover;">
+          <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${cp};"></div>
+        </div>`;
     } else {
       const logoHtml = logo
         ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">`
-        : `<span style="font-size:10px;color:#aaa;text-align:center;padding:4px;">Logo</span>`;
-      headerHtml = `<div style="display:flex;align-items:center;gap:10px;padding:14px 12px 10px;border-bottom:3px solid ${cp};">
-        <div style="width:72px;height:72px;flex-shrink:0;border-radius:50%;border:3px solid ${cp};background:#EDE0C4;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 2px ${cf},0 0 0 4px ${cp};">
-          ${logoHtml}
-        </div>
-        <div style="flex:1;text-align:center;">
-          <div style="font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;color:${cp};letter-spacing:2px;text-transform:uppercase;">RESTAURANTE</div>
-          <div style="font-family:'${fuenteNombre}',sans-serif;font-size:clamp(18px,5vw,28px);font-weight:900;color:${cn};line-height:1;text-transform:uppercase;">${esc(nombre)}</div>
-          ${sede   ? `<div style="font-family:'Playfair Display',serif;font-size:11px;font-style:italic;color:#1A1A1A;margin-top:2px;">${esc(sede)}</div>` : ''}
-          ${slogan ? `<div style="margin-top:4px;"><span style="background:${ce};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:7px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;">${esc(slogan.toUpperCase())}</span></div>` : ''}
-        </div>
-      </div>`;
+        : `<span style="font-size:22px;">🍽️</span>`;
+
+      headerHtml = `
+        <div style="position:relative;background:${cf};overflow:hidden;">
+          <!-- Banda de color superior -->
+          <div style="height:5px;background:linear-gradient(90deg,${cp},rgba(${cpRgb},0.5),${cp});"></div>
+
+          <!-- Contenido del header -->
+          <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 12px;">
+            <!-- Logo circular -->
+            <div style="flex-shrink:0;width:68px;height:68px;border-radius:50%;
+              border:3px solid ${cp};
+              background:rgba(${cpRgb},0.08);
+              display:flex;align-items:center;justify-content:center;overflow:hidden;
+              box-shadow:0 0 0 2px ${cf},0 0 0 5px ${cp},0 4px 12px rgba(${cpRgb},0.25);">
+              ${logoHtml}
+            </div>
+
+            <!-- Texto central -->
+            <div style="flex:1;min-width:0;text-align:center;">
+              <div style="font-family:'Oswald',sans-serif;font-size:7.5px;font-weight:700;
+                color:rgba(${cpRgb},0.7);letter-spacing:3px;text-transform:uppercase;margin-bottom:2px;">
+                ✦ RESTAURANTE ✦
+              </div>
+              <div style="font-family:'${fuenteNombre}',sans-serif;
+                font-size:clamp(16px,4.5vw,26px);font-weight:900;
+                color:${cn};line-height:1;text-transform:uppercase;
+                text-shadow:0 1px 0 rgba(0,0,0,0.08);">
+                ${esc(nombre)}
+              </div>
+              ${sede ? `
+                <div style="font-family:'Playfair Display',serif;font-size:10px;
+                  font-style:italic;color:rgba(0,0,0,0.5);margin-top:3px;letter-spacing:0.3px;">
+                  ${esc(sede)}
+                </div>` : ''}
+              ${slogan ? `
+                <div style="margin-top:5px;">
+                  <span style="display:inline-block;background:${ce};color:#fff;
+                    font-family:'${fuenteNombre}',sans-serif;font-size:7px;font-weight:700;
+                    letter-spacing:1.8px;text-transform:uppercase;
+                    padding:3px 12px;border-radius:999px;">
+                    ${esc(slogan.toUpperCase())}
+                  </span>
+                </div>` : ''}
+            </div>
+          </div>
+
+          <!-- Línea decorativa inferior con ornamento central -->
+          <div style="position:relative;height:16px;margin:0 0 2px;">
+            <div style="position:absolute;top:50%;left:10px;right:10px;height:1.5px;
+              background:linear-gradient(90deg,transparent,${cp} 20%,${cp} 80%,transparent);
+              transform:translateY(-50%);"></div>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              background:${cf};padding:0 6px;
+              font-size:10px;color:${cp};line-height:1;">✦</div>
+          </div>
+        </div>`;
     }
 
     // ── Decorativos de esquinas ──────────────────────────────────
     const fernosHtml = decorFernos ? `
-      <div style="position:absolute;top:4px;left:4px;font-size:28px;opacity:.18;transform:rotate(-30deg);pointer-events:none;z-index:0;">${esc(decorEmoji)}</div>
-      <div style="position:absolute;top:4px;right:4px;font-size:28px;opacity:.18;transform:rotate(30deg);pointer-events:none;z-index:0;">${esc(decorEmoji)}</div>
-      <div style="position:absolute;bottom:4px;left:4px;font-size:28px;opacity:.18;transform:rotate(150deg);pointer-events:none;z-index:0;">${esc(decorEmoji)}</div>
-      <div style="position:absolute;bottom:4px;right:4px;font-size:28px;opacity:.18;transform:rotate(-150deg);pointer-events:none;z-index:0;">${esc(decorEmoji)}</div>` : '';
+      <div style="position:absolute;top:6px;left:6px;font-size:32px;opacity:.12;transform:rotate(-30deg);pointer-events:none;z-index:0;line-height:1;">${esc(decorEmoji)}</div>
+      <div style="position:absolute;top:6px;right:6px;font-size:32px;opacity:.12;transform:rotate(30deg);pointer-events:none;z-index:0;line-height:1;">${esc(decorEmoji)}</div>
+      <div style="position:absolute;bottom:6px;left:6px;font-size:32px;opacity:.12;transform:rotate(150deg);pointer-events:none;z-index:0;line-height:1;">${esc(decorEmoji)}</div>
+      <div style="position:absolute;bottom:6px;right:6px;font-size:32px;opacity:.12;transform:rotate(-150deg);pointer-events:none;z-index:0;line-height:1;">${esc(decorEmoji)}</div>` : '';
 
     // ── Render de una categoría ──────────────────────────────────
     function renderCat(cat) {
       const catItems = items.filter(i => i.categoria === cat && i.disponible !== false);
       if (!catItems.length) return '';
-      return `<div style="margin:10px 0 4px;">
-        <div style="display:inline-block;background:${cp};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:${Math.max(9, tamano - 1)}px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;">${esc(cat)}</div>
-      </div>
-      <div>${catItems.map(it => `
-        <div style="display:flex;align-items:baseline;padding:2px 0;">
-          ${decorLeaf ? `<span style="color:${cp};font-size:9px;margin-right:3px;">${esc(decorEmoji)}</span>` : ''}
-          <div style="flex:1;min-width:0;">
-            <span style="font-size:${tamano}px;color:#1A1A1A;font-family:'${fuentePlatos}',sans-serif;">${esc(it.nombre)}</span>
-            ${mostrarDesc && it.descripcion ? `<div style="font-size:${Math.max(8, tamano - 2)}px;color:#888;line-height:1.3;">${esc(it.descripcion)}</div>` : ''}
+      return `
+        <div style="margin:10px 0 5px;display:flex;align-items:center;gap:6px;">
+          <div style="flex-shrink:0;height:1px;width:8px;background:rgba(${cpRgb},0.4);"></div>
+          <div style="display:inline-block;background:${cp};color:#fff;
+            font-family:'${fuenteNombre}',sans-serif;
+            font-size:${Math.max(8, tamano - 1)}px;font-weight:700;
+            letter-spacing:1.8px;text-transform:uppercase;
+            padding:3px 10px 3px 9px;border-radius:3px;
+            box-shadow:0 1px 4px rgba(${cpRgb},0.3);">
+            ${esc(cat)}
           </div>
-          <span style="flex:0 0 auto;min-width:${espaciado}px;border-bottom:1.5px dotted rgba(0,0,0,.2);margin:0 3px 3px;align-self:flex-end;flex-grow:1;"></span>
-          <span style="font-size:${tamano}px;font-weight:700;font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;color:#1A1A1A;">${fmt(it.precio || it.precioLocal || it.precioDomicilio || 0)}</span>
-        </div>`).join('')}</div>`;
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(${cpRgb},0.35),transparent);"></div>
+        </div>
+        <div style="margin-bottom:4px;">
+          ${catItems.map(it => `
+            <div style="display:flex;align-items:baseline;padding:2.5px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+              ${decorLeaf ? `<span style="color:${cp};font-size:9px;margin-right:4px;flex-shrink:0;opacity:0.8;">${esc(decorEmoji)}</span>` : ''}
+              <div style="flex:1;min-width:0;">
+                <span style="font-size:${tamano}px;color:#1A1A1A;
+                  font-family:'${fuentePlatos}',sans-serif;font-weight:500;
+                  line-height:1.3;">${esc(it.nombre)}</span>
+                ${mostrarDesc && it.descripcion ? `
+                  <div style="font-size:${Math.max(8, tamano-2)}px;color:#999;
+                    line-height:1.3;margin-top:0.5px;font-style:italic;">${esc(it.descripcion)}</div>` : ''}
+              </div>
+              <span style="flex:0 0 auto;border-bottom:1.5px dotted rgba(0,0,0,0.18);
+                margin:0 4px 3px;align-self:flex-end;flex-grow:1;
+                min-width:${espaciado}px;"></span>
+              <span style="font-size:${tamano}px;font-weight:800;
+                font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;
+                color:${cp};">${fmt(it.precio || it.precioLocal || it.precioDomicilio || 0)}</span>
+            </div>`).join('')}
+        </div>`;
     }
 
     // ── Render de fotos ─────────────────────────────────────────
     function renderFotos(arr) {
       if (!arr.length) return '';
       const gridCols = arr.length <= 2 ? '1fr 1fr' : '1fr 1fr 1fr';
-      return `<div style="display:grid;grid-template-columns:${gridCols};gap:4px;margin:8px 0;">
-        ${arr.map(f => `<div style="aspect-ratio:1.1;border-radius:5px;overflow:hidden;background:#ddd;">
+      return `<div style="display:grid;grid-template-columns:${gridCols};gap:5px;margin:8px 0;">
+        ${arr.map(f => `<div style="aspect-ratio:1;border-radius:6px;overflow:hidden;background:#ddd;
+          box-shadow:0 2px 6px rgba(0,0,0,0.12);">
           <img src="${f}" alt="plato" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
         </div>`).join('')}
       </div>`;
@@ -6734,9 +6809,9 @@ window.renderCategoryGridSafe = function() {
     // ── Cuerpo del menú ─────────────────────────────────────────
     let bodyHtml = '';
     if (!cats.length) {
-      bodyHtml = `<div style="text-align:center;padding:30px;color:#999;font-size:13px;">Sin platos configurados aún.</div>`;
+      bodyHtml = `<div style="text-align:center;padding:30px;color:#aaa;font-size:13px;font-style:italic;">Sin platos configurados aún.</div>`;
     } else if (cols === 1) {
-      bodyHtml = `<div style="padding:0 10px 12px;">
+      bodyHtml = `<div style="padding:0 12px 12px;">
         ${cats.map(renderCat).join('')}
         ${renderFotos(fotos)}
       </div>`;
@@ -6744,28 +6819,42 @@ window.renderCategoryGridSafe = function() {
       const colL = [], colR = [];
       cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
       const fotosL = fotos.slice(0, 3), fotosR = fotos.slice(3, 6);
-      bodyHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 8px 12px;">
-        <div style="padding:0 4px;border-right:1.5px solid rgba(0,0,0,.1);">
+      bodyHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 10px 12px;gap:0 10px;">
+        <div style="padding-right:5px;border-right:1px solid rgba(${cpRgb},0.15);">
           ${colL.map(renderCat).join('')}
           ${renderFotos(fotosL)}
         </div>
-        <div style="padding:0 4px;">
+        <div style="padding-left:5px;">
           ${colR.map(renderCat).join('')}
           ${renderFotos(fotosR)}
         </div>
       </div>`;
     }
 
+    // ── Pie de página ────────────────────────────────────────────
+    const footerHtml = `
+      <div style="position:relative;padding:12px 12px 14px;text-align:center;">
+        <!-- Línea decorativa superior -->
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(${cpRgb},0.4));"></div>
+          <span style="font-size:11px;color:${cp};">✦</span>
+          <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(${cpRgb},0.4),transparent);"></div>
+        </div>
+        <div style="font-family:'Playfair Display',serif;font-size:12px;font-style:italic;
+          color:${ce};letter-spacing:0.3px;">${esc(cierre)}</div>
+        ${decorFernos ? `<div style="margin-top:5px;font-size:13px;opacity:0.4;letter-spacing:4px;">${esc(decorEmoji)} ${esc(decorEmoji)} ${esc(decorEmoji)}</div>` : ''}
+      </div>`;
+
     // ── HTML completo ───────────────────────────────────────────
     render.innerHTML = `
-      <div style="background:${cf};position:relative;overflow:hidden;font-family:'${fuentePlatos}',sans-serif;">
+      <div style="background:${cf};position:relative;overflow:hidden;
+        font-family:'${fuentePlatos}',sans-serif;
+        box-shadow:inset 0 0 0 1px rgba(0,0,0,0.04);">
         ${fernosHtml}
         <div style="position:relative;z-index:1;">
           ${headerHtml}
           ${bodyHtml}
-          <div style="text-align:center;padding:10px 10px 16px;border-top:2px solid ${cp};position:relative;z-index:1;">
-            <div style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:${ce};">${esc(cierre)}</div>
-          </div>
+          ${footerHtml}
         </div>
       </div>`;
 
@@ -6773,7 +6862,7 @@ window.renderCategoryGridSafe = function() {
     const fontId = 'mfCustomFont';
     let fontLink = document.getElementById(fontId);
     if (!fontLink) { fontLink = document.createElement('link'); fontLink.id = fontId; fontLink.rel = 'stylesheet'; document.head.appendChild(fontLink); }
-    fontLink.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fuenteNombre)}:wght@600;700;900&family=${encodeURIComponent(fuentePlatos)}:wght@400;700&family=Playfair+Display:ital,wght@1,700&display=swap`;
+    fontLink.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(fuenteNombre)}:wght@600;700;900&family=${encodeURIComponent(fuentePlatos)}:wght@400;500;700&family=Playfair+Display:ital,wght@1,700&family=Oswald:wght@700&display=swap`;
   }
 
   // ── API pública ─────────────────────────────────────────────
