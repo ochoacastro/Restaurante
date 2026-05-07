@@ -30,7 +30,6 @@
     if (raw) firebaseConfig = JSON.parse(raw);
   } catch(e) {}
 
-  // Config embebida como fallback automático (igual que menu.html)
   if (!firebaseConfig) {
     firebaseConfig = {
       apiKey:            "AIzaSyDqkmnJoldzILAY41ll_sQ4n29WM1XSvyA",
@@ -3789,7 +3788,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <span class="cfg-acc-icon">🖼️</span>
         <div>
           <div class="cfg-acc-title">Fotos de categorías</div>
-          <div class="cfg-acc-sub">Imagen en el grid del menú digital</div>
+          <div class="cfg-acc-sub">Imagen en el grid de categorías</div>
         </div>
       </div>
       <span class="cfg-acc-arrow">▼</span>
@@ -3890,7 +3889,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 
         <div style="height:1px;background:var(--borde);margin:4px 0;"></div>
 
-        <!-- Cabecera del menú digital -->
+        <!-- Cabecera del menú -->
         <div>
           <div class="form-label form-label-small" style="margin-bottom:4px;">✏️ Cabecera del menú</div>
           <div style="font-size:11px;color:var(--gris);margin-bottom:14px;line-height:1.5;">
@@ -3943,7 +3942,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
             </div>
           </div>
 
-          <div class="qr-note" style="margin-top:10px;">Los cambios se reflejan al instante en el menú digital.</div>
+          <div class="qr-note" style="margin-top:10px;">Los cambios se guardan automáticamente.</div>
         </div>
 
         <div style="height:1px;background:var(--borde);margin:4px 0;"></div>
@@ -4053,38 +4052,6 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     </div>
   </div>
 
-  <!-- QR -->
-  <div class="cfg-acc" id="cfgacc-qr">
-    <div class="cfg-acc-header" data-cfgacc="cfgacc-qr">
-      <div class="cfg-acc-left">
-        <span class="cfg-acc-icon">📲</span>
-        <div>
-          <div class="cfg-acc-title">Código QR del menú</div>
-          <div class="cfg-acc-sub">Para imprimir o compartir con clientes</div>
-        </div>
-      </div>
-      <span class="cfg-acc-arrow">▼</span>
-    </div>
-    <div class="cfg-acc-body">
-      <div class="cfg-acc-inner">
-        <div class="qr-url-row">
-          <input id="qrUrlInput" class="qr-url-input" type="url" placeholder="https://tu-dominio.com/menu.html" autocomplete="off" spellcheck="false" title="URL del menú digital">
-          <button class="btn-save-config" style="white-space:nowrap;padding:10px 14px;" onclick="cfgGuardarYGenerarQR()">Generar</button>
-        </div>
-        <div id="qrCanvasWrap" class="qr-canvas-wrap" style="display:none;"></div>
-        <div id="qrLinkBox" class="qr-link-box" style="display:none;">
-          <span id="qrLinkText" class="qr-link-text"></span>
-          <button id="qrCopyBtn" class="qr-copy-btn" onclick="cfgQrCopy()">📋 Copiar</button>
-        </div>
-        <div id="qrActions" class="qr-actions" style="display:none;">
-          <button class="qr-action-btn" onclick="cfgQrDownload()">⬇️ Descargar PNG</button>
-          <button class="qr-action-btn" onclick="cfgQrShare()">📤 Compartir</button>
-        </div>
-        <div class="qr-note">Escribe la URL completa donde está tu menú digital (ej: https://tu-dominio.com/menu.html). Se guardará automáticamente.</div>
-      </div>
-    </div>
-  </div>
-
       <button id="btnGuardarMenuFlotante" onclick="guardarMenuDesdeBotonFlotante()" style="position:relative;">
         <span>💾 Guardar cambios en el menú</span>
         <span class="btn-save-badge" id="btnGuardarMenuBadge">0</span>
@@ -4129,7 +4096,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <div class="config-field">
           <label>📲 WhatsApp para pedidos de domicilio</label>
           <input class="config-input" id="cfgWaDomicilio" type="tel" placeholder="Ej: 3001234567 (sin +57)" inputmode="numeric">
-          <div style="font-size:11px;color:var(--gris);margin-top:4px;">Se pre-llenará al enviar domicilios por WhatsApp y es el número al que los clientes del menú digital envían sus pedidos.</div>
+          <div style="font-size:11px;color:var(--gris);margin-top:4px;">Se pre-llenará al enviar domicilios por WhatsApp y es el número de contacto para pedidos.</div>
         </div>
         <div class="config-field">
           <label>💬 Mensaje de WhatsApp (factura)</label>
@@ -4145,11 +4112,11 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <div class="config-field" style="margin-top:6px;">
           <label>🕐 Horarios de atención</label>
           <div style="font-size:11px;color:var(--gris);margin-bottom:10px;line-height:1.5;">
-            Configura los días y horas en que el menú digital está disponible. Fuera de este horario los clientes verán un aviso de "Cerrado".
+            Configura los días y horas de atención del restaurante.
           </div>
           <div id="horariosWrap" style="display:flex;flex-direction:column;gap:6px;"></div>
           <div style="margin-top:10px;padding:10px 12px;background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.12);border-radius:var(--r-sm);font-size:12px;color:var(--rappi);font-weight:600;">
-            💡 Deja "Cerrado" los días que no atiendes. El menú digital mostrará el aviso automáticamente.
+            💡 Deja "Cerrado" los días que no atiendes.
           </div>
         </div>
 
@@ -4208,250 +4175,6 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     </div>
   </div>
 
-
-  <!-- ═══════════════════════════════════════
-       MENÚ RESTAURANTE — editor tipo plantilla
-  ═══════════════════════════════════════ -->
-  <style>
-    /* ── Tarjeta diseñador de menú ── */
-    .mfd-card {
-      margin: 0;
-      border-radius: 0;
-      overflow: hidden;
-    }
-    .mfd-hero {
-      position: relative;
-      background: linear-gradient(135deg, #0F1A0F 0%, #1A2E1A 50%, #0F1A0F 100%);
-      padding: 20px 16px 16px;
-      overflow: hidden;
-      cursor: pointer;
-      user-select: none;
-      -webkit-tap-highlight-color: transparent;
-      transition: filter 0.18s;
-    }
-    .mfd-hero:active { filter: brightness(0.88); }
-    .mfd-hero-bg {
-      position: absolute; inset: 0;
-      background: repeating-linear-gradient(
-        45deg, transparent, transparent 20px,
-        rgba(255,255,255,0.015) 20px, rgba(255,255,255,0.015) 40px
-      );
-      pointer-events: none;
-    }
-    .mfd-hero-accent {
-      position: absolute; top: -30px; right: -30px;
-      width: 120px; height: 120px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255,68,26,0.18) 0%, transparent 70%);
-      pointer-events: none;
-    }
-    .mfd-hero-top {
-      display: flex; align-items: center; gap: 14px;
-      position: relative; z-index: 1;
-    }
-    .mfd-hero-icon {
-      width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
-      background: linear-gradient(135deg, rgba(255,68,26,0.25), rgba(255,68,26,0.08));
-      border: 1.5px solid rgba(255,68,26,0.35);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 26px;
-    }
-    .mfd-hero-text { flex: 1; min-width: 0; }
-    .mfd-hero-title {
-      font-size: 16px; font-weight: 900; color: #fff;
-      letter-spacing: -0.3px; line-height: 1.1;
-    }
-    .mfd-hero-sub {
-      font-size: 11px; color: rgba(255,255,255,0.45);
-      margin-top: 3px; font-weight: 500;
-    }
-    .mfd-hero-arrow {
-      width: 32px; height: 32px; border-radius: 50%;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.12);
-      display: flex; align-items: center; justify-content: center;
-      color: rgba(255,255,255,0.6); font-size: 14px; flex-shrink: 0;
-    }
-
-    /* Paletas en el hero */
-    .mfd-paletas {
-      display: flex; gap: 8px; align-items: center;
-      position: relative; z-index: 1;
-      margin-top: 14px; padding-top: 14px;
-      border-top: 1px solid rgba(255,255,255,0.07);
-    }
-    .mfd-paletas-label {
-      font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.3);
-      text-transform: uppercase; letter-spacing: 0.6px; flex-shrink: 0;
-    }
-    .mfd-paleta-dot {
-      width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
-      border: 2px solid rgba(255,255,255,0.15);
-      transition: transform 0.15s, border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .mfd-paleta-dot:active { transform: scale(0.85); }
-
-    /* Acciones rápidas */
-    .mfd-actions {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
-      padding: 10px 12px 12px;
-      background: var(--blanco);
-    }
-    .mfd-action-btn {
-      display: flex; align-items: center; gap: 8px;
-      padding: 11px 12px; border-radius: 12px;
-      border: 1.5px solid var(--borde); background: var(--fondo);
-      color: var(--negro); font-size: 12px; font-weight: 700;
-      cursor: pointer; font-family: inherit;
-      transition: background 0.15s, border-color 0.15s;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .mfd-action-btn:active { background: var(--gris-cl); }
-    .mfd-action-btn .mfd-ab-icon { font-size: 16px; flex-shrink: 0; }
-    .mfd-action-btn.accent {
-      background: linear-gradient(135deg, #1a5e20, #2e7d32);
-      color: #fff; border-color: transparent;
-      box-shadow: 0 3px 10px rgba(46,125,50,0.3);
-    }
-    .mfd-action-btn.accent:active { opacity: 0.85; }
-    body.dark .mfd-actions { background: var(--blanco); }
-    body.dark .mfd-action-btn { background: #1E1E1E; border-color: #2A2A2A; color: #DDD; }
-    body.dark .mfd-action-btn:active { background: #252525; }
-
-    /* Mini-preview de paleta actual */
-    .mfd-palette-preview {
-      display: flex; gap: 4px; margin-left: auto;
-    }
-    .mfd-pp-swatch {
-      width: 12px; height: 12px; border-radius: 3px;
-    }
-  </style>
-
-  <div class="cfg-acc" id="cfgacc-menufisico">
-    <div class="cfg-acc-header" data-cfgacc="cfgacc-menufisico">
-      <div class="cfg-acc-left">
-        <span class="cfg-acc-icon">🍽️</span>
-        <div>
-          <div class="cfg-acc-title">Menú Restaurante</div>
-          <div class="cfg-acc-sub">Editor visual · se refleja en el menú digital</div>
-        </div>
-      </div>
-      <span class="cfg-acc-arrow">▼</span>
-    </div>
-    <div class="cfg-acc-body">
-      <div class="cfg-acc-inner" style="padding:0;" class="mfd-card">
-
-        <!-- HERO: botón principal de acceso al editor -->
-        <div class="mfd-hero" onclick="mfAbrirEditorCompleto()">
-          <div class="mfd-hero-bg"></div>
-          <div class="mfd-hero-accent"></div>
-
-          <div class="mfd-hero-top">
-            <div class="mfd-hero-icon">🍽️</div>
-            <div class="mfd-hero-text">
-              <div class="mfd-hero-title">Diseñar menú del restaurante</div>
-              <div class="mfd-hero-sub">Editor visual completo · vista previa en tiempo real</div>
-            </div>
-            <div class="mfd-hero-arrow">→</div>
-          </div>
-
-          <!-- Paletas de color rápidas -->
-          <div class="mfd-paletas" onclick="event.stopPropagation()">
-            <span class="mfd-paletas-label">Paleta:</span>
-            <button class="mfd-paleta-dot" title="Campestre" style="background:linear-gradient(135deg,#2D5A27,#E8520A);" onclick="mfdAplicarPaleta('campestre')"></button>
-            <button class="mfd-paleta-dot" title="Clásico"   style="background:linear-gradient(135deg,#1A1A1A,#C0392B);" onclick="mfdAplicarPaleta('clasico')"></button>
-            <button class="mfd-paleta-dot" title="Elegante"  style="background:linear-gradient(135deg,#2C3E50,#D4AF37);" onclick="mfdAplicarPaleta('elegante')"></button>
-            <button class="mfd-paleta-dot" title="Tropical"  style="background:linear-gradient(135deg,#1B6CA8,#F39C12);" onclick="mfdAplicarPaleta('tropical')"></button>
-            <button class="mfd-paleta-dot" title="Rosado"    style="background:linear-gradient(135deg,#8E44AD,#E91E8C);" onclick="mfdAplicarPaleta('rosa')"></button>
-            <button class="mfd-paleta-dot" title="Neutro"    style="background:linear-gradient(135deg,#555,#888);"       onclick="mfdAplicarPaleta('neutro')"></button>
-            <!-- Swatches de la paleta actual -->
-            <div class="mfd-palette-preview" id="mfdSwatchPreview" style="margin-left:auto;"></div>
-          </div>
-        </div>
-
-        <!-- ACCIONES RÁPIDAS -->
-        <div class="mfd-actions">
-          <button class="mfd-action-btn" onclick="mfAbrirEditorCompleto()">
-            <span class="mfd-ab-icon">🎨</span>
-            <span>Diseño y colores</span>
-          </button>
-          <button class="mfd-action-btn" onclick="mfAbrirEditorCompleto();setTimeout(()=>mfeToggleTab('fotos'),400)">
-            <span class="mfd-ab-icon">📷</span>
-            <span>Fotos de platos</span>
-          </button>
-          <button class="mfd-action-btn" onclick="mfAbrirEditorCompleto();setTimeout(()=>mfeToggleTab('cats'),400)">
-            <span class="mfd-ab-icon">📋</span>
-            <span>Categorías</span>
-          </button>
-          <button class="mfd-action-btn accent" onclick="mfDescargarPNG()">
-            <span class="mfd-ab-icon">📥</span>
-            <span>Descargar PNG</span>
-          </button>
-        </div>
-
-        <!-- Campos legacy ocultos (compatibilidad con funciones existentes) -->
-        <div style="display:none;">
-          <input id="mfSede">
-          <input id="mfSlogan">
-          <input id="mfCierre">
-          <div id="mfFotosGrid"></div>
-          <div id="mfCatToggles"></div>
-          <div id="mfMembretePreviewWrap"><img id="mfMembretePreview"></div>
-          <span id="mfMembreteUploadTxt"></span>
-          <button id="mfMembreteQuitarBtn"></button>
-          <input id="mfMembreteInput" type="file" accept="image/*" onchange="mfSubirMembrete(this)">
-        </div>
-
-      </div>
-    </div>
-  </div>
-
-  <script>
-  // ── Función helper para aplicar paleta desde la tarjeta de config ──
-  function mfdAplicarPaleta(nombre) {
-    // Aplicar al editor si está abierto, o solo guardar en cfg
-    if (typeof mfeAplicarPaleta === 'function') {
-      mfeAplicarPaleta(nombre);
-    }
-    // También guardar directamente en localStorage para que menu.html lo recoja
-    const paletas = {
-      campestre: { colorPrimario:'#2D5A27', colorNombre:'#E8520A', colorFondo:'#F5EDD8', colorEslogan:'#6B3A2A' },
-      clasico:   { colorPrimario:'#1A1A1A', colorNombre:'#C0392B', colorFondo:'#FAFAFA', colorEslogan:'#222' },
-      elegante:  { colorPrimario:'#2C3E50', colorNombre:'#D4AF37', colorFondo:'#F8F6F0', colorEslogan:'#2C3E50' },
-      tropical:  { colorPrimario:'#1B6CA8', colorNombre:'#F39C12', colorFondo:'#EEF7FF', colorEslogan:'#1B6CA8' },
-      rosa:      { colorPrimario:'#8E44AD', colorNombre:'#E91E8C', colorFondo:'#FEF6FF', colorEslogan:'#6A1B9A' },
-      neutro:    { colorPrimario:'#555',    colorNombre:'#333',    colorFondo:'#F7F7F7', colorEslogan:'#444' }
-    };
-    const p = paletas[nombre];
-    if (!p) return;
-    try {
-      const existing = JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}');
-      const updated = { ...existing, ...p };
-      localStorage.setItem('helechos_menu_fisico_cfg', JSON.stringify(updated));
-    } catch(e) {}
-    mfdActualizarSwatches();
-    if (window.showToast) showToast('🎨 Paleta "' + nombre + '" aplicada · guardada automáticamente');
-  }
-
-  function mfdActualizarSwatches() {
-    const el = document.getElementById('mfdSwatchPreview');
-    if (!el) return;
-    try {
-      const cfg = JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}');
-      const cp = cfg.colorPrimario || '#2D5A27';
-      const cn = cfg.colorNombre   || '#E8520A';
-      const cf = cfg.colorFondo    || '#F5EDD8';
-      el.innerHTML = [cp, cn, cf].map(c =>
-        `<div class="mfd-pp-swatch" style="background:${c};border:1px solid rgba(255,255,255,0.2);" title="${c}"></div>`
-      ).join('');
-    } catch(e) {}
-  }
-
-  // Inicializar swatches al cargar
-  document.addEventListener('DOMContentLoaded', mfdActualizarSwatches);
-  setTimeout(mfdActualizarSwatches, 500);
-  </script>
 
   <!-- Consecutivo -->
   <div class="cfg-acc" id="cfgacc-consec">
@@ -6187,7 +5910,6 @@ function cargarConfig() {
     const savedLogo = localStorage.getItem('helechos_logo');
     if (savedLogo) { logoBase64 = savedLogo; mostrarLogoPreview(); }
     else {
-      // BUG 5 fix: fallback — leer logo desde la clave del menú digital
       try {
         const raw = localStorage.getItem('helechos_menu_settings_v1');
         const ms = raw ? JSON.parse(raw) : {};
@@ -6207,7 +5929,6 @@ function cargarConfig() {
 
 function cargarMenuPrecios() {
   try {
-    // Intentar cargar desde clave del POS primero; luego desde clave del menú digital
     const raw = localStorage.getItem('helechos_menu')
              || localStorage.getItem('helechos_menu_custom_v3');
     if (raw) {
@@ -6215,7 +5936,6 @@ function cargarMenuPrecios() {
       const tienenCategoria = savedMenu.every(s => s.categoria);
       if (tienenCategoria) {
         MENU = savedMenu.map(s => {
-          // BUG 1 fix: el menú digital usa precioLocal; el POS usa precio.
           // Normalizar: precio = precio ?? precioLocal (nunca queda undefined)
           const precio       = Number(s.precio       ?? s.precioLocal  ?? 0);
           const precioDom    = Number(s.precioDomicilio ?? s.precio ?? s.precioLocal ?? precio);
@@ -6688,7 +6408,6 @@ function adBannerSpeedChange(val) {
   if (label) label.textContent = secs + 's';
   const key = 'clasico';
   saveAdBannerSpeed(key, secs);
-  // propagar al menu.html vía storage event
   showToast('⏱ Velocidad: ' + secs + 's por banner');
 }
 
@@ -6865,11 +6584,9 @@ function saveConfig() {
   config.waMensaje = document.getElementById('cfgWaMensaje').value.trim();
   localStorage.setItem('helechos_config', JSON.stringify(config));
 
-  // ── Sincronizar con el menú digital ──
   try {
     const raw = localStorage.getItem(MENU_SETTINGS_KEY);
     const menuSettings = raw ? JSON.parse(raw) : {};
-    // El menú digital espera el número CON prefijo 57
     menuSettings.businessWhatsApp = config.waTelDomicilio
       ? '57' + config.waTelDomicilio
       : '';
@@ -6898,13 +6615,11 @@ function saveConfig() {
   if (loginBrand) {
     localStorage.setItem('helechos_login_brand', loginBrand);
     const el = document.getElementById('loginBrandText'); if (el) el.textContent = loginBrand;
-    // Sincronizar al menú digital vía Firebase
     config.loginBrand = loginBrand;
   }
   if (loginSub) {
     localStorage.setItem('helechos_login_sub', loginSub);
     const el = document.getElementById('loginSubText'); if (el) el.textContent = loginSub;
-    // Sincronizar al menú digital vía Firebase
     config.loginSub = loginSub;
   }
   // Re-sincronizar config completo con loginBrand/loginSub incluidos
@@ -7797,7 +7512,6 @@ function renderMenu() {
   }
 
   const q = (busquedaMenu || '').trim().toLowerCase();
-  // FIX C: excluir productos con disponible === false (igual que el menú digital)
   let filtrado = catActiva === 'Todos' ? MENU : MENU.filter(i => i.categoria === catActiva);
   filtrado = filtrado.filter(i => i.disponible !== false);
   if (q) filtrado = filtrado.filter(i => i.nombre.toLowerCase().includes(q) || i.categoria.toLowerCase().includes(q));
@@ -8144,7 +7858,6 @@ function guardarMenuLocalStorage() {
     disponible: i.disponible !== false   // BUG 1 fix: preservar estado de disponibilidad
   }));
   localStorage.setItem('helechos_menu', JSON.stringify(data));
-  // BUG 2 fix: escribir también en la clave del menú digital para sincronizar sin Firebase
   try { localStorage.setItem('helechos_menu_custom_v3', JSON.stringify(data)); } catch(_) {}
   fbSync('menu', data);
 }
@@ -11154,7 +10867,6 @@ function cargarLogo(input) {
   reader.onload = (e) => {
     logoBase64 = e.target.result;
     localStorage.setItem('helechos_logo', logoBase64);
-    // BUG 5 fix: sincronizar logo con el menú digital (helechos_menu_settings_v1)
     try {
       const raw = localStorage.getItem('helechos_menu_settings_v1');
       const ms = raw ? JSON.parse(raw) : {};
@@ -11162,7 +10874,6 @@ function cargarLogo(input) {
       localStorage.setItem('helechos_menu_settings_v1', JSON.stringify(ms));
     } catch(_) {}
     fbSync('logo', { data: logoBase64 }); // Corrección: el listener espera { data: string }
-    // BUG 1 fix: sincronizar logo también en la ruta que lee el menú digital
     fbSync('decorImages/businessLogo', logoBase64);
     mostrarLogoPreview();
     showToast('✅ Logo guardado');
@@ -11252,7 +10963,6 @@ function quitarLogo() {
   confirmar({ icono:'🖼️', titulo:'Quitar logo', mensaje:'¿Quitar el logo del recibo?', textoOk:'Quitar', callback() {
     logoBase64 = null;
     localStorage.removeItem('helechos_logo');
-    // BUG 5 fix: limpiar logo también en la clave del menú digital
     try {
       const raw = localStorage.getItem('helechos_menu_settings_v1');
       const ms = raw ? JSON.parse(raw) : {};
@@ -11260,7 +10970,6 @@ function quitarLogo() {
       localStorage.setItem('helechos_menu_settings_v1', JSON.stringify(ms));
     } catch(_) {}
     fbSyncRemove('logo');
-    // BUG 1 fix: limpiar logo también en la ruta que lee el menú digital
     fbSync('decorImages/businessLogo', '');
     document.getElementById('logoFileInput').value = '';
     mostrarLogoPreview();
@@ -11992,7 +11701,6 @@ function fbEscucharCambios() {
         document.getElementById('cfgMsg').value    = config.mensaje   || '';
         document.getElementById('cfgWaDomicilio').value = config.waTelDomicilio || '';
         document.getElementById('cfgWaMensaje').value = config.waMensaje || '';
-        // Sincronizar con menú digital
         try {
           const raw2 = localStorage.getItem('helechos_menu_settings_v1');
           const ms2 = raw2 ? JSON.parse(raw2) : {};
@@ -12007,7 +11715,6 @@ function fbEscucharCambios() {
     },
     { path: 'helechos/menu', handler: (val) => {
         if (!Array.isArray(val)) return;
-        // BUG 1 fix: normalizar items que vienen del menú digital (precioLocal) al
         // formato del POS (precio), para que los cálculos del carrito nunca sean $0.
         MENU = val.map(s => {
           const precio    = Number(s.precio ?? s.precioLocal ?? 0);
@@ -12024,7 +11731,6 @@ function fbEscucharCambios() {
           };
         });
         localStorage.setItem('helechos_menu', JSON.stringify(MENU));
-        // BUG 2 fix: mantener la clave del menú digital también actualizada
         try { localStorage.setItem('helechos_menu_custom_v3', JSON.stringify(MENU)); } catch(_) {}
         // Actualizar precios en carrito si cambiaron desde otro dispositivo
         carrito.forEach(ci => {
@@ -12831,19 +12537,7 @@ function onCfgAccOpen(id) {
   if (id === 'cfgacc-diseno')   { cfgRenderDiseno(); renderClosedBgPreview(); }
   if (id === 'cfgacc-publicidad') { renderAdBannerPreview(); }
   if (id === 'cfgacc-restaurante') { renderHorarios(); renderFestivos(); }
-  if (id === 'cfgacc-menufisico')  { mfIniciarPanel(); }
-  // ── QR: siempre pre-llenar con la URL permanente y generar automáticamente ──
-  if (id === 'cfgacc-qr') {
-    const inp = document.getElementById('qrUrlInput');
-    if (inp) {
-      inp.removeAttribute('readonly');
-      // Cargar URL guardada en localStorage
-      const saved = cfgGetQrUrl();
-      if (saved) inp.value = saved;
-    }
-    // Generar automáticamente si ya hay URL guardada
-    if (cfgGetQrUrl()) setTimeout(cfgGenerateQR, 80);
-  }
+
   if (id === 'cfgAccFE') {
     // Handled by toggleCfgAccFE()
   }
@@ -12864,7 +12558,6 @@ const PERM_SECTIONS = {
   pagos:     'cfgacc-pagos',
   diseno:    'cfgacc-diseno',
   publicidad:'cfgacc-publicidad',
-  qr:        'cfgacc-qr',
 };
 
 function loadMasterPerms() {
@@ -13142,7 +12835,6 @@ async function cfgHandleMenuImageInput(inputId, key) {
     const s = loadMenuSettings();
     s[key] = data;
     saveMenuSettings(s);
-    // FIX: sincronizar imagen decorativa a Firebase para que el menú digital la reciba
     if (window.fbSync) {
       try { window.fbSync('decorImages/' + key, data); } catch(e) {}
     }
@@ -13156,7 +12848,6 @@ function cfgClearMenuImage(key) {
   const s = loadMenuSettings();
   delete s[key];
   saveMenuSettings(s);
-  // FIX: borrar también en Firebase para que el menú digital la quite
   if (window.fbSync) {
     try { window.fbSync('decorImages/' + key, ''); } catch(e) {}
   }
@@ -13439,83 +13130,8 @@ function cfgRenderCatImages() {
   });
 }
 
-// ══════════════════════════════════════
-// QR
-// ══════════════════════════════════════
-let _qrInstance = null;
-let _qrCurrentUrl = '';
 
-(function loadQRLib(){
-  const s = document.createElement('script');
-  s.src = 'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js';
-  document.head.appendChild(s);
-})();
 
-// ══════════════════════════════════════════════════════════════════════
-// URL DINÁMICA DEL MENÚ DIGITAL
-// Se construye automáticamente a partir del dominio actual del sistema,
-// así funciona correctamente sin importar dónde esté alojado.
-// ══════════════════════════════════════════════════════════════════════
-const QR_URL_KEY = 'helechos_qr_menu_url';
-
-function cfgGetQrUrl() {
-  return localStorage.getItem(QR_URL_KEY) || '';
-}
-
-function cfgGuardarYGenerarQR() {
-  const urlInput = document.getElementById('qrUrlInput');
-  const url = (urlInput?.value || '').trim();
-  if (!url) { showToast('⚠️ Escribe la URL del menú primero'); urlInput?.focus(); return; }
-  if (!url.startsWith('http')) { showToast('⚠️ La URL debe comenzar con https://'); urlInput?.focus(); return; }
-  // Guardar en localStorage para recordarla siempre
-  localStorage.setItem(QR_URL_KEY, url);
-  cfgGenerateQR();
-}
-
-function cfgGenerateQR() {
-  const urlInput = document.getElementById('qrUrlInput');
-  const url = (urlInput?.value || '').trim();
-  if (!url) { showToast('⚠️ Escribe la URL del menú primero'); urlInput?.focus(); return; }
-  _qrCurrentUrl = url;
-  const wrap = document.getElementById('qrCanvasWrap');
-  wrap.innerHTML = '';
-  const div = document.createElement('div');
-  wrap.appendChild(div);
-  try {
-    _qrInstance = new QRCode(div, { text: url, width: 200, height: 200, colorDark: '#1A1A1A', colorLight: '#FFFFFF', correctLevel: QRCode.CorrectLevel.H });
-  } catch(e) { showToast('⚠️ No se pudo generar el QR'); return; }
-  wrap.style.display = 'flex';
-  document.getElementById('qrLinkBox').style.display = 'flex';
-  document.getElementById('qrLinkText').textContent = url;
-  document.getElementById('qrActions').style.display = 'grid';
-}
-
-function cfgQrCopy() {
-  if (!_qrCurrentUrl) return;
-  const btn = document.getElementById('qrCopyBtn');
-  navigator.clipboard.writeText(_qrCurrentUrl).then(() => {
-    const orig = btn.textContent; btn.textContent = '✅ Copiado';
-    setTimeout(() => btn.textContent = orig, 1800);
-  }).catch(() => showToast('⚠️ No se pudo copiar'));
-}
-
-function cfgQrDownload() {
-  const wrap = document.getElementById('qrCanvasWrap');
-  const img = wrap?.querySelector('img');
-  const canvas = wrap?.querySelector('canvas');
-  const dataUrl = img?.src || canvas?.toDataURL('image/png');
-  if (!dataUrl) return;
-  const a = document.createElement('a'); a.href = dataUrl; a.download = 'qr-menu-helechos.png'; a.click();
-}
-
-async function cfgQrShare() {
-  if (navigator.share && _qrCurrentUrl) {
-    try { await navigator.share({ title: 'Menú ' + (config.nombre || 'del restaurante'), url: _qrCurrentUrl }); return; } catch(e) {}
-  }
-  cfgQrCopy();
-}
-
-// URL del menú: ver constante MENU_DIGITAL_URL arriba
 
 // ══════════════════════════════════════════════════════════════════════
 // MÓDULO FACTURA ELECTRÓNICA — CLIENTE
@@ -15436,7 +15052,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
       html += `<div class="dom-empty">
         <div class="icon">🛵</div>
         <p>Sin pedidos de domicilio</p>
-        <p style="font-size:12px;color:var(--gris);margin-top:6px;">Los pedidos del menú digital aparecen aquí en tiempo real</p>
+        <p style="font-size:12px;color:var(--gris);margin-top:6px;">Los pedidos de domicilio aparecen aquí en tiempo real</p>
       </div>`;
     } else {
       html += lista.map(p => domRenderCard(p)).join('');
@@ -16271,1169 +15887,6 @@ function renderPedido(p) {
   }
 
 })(); // fin initDomicilios
-
-// ══════════════════════════════════════════════════
-// MENÚ FÍSICO — editor desde index.html
-// ══════════════════════════════════════════════════
-const MF_CFG_KEY = 'helechos_menu_fisico_cfg';
-
-function mfCargarCfg() {
-  try { return JSON.parse(localStorage.getItem(MF_CFG_KEY) || '{}'); } catch(e) { return {}; }
-}
-function mfGuardarCfg(cfg) {
-  localStorage.setItem(MF_CFG_KEY, JSON.stringify(cfg));
-  if (window.fbSync) fbSync('menuFisicoCfg', cfg);
-}
-
-function mfIniciarPanel() {
-  const cfg = mfCargarCfg();
-  const sede   = document.getElementById('mfSede');
-  const slogan = document.getElementById('mfSlogan');
-  const cierre = document.getElementById('mfCierre');
-  if (sede)   sede.value   = cfg.sede   || '';
-  if (slogan) slogan.value = cfg.slogan || '';
-  if (cierre) cierre.value = cfg.cierre || 'Gracias por preferirnos';
-  mfActualizarMembreteUI(cfg.membrete || null);
-  mfRenderFotos(cfg.fotos || [null,null,null,null,null,null]);
-  mfRenderCatToggles(cfg.catVisible || {});
-}
-
-let _mfFotos = [null,null,null,null,null,null];
-
-function mfRenderFotos(fotos) {
-  _mfFotos = fotos.slice();
-  while (_mfFotos.length < 6) _mfFotos.push(null);
-  const grid = document.getElementById('mfFotosGrid');
-  if (!grid) return;
-  grid.innerHTML = _mfFotos.map((f, i) => `
-    <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:var(--fondo);border:1.5px dashed var(--borde);position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="document.getElementById('mfFotoInput${i}').click()">
-      <input type="file" id="mfFotoInput${i}" accept="image/*" style="display:none" onchange="mfSubirFoto(this,${i})">
-      ${f
-        ? `<img src="${f}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;"><div onclick="event.stopPropagation();mfBorrarFoto(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.65);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;z-index:2;">✕</div>`
-        : `<span style="font-size:22px;color:var(--gris);">📷</span>`}
-    </div>`).join('');
-}
-
-function mfSubirFoto(input, idx) {
-  const file = input.files && input.files[0];
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { showToast('⚠️ Imagen muy grande (máx 3MB)'); return; }
-  const reader = new FileReader();
-  reader.onload = e => { _mfFotos[idx] = e.target.result; mfRenderFotos(_mfFotos); };
-  reader.readAsDataURL(file);
-}
-
-function mfBorrarFoto(idx) {
-  _mfFotos[idx] = null;
-  mfRenderFotos(_mfFotos);
-}
-
-function mfImportarFotos() {
-  let items = [];
-  try { items = JSON.parse(localStorage.getItem('helechos_menu_custom_v3') || '[]'); } catch(e){}
-  let settings = {};
-  try { settings = JSON.parse(localStorage.getItem(MENU_SETTINGS_KEY) || '{}'); } catch(e){}
-  const fotos = [
-    ...items.map(i => i.foto).filter(Boolean),
-    ...Object.values(settings.categoryImages || {}).filter(Boolean)
-  ].slice(0, 6);
-  if (!fotos.length) { showToast('⚠️ No hay fotos en el menú digital'); return; }
-  fotos.forEach((f, i) => { _mfFotos[i] = f; });
-  mfRenderFotos(_mfFotos);
-  showToast('✅ ' + fotos.length + ' fotos importadas');
-}
-
-function mfRenderCatToggles(catVisible) {
-  let items = [];
-  try { items = JSON.parse(localStorage.getItem('helechos_menu_custom_v3') || '[]'); } catch(e){}
-  const cats = [...new Set(items.map(i => i.categoria).filter(Boolean))];
-  const wrap = document.getElementById('mfCatToggles');
-  if (!wrap) return;
-  if (!cats.length) {
-    wrap.innerHTML = '<div style="font-size:12px;color:var(--gris);">Sin categorías aún.</div>';
-    return;
-  }
-  wrap.innerHTML = cats.map(c => {
-    const checked = catVisible[c] !== false;
-    const count   = items.filter(i => i.categoria === c).length;
-    return `<label style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--fondo);border-radius:var(--r-sm);border:1px solid var(--borde);cursor:pointer;">
-      <input type="checkbox" ${checked ? 'checked' : ''} data-mfcat="${c.replace(/"/g,'&quot;')}" style="accent-color:var(--rappi);width:16px;height:16px;flex-shrink:0;">
-      <span style="font-size:13px;flex:1;">${c}</span>
-      <span style="font-size:11px;color:var(--gris);">${count} platos</span>
-    </label>`;
-  }).join('');
-}
-
-function mfLeerCatVisible() {
-  const result = {};
-  document.querySelectorAll('[data-mfcat]').forEach(cb => { result[cb.dataset.mfcat] = cb.checked; });
-  return result;
-}
-
-function guardarMenuFisicoCfg() {
-  const cfg = {
-    sede:       (document.getElementById('mfSede')   || {}).value || '',
-    slogan:     (document.getElementById('mfSlogan') || {}).value || '',
-    cierre:     (document.getElementById('mfCierre') || {}).value || 'Gracias por preferirnos',
-    fotos:      _mfFotos,
-    catVisible: mfLeerCatVisible(),
-    membrete:   _mfMembrete || null
-  };
-  mfGuardarCfg(cfg);
-  showToast('✅ Menú físico guardado');
-}
-
-
-// ── Membrete del menú físico ──
-let _mfMembrete = null; // base64 de la imagen de membrete
-
-function mfSubirMembrete(input) {
-  const file = input.files && input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { showToast('⚠️ Imagen muy grande (máx 5MB)'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    _mfMembrete = e.target.result;
-    mfActualizarMembreteUI(_mfMembrete);
-  };
-  reader.readAsDataURL(file);
-}
-
-function mfQuitarMembrete() {
-  _mfMembrete = null;
-  mfActualizarMembreteUI(null);
-}
-
-function mfActualizarMembreteUI(data) {
-  _mfMembrete = data || null;
-  const previewWrap = document.getElementById('mfMembretePreviewWrap');
-  const preview     = document.getElementById('mfMembretePreview');
-  const uploadTxt   = document.getElementById('mfMembreteUploadTxt');
-  const quitarBtn   = document.getElementById('mfMembreteQuitarBtn');
-  if (!previewWrap) return;
-  if (data) {
-    previewWrap.style.display = '';
-    if (preview) preview.src = data;
-    if (uploadTxt) uploadTxt.textContent = 'Cambiar imagen de membrete';
-    if (quitarBtn) quitarBtn.style.display = '';
-  } else {
-    previewWrap.style.display = 'none';
-    if (uploadTxt) uploadTxt.textContent = 'Subir imagen de membrete';
-    if (quitarBtn) quitarBtn.style.display = 'none';
-  }
-}
-
-// ── Descargar PNG del menú físico desde index.html ──
-function mfDescargarPNG() {
-  // Construir el menú físico directamente en un div oculto dentro de index.html
-  // usando los mismos datos del localStorage, sin abrir menu.html
-  if (!window.html2canvas) {
-    showToast('⏳ Cargando html2canvas...');
-    const s = document.createElement('script');
-    s.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
-    s.onload = () => mfDescargarPNG();
-    document.head.appendChild(s);
-    return;
-  }
-
-  // Cargar fuentes si no están
-  if (!document.getElementById('mfFontLink')) {
-    const link = document.createElement('link');
-    link.id = 'mfFontLink';
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=Oswald:wght@600;700&family=Lato:wght@400;700&display=swap';
-    document.head.appendChild(link);
-  }
-
-  const cfg = mfCargarCfg();
-  let items = [];
-  try { items = JSON.parse(localStorage.getItem('helechos_menu_custom_v3') || '[]'); } catch(e){}
-  let settings = {};
-  try { settings = JSON.parse(localStorage.getItem(MENU_SETTINGS_KEY) || '{}'); } catch(e){}
-  let configData = {};
-  try { configData = JSON.parse(localStorage.getItem('helechos_config') || '{}'); } catch(e){}
-  const logo = (settings.businessLogo) || localStorage.getItem('helechos_logo') || '';
-
-  const nombre   = (configData.nombre && configData.nombre !== 'Mi Restaurante' ? configData.nombre : 'MI RESTAURANTE').toUpperCase();
-  const sede     = (cfg.sede   || configData.subtitulo || '');
-  const slogan   = (cfg.slogan || configData.slogan    || 'SABOR, NATURALEZA Y TRADICIÓN').toUpperCase();
-  const cierre   = (cfg.cierre || 'Gracias por preferirnos');
-
-  // Filtrar categorías
-  const hidden     = settings.hiddenCategories || [];
-  const mfCatVis   = cfg.catVisible || null;
-  const cats       = [...new Set(items.map(i => i.categoria).filter(Boolean))]
-                       .filter(c => !hidden.includes(c))
-                       .filter(c => !mfCatVis || mfCatVis[c] !== false);
-
-  // Fotos
-  const mfFotos  = (cfg.fotos || []).filter(Boolean);
-  const allFotos = items.map(i => i.foto).filter(Boolean);
-  const catFotos = Object.values(settings.categoryImages || {}).filter(Boolean);
-  const fotos    = mfFotos.length ? mfFotos : [...allFotos, ...catFotos].slice(0, 6);
-  const fotosL   = fotos.slice(0, 3);
-  const fotosR   = fotos.slice(3, 6);
-
-  function escH(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function fmtP(n) { return '$' + Number(n||0).toLocaleString('es-CO'); }
-
-  function renderCatHTML(cat) {
-    const catItems = items.filter(i => i.categoria === cat);
-    if (!catItems.length) return '';
-    return `<div style="margin:8px 0 5px;">
-      <span style="background:#2D5A27;color:#fff;font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;">${escH(cat)}</span>
-    </div>
-    <div>${catItems.map(it => `
-      <div style="display:flex;align-items:baseline;padding:2px 0;">
-        <span style="color:#3D7A35;font-size:9px;margin-right:3px;">🌿</span>
-        <span style="font-size:11.5px;color:#1A1A1A;flex:1;">${escH(it.nombre)}</span>
-        <span style="flex:1;min-width:10px;border-bottom:1.5px dotted rgba(0,0,0,.2);margin:0 3px 3px;"></span>
-        <span style="font-size:11.5px;font-weight:700;font-family:'Oswald',sans-serif;white-space:nowrap;">${fmtP(it.precioLocal||it.precioDomicilio||0)}</span>
-      </div>`).join('')}</div>`;
-  }
-
-  function renderFotosHTML(arr) {
-    if (!arr.length) return '';
-    const cols = arr.length <= 2 ? '1fr 1fr' : '1fr 1fr 1fr';
-    return `<div style="display:grid;grid-template-columns:${cols};gap:5px;margin:8px 0;">
-      ${arr.map(f => `<div style="aspect-ratio:1.1;border-radius:6px;overflow:hidden;background:#EDE0C4;">
-        <img src="${f}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
-      </div>`).join('')}
-    </div>`;
-  }
-
-  const colL = []; const colR = [];
-  cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
-
-  const logoHtml = logo
-    ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">`
-    : `<span style="font-size:10px;color:#aaa;text-align:center;padding:6px;">Logo</span>`;
-
-  const html = `
-  <div style="width:794px;min-height:1123px;background:#F5EDD8;position:relative;font-family:'Lato',sans-serif;overflow:hidden;">
-    <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 5% 5%,rgba(93,70,35,.1) 0%,transparent 40%),radial-gradient(ellipse at 95% 5%,rgba(93,70,35,.1) 0%,transparent 40%),radial-gradient(ellipse at 5% 95%,rgba(93,70,35,.1) 0%,transparent 40%),radial-gradient(ellipse at 95% 95%,rgba(93,70,35,.1) 0%,transparent 40%);pointer-events:none;"></div>
-    <div style="position:absolute;top:0;left:0;opacity:.12;font-size:48px;transform:rotate(-30deg);user-select:none;">🌿</div>
-    <div style="position:absolute;top:0;right:0;opacity:.12;font-size:48px;transform:rotate(30deg);user-select:none;">🌿</div>
-    <div style="position:absolute;bottom:0;left:0;opacity:.12;font-size:48px;transform:rotate(150deg);user-select:none;">🌿</div>
-    <div style="position:absolute;bottom:0;right:0;opacity:.12;font-size:48px;transform:rotate(-150deg);user-select:none;">🌿</div>
-    <!-- Header: membrete si existe, sino diseño automático -->
-    ${cfg.membrete
-      ? `<div style="width:100%;position:relative;z-index:1;border-bottom:3px solid #2D5A27;">
-           <img src="${cfg.membrete}" style="width:100%;display:block;max-height:220px;object-fit:cover;" crossorigin="anonymous">
-         </div>`
-      : `<div style="display:flex;align-items:center;gap:14px;padding:18px 24px 12px;border-bottom:3px solid #2D5A27;position:relative;z-index:1;">
-          <div style="width:100px;height:100px;flex-shrink:0;border-radius:50%;border:3px solid #2D5A27;background:#EDE0C4;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 2px #F5EDD8,0 0 0 4px #2D5A27;">
-            ${logoHtml}
-          </div>
-          <div style="flex:1;text-align:center;">
-            <div style="font-family:'Oswald',sans-serif;font-size:11px;font-weight:700;color:#2D5A27;letter-spacing:3px;text-transform:uppercase;">RESTAURANTE</div>
-            <div style="font-family:'Oswald',sans-serif;font-size:42px;font-weight:900;color:#E8520A;line-height:1;text-transform:uppercase;letter-spacing:-1px;">${nombre}</div>
-            ${sede ? `<div style="font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:#1A1A1A;margin-top:1px;">${escH(sede)}</div>` : ''}
-            <div style="margin-top:5px;"><span style="background:#6B3A2A;color:#fff;font-family:'Oswald',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;padding:4px 14px;border-radius:3px;">${escH(slogan)}</span></div>
-          </div>
-        </div>`}
-    <!-- Body -->
-    <div style="display:grid;grid-template-columns:1fr 1fr;padding:0 14px 14px;position:relative;z-index:1;">
-      <div style="padding:8px 6px;border-right:1.5px solid rgba(45,90,39,.25);">
-        ${colL.map(renderCatHTML).join('')}
-        ${renderFotosHTML(fotosL)}
-      </div>
-      <div style="padding:8px 6px;">
-        ${colR.map(renderCatHTML).join('')}
-        ${renderFotosHTML(fotosR)}
-      </div>
-    </div>
-    <!-- Footer -->
-    <div style="text-align:center;padding:8px 16px 16px;border-top:2px solid #2D5A27;position:relative;z-index:1;">
-      <div style="font-family:'Playfair Display',serif;font-size:16px;font-style:italic;color:#6B3A2A;">${escH(cierre)}</div>
-    </div>
-  </div>`;
-
-  // Crear contenedor temporal invisible
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;z-index:-1;';
-  wrap.innerHTML = html;
-  document.body.appendChild(wrap);
-
-  showToast('⏳ Generando PNG...');
-
-  setTimeout(async () => {
-    try {
-      const el = wrap.firstElementChild;
-      const canvas = await html2canvas(el, {
-        scale: 3,
-        useCORS: true,
-        allowTaint: true,
-        backgroundColor: '#F5EDD8',
-        logging: false,
-        width: 794,
-        height: el.scrollHeight
-      });
-      const nombreFile = (configData.nombre || 'menu').replace(/\s+/g,'_').toLowerCase();
-      const link = document.createElement('a');
-      link.download = `menu_fisico_${nombreFile}.png`;
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-      showToast('✅ PNG descargado');
-    } catch(err) {
-      showToast('❌ Error: ' + err.message);
-      console.error(err);
-    }
-    document.body.removeChild(wrap);
-  }, 600);
-}
-
-</script>
-
-<!-- ══════════════════════════════════════════════════════════════
-     EDITOR MENÚ RESTAURANTE — pantalla completa tipo plantilla
-══════════════════════════════════════════════════════════════ -->
-<div id="mfEditorScreen" style="display:none;position:fixed;inset:0;z-index:9800;background:#0F0F0F;flex-direction:column;">
-
-  <!-- Header -->
-  <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#1A1A1A;border-bottom:1px solid #2A2A2A;flex-shrink:0;flex-wrap:wrap;">
-    <button onclick="mfCerrarEditorCompleto()" style="width:34px;height:34px;border:none;background:#2A2A2A;border-radius:50%;color:#fff;font-size:16px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
-    <!-- Tabs en el header -->
-    <div style="display:flex;gap:4px;flex:1;overflow-x:auto;min-width:0;">
-      <button id="mfeTabDiseno" onclick="mfeToggleTab('diseno')" class="mfe-tab-h" style="padding:7px 12px;font-size:11px;font-weight:800;border:none;border-radius:8px;background:#2A2A2A;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">🎨 Diseño</button>
-      <button id="mfeTabFotos" onclick="mfeToggleTab('fotos')" class="mfe-tab-h" style="padding:7px 12px;font-size:11px;font-weight:800;border:none;border-radius:8px;background:#2A2A2A;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">📷 Fotos</button>
-      <button id="mfeTabCats" onclick="mfeToggleTab('cats')" class="mfe-tab-h" style="padding:7px 12px;font-size:11px;font-weight:800;border:none;border-radius:8px;background:#2A2A2A;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">📋 Categorías</button>
-      <button id="mfeTabEstilo" onclick="mfeToggleTab('estilo')" class="mfe-tab-h" style="padding:7px 12px;font-size:11px;font-weight:800;border:none;border-radius:8px;background:#2A2A2A;color:rgba(255,255,255,.55);cursor:pointer;font-family:inherit;white-space:nowrap;flex-shrink:0;">✨ Estilo</button>
-    </div>
-  <!-- Notificación de auto-guardado -->
-  <div id="mfeAutoSaveToast" style="display:none;position:absolute;top:60px;left:50%;transform:translateX(-50%);background:rgba(30,30,30,0.95);color:#fff;padding:7px 16px;border-radius:999px;font-size:12px;font-weight:700;font-family:inherit;box-shadow:0 4px 16px rgba(0,0,0,0.4);border:1px solid #333;z-index:9999;pointer-events:none;white-space:nowrap;transition:opacity .3s ease;">💾 Guardado automáticamente</div>
-  </div>
-
-  <!-- Body: 2 paneles -->
-  <div style="flex:1;display:flex;overflow:hidden;position:relative;">
-
-    <!-- Panel izquierdo: bloques de la plantilla -->
-    <div id="mfEditorLeft" style="width:0;flex-shrink:0;background:#141414;border-right:1px solid #222;display:flex;flex-direction:column;overflow:hidden;transition:width .25s ease;position:relative;">
-
-      <!-- ── TAB: DISEÑO ── -->
-      <div id="mfePanelDiseno" style="flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:14px;">
-
-        <!-- Membrete -->
-        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;">🖼️ Membrete (encabezado personalizado)</div>
-          <div style="font-size:11px;color:rgba(255,255,255,.35);margin-bottom:10px;line-height:1.5;">Sube una imagen de tu membrete para reemplazar el encabezado automático.</div>
-          <div id="mfeMembretePreviewWrap" style="display:none;margin-bottom:8px;border-radius:8px;overflow:hidden;border:1px solid #333;">
-            <img id="mfeMembretePreview" style="width:100%;display:block;max-height:120px;object-fit:cover;">
-          </div>
-          <div style="display:flex;gap:8px;">
-            <label style="flex:1;cursor:pointer;">
-              <div style="text-align:center;padding:9px;background:#2A2A2A;border-radius:10px;font-size:12px;font-weight:700;color:#ddd;border:1.5px dashed #444;">📷 <span id="mfeMembreteUploadTxt">Subir membrete</span></div>
-              <input type="file" id="mfeMembreteInput" accept="image/*" style="display:none" onchange="mfeSubirMembrete(this)">
-            </label>
-            <button id="mfeMembreteQuitarBtn" style="display:none;padding:9px 12px;background:#2A2A2A;border:1.5px solid rgba(229,57,53,.4);color:#E53935;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap;" onclick="mfeQuitarMembrete()">✕ Quitar</button>
-          </div>
-        </div>
-
-        <!-- Textos -->
-        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">✏️ Textos del encabezado</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Sede / Sucursal</div>
-              <input id="mfeSede" placeholder="Ej: La Tupia · Sede Norte" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;box-sizing:border-box;" oninput="mfeActualizarPreview()">
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Eslogan</div>
-              <input id="mfeSlogan" placeholder="Ej: Sabor, Naturaleza y Tradición" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;box-sizing:border-box;" oninput="mfeActualizarPreview()">
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Texto de cierre (pie)</div>
-              <input id="mfeCierre" placeholder="Ej: Gracias por preferirnos" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;box-sizing:border-box;" oninput="mfeActualizarPreview()">
-            </div>
-          </div>
-        </div>
-
-        <!-- Diseño del encabezado (cuando no hay membrete) -->
-        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">🏷️ Estilo del encabezado automático</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color primario (categorías y bordes)</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <input type="color" id="mfeColorPrimario" value="#2D5A27" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
-                <span id="mfeColorPrimarioLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#2D5A27</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color del nombre del restaurante</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <input type="color" id="mfeColorNombre" value="#E8520A" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
-                <span id="mfeColorNombreLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#E8520A</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color de fondo del menú</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <input type="color" id="mfeColorFondo" value="#F5EDD8" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
-                <span id="mfeColorFondoLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#F5EDD8</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Color del eslogan / banner</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <input type="color" id="mfeColorEslogan" value="#6B3A2A" style="width:42px;height:36px;border:none;border-radius:8px;cursor:pointer;background:none;padding:2px;" oninput="mfeActualizarPreview()">
-                <span id="mfeColorEsloganLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;">#6B3A2A</span>
-              </div>
-            </div>
-          </div>
-          <!-- Presets de color -->
-          <div style="margin-top:10px;">
-            <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Paletas rápidas</div>
-            <div style="display:flex;gap:6px;flex-wrap:wrap;">
-              <button onclick="mfeAplicarPaleta('campestre')" title="Campestre" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2D5A27,#E8520A);border:2px solid #444;cursor:pointer;" ></button>
-              <button onclick="mfeAplicarPaleta('clasico')" title="Clásico" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1A1A1A,#C0392B);border:2px solid #444;cursor:pointer;"></button>
-              <button onclick="mfeAplicarPaleta('elegante')" title="Elegante" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#2C3E50,#D4AF37);border:2px solid #444;cursor:pointer;"></button>
-              <button onclick="mfeAplicarPaleta('tropical')" title="Tropical" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#1B6CA8,#F39C12);border:2px solid #444;cursor:pointer;"></button>
-              <button onclick="mfeAplicarPaleta('rosa')" title="Rosado" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#8E44AD,#E91E8C);border:2px solid #444;cursor:pointer;"></button>
-              <button onclick="mfeAplicarPaleta('neutro')" title="Neutro" style="width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,#555,#888);border:2px solid #444;cursor:pointer;"></button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Decorativos -->
-        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">🌿 Decorativos</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="mfeDecorFernos" checked onchange="mfeActualizarPreview()" style="accent-color:#FF441A;width:16px;height:16px;">
-              <span style="font-size:13px;color:#ddd;">Mostrar emojis decorativos en esquinas</span>
-            </label>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="mfeDecorLeaf" checked onchange="mfeActualizarPreview()" style="accent-color:#FF441A;width:16px;height:16px;">
-              <span style="font-size:13px;color:#ddd;">🌿 junto a cada plato</span>
-            </label>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Emoji decorativo (esquinas)</div>
-              <input id="mfeDecorEmoji" value="🌿" maxlength="4" style="width:80px;padding:8px 10px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:20px;font-family:inherit;background:#111;color:#fff;outline:none;text-align:center;" oninput="mfeActualizarPreview()">
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- ── TAB: FOTOS ── -->
-      <div id="mfePanelFotos" style="flex:1;overflow-y:auto;padding:14px;display:none;">
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:12px;line-height:1.5;">Las fotos aparecen intercaladas entre las categorías. Máximo 6.</div>
-        <div id="mfeFotosGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px;"></div>
-        <button onclick="mfeImportarFotos()" style="width:100%;padding:10px;background:#1E1E1E;border:1.5px dashed #333;border-radius:10px;font-size:12px;font-weight:700;color:rgba(255,255,255,.5);cursor:pointer;font-family:inherit;">↙️ Importar fotos del menú digital</button>
-      </div>
-
-      <!-- ── TAB: CATEGORÍAS ── -->
-      <div id="mfePanelCats" style="flex:1;overflow-y:auto;padding:14px;display:none;">
-        <div style="font-size:12px;color:rgba(255,255,255,.4);margin-bottom:10px;line-height:1.5;">Selecciona qué categorías mostrar en el menú del restaurante.</div>
-        <div id="mfeCatToggles2" style="display:flex;flex-direction:column;gap:6px;"></div>
-      </div>
-
-      <!-- ── TAB: ESTILO TEXTO ── -->
-      <div id="mfePanelEstilo" style="flex:1;overflow-y:auto;padding:14px;display:none;flex-direction:column;gap:14px;">
-
-        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">🔤 Tipografía</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Fuente del nombre del restaurante</div>
-              <select id="mfeFuenteNombre" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;" onchange="mfeActualizarPreview()">
-                <option value="Oswald">Oswald (negrita impactante)</option>
-                <option value="Playfair Display">Playfair Display (elegante)</option>
-                <option value="Bebas Neue">Bebas Neue (condensada)</option>
-                <option value="Lobster">Lobster (cursiva)</option>
-                <option value="Montserrat">Montserrat (moderna)</option>
-                <option value="Raleway">Raleway (delgada premium)</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Fuente de los platos</div>
-              <select id="mfeFuentePlatos" style="width:100%;padding:9px 11px;border:1.5px solid #2A2A2A;border-radius:9px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;" onchange="mfeActualizarPreview()">
-                <option value="Lato">Lato (clara y legible)</option>
-                <option value="Open Sans">Open Sans (estándar)</option>
-                <option value="Merriweather">Merriweather (serif)</option>
-                <option value="Nunito">Nunito (redondeada)</option>
-                <option value="Roboto Condensed">Roboto Condensed (compacta)</option>
-              </select>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Tamaño del texto de platos</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <input type="range" id="mfeTamanoTexto" min="9" max="16" value="12" style="flex:1;accent-color:#FF441A;" oninput="mfeTamanoLabel.textContent=this.value+'px';mfeActualizarPreview()">
-                <span id="mfeTamanoLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;width:30px;">12px</span>
-              </div>
-            </div>
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:4px;">Espaciado entre nombre y precio</div>
-              <div style="font-size:10px;color:rgba(255,255,255,.25);margin-bottom:6px;line-height:1.4;">Ajusta el ancho mínimo del punteado que separa el plato del precio. Reduce este valor si los nombres largos se ven apilados.</div>
-              <div style="display:flex;align-items:center;gap:8px;">
-                <input type="range" id="mfeEspaciadoItem" min="4" max="40" value="12" style="flex:1;accent-color:#FF441A;" oninput="mfeEspaciadoLabel.textContent=this.value+'px';mfeActualizarPreview()">
-                <span id="mfeEspaciadoLabel" style="font-size:12px;color:rgba(255,255,255,.5);font-family:monospace;width:30px;">12px</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:#1E1E1E;border-radius:12px;padding:12px;border:1px solid #2A2A2A;">
-          <div style="font-size:11px;font-weight:800;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;">📐 Layout</div>
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div>
-              <div style="font-size:10px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:6px;">Columnas del menú</div>
-              <div style="display:flex;gap:6px;">
-                <button id="mfeColBtn1" onclick="mfeSetCols(1)" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid #2A2A2A;background:#111;color:#ddd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">1 col</button>
-                <button id="mfeColBtn2" onclick="mfeSetCols(2)" style="flex:1;padding:9px;border-radius:9px;border:1.5px solid #FF441A;background:rgba(255,68,26,.12);color:#FF441A;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;">2 col ✓</button>
-              </div>
-            </div>
-            <label style="display:flex;align-items:center;gap:10px;cursor:pointer;">
-              <input type="checkbox" id="mfeMostrarDesc" onchange="mfeActualizarPreview()" style="accent-color:#FF441A;width:16px;height:16px;">
-              <span style="font-size:13px;color:#ddd;">Mostrar descripción de los platos</span>
-            </label>
-          </div>
-        </div>
-
-      </div>
-
-    </div>
-
-    <!-- Panel derecho: preview del menú -->
-    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000;">
-      <!-- Toolbar -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111;border-bottom:1px solid #1A1A1A;flex-shrink:0;">
-        <button id="mfeBtnEditar" onclick="mfeAbrirUltimoTab()" style="padding:6px 12px;background:#2A2A2A;border:1.5px solid #FF441A;color:#FF441A;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;display:none;">⚙ Editar</button>
-        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;">Vista previa</span>
-        <div style="flex:1;"></div>
-        <button onclick="mfeActualizarPreview()" style="padding:6px 10px;border:1.5px solid #2A2A2A;background:transparent;color:rgba(255,255,255,.5);border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;">↺</button>
-        <div style="display:flex;gap:3px;padding:3px;background:#1A1A1A;border-radius:8px;border:1px solid #2A2A2A;">
-          <button onclick="mfeSetPreviewMode('mobile')" id="mfeBtnMobile" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:#FF441A;color:#fff;">📱</button>
-          <button onclick="mfeSetPreviewMode('tablet')" id="mfeBtnTablet" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:rgba(255,255,255,.4);">📟</button>
-          <button onclick="mfeSetPreviewMode('full')" id="mfeBtnFull" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:rgba(255,255,255,.4);">🖥</button>
-        </div>
-      </div>
-      <!-- Preview container -->
-      <div style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:#0A0A0A;" id="mfePreviewWrap">
-        <div id="mfePhoneFrame" style="width:375px;border-radius:32px;overflow:hidden;box-shadow:0 0 0 10px #1A1A1A,0 0 0 12px #2A2A2A,0 30px 80px rgba(0,0,0,0.8);flex-shrink:0;transition:width .3s ease;">
-          <div id="mfePreviewContent" style="width:100%;min-height:700px;background:#F5EDD8;overflow-y:auto;font-family:Lato,sans-serif;"></div>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-</div>
-<!-- fin editor menú restaurante -->
-
-<style>
-.mfe-tab.active { color:#FF441A !important; border-bottom-color:#FF441A !important; background:rgba(255,68,26,.08) !important; }
-</style>
-
-<script>
-// ══════════════════════════════════════════════════════════
-// EDITOR MENÚ RESTAURANTE — lógica completa
-// ══════════════════════════════════════════════════════════
-
-const MFE_CFG_KEY = 'helechos_menu_fisico_cfg';
-let _mfeFotos  = [null,null,null,null,null,null];
-let _mfeMembrete2 = null;
-let _mfeCols = 2;
-let _mfePreviewMode = 'mobile';
-
-function mfeGetCfg() {
-  try { return JSON.parse(localStorage.getItem(MFE_CFG_KEY)||'{}'); } catch(e){ return {}; }
-}
-
-function mfeAbrirEditorCompleto() {
-  const screen = document.getElementById('mfEditorScreen');
-  if (!screen) return;
-  screen.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  // Iniciar siempre colapsado
-  const panel = document.getElementById('mfEditorLeft');
-  if (panel) panel.style.width = '0px';
-  _mfeActiveTab = null;
-  // Limpiar tabs activos
-  document.querySelectorAll('.mfe-tab-h').forEach(b => {
-    b.style.background = '#2A2A2A';
-    b.style.color = 'rgba(255,255,255,.55)';
-  });
-  // Mostrar botón Editar
-  const btnEditar = document.getElementById('mfeBtnEditar');
-  if (btnEditar) btnEditar.style.display = '';
-  mfeCargarEstado();
-  mfeActualizarPreview();
-  // Cargar fuentes
-  if (!document.getElementById('mfeFontLink2')) {
-    const link = document.createElement('link');
-    link.id = 'mfeFontLink2';
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Oswald:wght@600;700&family=Playfair+Display:ital,wght@0,700;1,700&family=Bebas+Neue&family=Lobster&family=Montserrat:wght@700;900&family=Raleway:wght@700&family=Lato:wght@400;700&family=Open+Sans:wght@400;700&family=Merriweather:wght@400;700&family=Nunito:wght@400;700&family=Roboto+Condensed:wght@400;700&display=swap';
-    document.head.appendChild(link);
-  }
-}
-
-window.mfAbrirEditorCompleto = mfeAbrirEditorCompleto;
-
-function mfeCerrarEditorCompleto() {
-  const screen = document.getElementById('mfEditorScreen');
-  if (screen) screen.style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function mfeCargarEstado() {
-  const cfg = mfeGetCfg();
-  // Textos
-  const sede   = document.getElementById('mfeSede');
-  const slogan = document.getElementById('mfeSlogan');
-  const cierre = document.getElementById('mfeCierre');
-  if (sede)   sede.value   = cfg.sede   || '';
-  if (slogan) slogan.value = cfg.slogan || '';
-  if (cierre) cierre.value = cfg.cierre || 'Gracias por preferirnos';
-
-  // Colores
-  const cp = document.getElementById('mfeColorPrimario');
-  const cn = document.getElementById('mfeColorNombre');
-  const cf = document.getElementById('mfeColorFondo');
-  const ce = document.getElementById('mfeColorEslogan');
-  if (cp) { cp.value = cfg.colorPrimario || '#2D5A27'; document.getElementById('mfeColorPrimarioLabel').textContent = cp.value; }
-  if (cn) { cn.value = cfg.colorNombre   || '#E8520A'; document.getElementById('mfeColorNombreLabel').textContent = cn.value; }
-  if (cf) { cf.value = cfg.colorFondo    || '#F5EDD8'; document.getElementById('mfeColorFondoLabel').textContent = cf.value; }
-  if (ce) { ce.value = cfg.colorEslogan  || '#6B3A2A'; document.getElementById('mfeColorEsloganLabel').textContent = ce.value; }
-
-  // Decorativos
-  const dfn = document.getElementById('mfeDecorFernos');
-  const dfl = document.getElementById('mfeDecorLeaf');
-  const de  = document.getElementById('mfeDecorEmoji');
-  if (dfn) dfn.checked  = cfg.decorFernos !== false;
-  if (dfl) dfl.checked  = cfg.decorLeaf   !== false;
-  if (de)  de.value     = cfg.decorEmoji  || '🌿';
-
-  // Fuentes y layout
-  const fn = document.getElementById('mfeFuenteNombre');
-  const fp = document.getElementById('mfeFuentePlatos');
-  const tt = document.getElementById('mfeTamanoTexto');
-  const md = document.getElementById('mfeMostrarDesc');
-  if (fn) fn.value = cfg.fuenteNombre || 'Oswald';
-  if (fp) fp.value = cfg.fuentePlatos || 'Lato';
-  if (tt) { tt.value = cfg.tamanoTexto || 12; document.getElementById('mfeTamanoLabel').textContent = tt.value + 'px'; }
-  if (md) md.checked = !!cfg.mostrarDesc;
-
-  // Espaciado entre nombre y precio
-  const es = document.getElementById('mfeEspaciadoItem');
-  const esl = document.getElementById('mfeEspaciadoLabel');
-  if (es) { es.value = cfg.espaciadoItem || 12; if (esl) esl.textContent = es.value + 'px'; }
-
-  // Cols
-  _mfeCols = cfg.cols || 2;
-  mfeUpdateColBtns();
-
-  // Membrete
-  _mfeMembrete2 = cfg.membrete || null;
-  mfeActualizarMembreteUI(_mfeMembrete2);
-
-  // Fotos
-  _mfeFotos = (cfg.fotos || [null,null,null,null,null,null]).slice();
-  while (_mfeFotos.length < 6) _mfeFotos.push(null);
-  mfeRenderFotos();
-
-  // Categorías
-  mfeRenderCatToggles(cfg.catVisible || {});
-}
-
-function mfeGuardarDesdeEditor() {
-  const cp = document.getElementById('mfeColorPrimario');
-  const cn = document.getElementById('mfeColorNombre');
-  const cf = document.getElementById('mfeColorFondo');
-  const ce = document.getElementById('mfeColorEslogan');
-  const cfg = {
-    sede:          (document.getElementById('mfeSede')   ||{}).value || '',
-    slogan:        (document.getElementById('mfeSlogan') ||{}).value || '',
-    cierre:        (document.getElementById('mfeCierre') ||{}).value || 'Gracias por preferirnos',
-    colorPrimario: cp ? cp.value : '#2D5A27',
-    colorNombre:   cn ? cn.value : '#E8520A',
-    colorFondo:    cf ? cf.value : '#F5EDD8',
-    colorEslogan:  ce ? ce.value : '#6B3A2A',
-    decorFernos:   (document.getElementById('mfeDecorFernos')||{}).checked !== false,
-    decorLeaf:     (document.getElementById('mfeDecorLeaf')  ||{}).checked !== false,
-    decorEmoji:    (document.getElementById('mfeDecorEmoji') ||{}).value || '🌿',
-    fuenteNombre:  (document.getElementById('mfeFuenteNombre')||{}).value || 'Oswald',
-    fuentePlatos:  (document.getElementById('mfeFuentePlatos')||{}).value || 'Lato',
-    tamanoTexto:   parseInt((document.getElementById('mfeTamanoTexto')||{}).value) || 12,
-    espaciadoItem: parseInt((document.getElementById('mfeEspaciadoItem')||{}).value) || 12,
-    mostrarDesc:   !!(document.getElementById('mfeMostrarDesc')||{}).checked,
-    cols:          _mfeCols,
-    fotos:         _mfeFotos,
-    catVisible:    mfeLeerCatVisible2(),
-    membrete:      _mfeMembrete2 || null
-  };
-  localStorage.setItem(MFE_CFG_KEY, JSON.stringify(cfg));
-  // Sincronizar con campos legacy para compatibilidad
-  const mfSede   = document.getElementById('mfSede');
-  const mfSlogan = document.getElementById('mfSlogan');
-  const mfCierre = document.getElementById('mfCierre');
-  if (mfSede)   mfSede.value   = cfg.sede;
-  if (mfSlogan) mfSlogan.value = cfg.slogan;
-  if (mfCierre) mfCierre.value = cfg.cierre;
-  _mfeFotos = cfg.fotos;
-  if (window.fbSync) fbSync('menuFisicoCfg', cfg);
-}
-
-window.mfGuardarDesdeEditor = mfeGuardarDesdeEditor;
-window.mfCerrarEditorCompleto = mfeCerrarEditorCompleto;
-
-// ── Auto-guardado con debounce ───────────────────────
-let _mfeAutoSaveTimer = null;
-function mfeMostrarAutoSaveToast() {
-  const t = document.getElementById('mfeAutoSaveToast');
-  if (!t) return;
-  t.style.display = 'block';
-  t.style.opacity = '1';
-  clearTimeout(t._hideTimer);
-  t._hideTimer = setTimeout(() => {
-    t.style.opacity = '0';
-    setTimeout(() => { t.style.display = 'none'; }, 300);
-  }, 1800);
-}
-function mfeAutoGuardar() {
-  clearTimeout(_mfeAutoSaveTimer);
-  _mfeAutoSaveTimer = setTimeout(() => {
-    mfeGuardarDesdeEditor();
-    mfeMostrarAutoSaveToast();
-  }, 800);
-}
-function mfeGuardarYNotificar() {
-  mfeGuardarDesdeEditor();
-  mfeMostrarAutoSaveToast();
-}
-
-// ── Toggle colapso del panel izquierdo ───────────────
-let _mfeActiveTab = null; // tab actualmente abierto
-
-function mfeToggleTab(tab) {
-  const panel = document.getElementById('mfEditorLeft');
-  const collapsed = panel.style.width === '0px' || panel.style.width === '0';
-  if (collapsed || _mfeActiveTab !== tab) {
-    // Expandir y mostrar el tab
-    panel.style.width = '340px';
-    _mfeActiveTab = tab;
-    mfeShowTab(tab);
-    // Ocultar botón Editar
-    const btnEditar = document.getElementById('mfeBtnEditar');
-    if (btnEditar) btnEditar.style.display = 'none';
-  } else {
-    // Mismo tab activo → colapsar
-    panel.style.width = '0px';
-    _mfeActiveTab = null;
-    // Quitar active de todos los tabs header
-    document.querySelectorAll('.mfe-tab-h').forEach(b => {
-      b.style.background = '#2A2A2A';
-      b.style.color = 'rgba(255,255,255,.55)';
-    });
-    // Mostrar botón Editar
-    const btnEditar = document.getElementById('mfeBtnEditar');
-    if (btnEditar) btnEditar.style.display = '';
-  }
-}
-
-function mfeAbrirUltimoTab() {
-  const last = _mfeActiveTab || 'diseno';
-  const panel = document.getElementById('mfEditorLeft');
-  panel.style.width = '340px';
-  _mfeActiveTab = last;
-  mfeShowTab(last);
-  const btnEditar = document.getElementById('mfeBtnEditar');
-  if (btnEditar) btnEditar.style.display = 'none';
-}
-window.mfeToggleTab = mfeToggleTab;
-window.mfeAbrirUltimoTab = mfeAbrirUltimoTab;
-
-// ── Tabs del editor ──────────────────────────────────
-function mfeShowTab(tab) {
-  const idMap = { diseno:'mfePanelDiseno', fotos:'mfePanelFotos', cats:'mfePanelCats', estilo:'mfePanelEstilo' };
-  const btnMap = { diseno:'mfeTabDiseno', fotos:'mfeTabFotos', cats:'mfeTabCats', estilo:'mfeTabEstilo' };
-  ['diseno','fotos','cats','estilo'].forEach(t => {
-    const p = document.getElementById(idMap[t]);
-    const b = document.getElementById(btnMap[t]);
-    if (p) p.style.display = t === tab ? (t === 'estilo' ? 'flex' : 'block') : 'none';
-    // Estilo tab header activo
-    if (b) {
-      const isActive = t === tab;
-      b.style.background = isActive ? '#FF441A' : '#2A2A2A';
-      b.style.color = isActive ? '#fff' : 'rgba(255,255,255,.55)';
-    }
-  });
-}
-
-// ── Layout columnas ──────────────────────────────────
-function mfeSetCols(n) {
-  _mfeCols = n;
-  mfeUpdateColBtns();
-  mfeActualizarPreview();
-}
-function mfeUpdateColBtns() {
-  [1,2].forEach(n => {
-    const btn = document.getElementById('mfeColBtn' + n);
-    if (!btn) return;
-    const on = _mfeCols === n;
-    btn.style.borderColor  = on ? '#FF441A' : '#2A2A2A';
-    btn.style.background   = on ? 'rgba(255,68,26,.12)' : '#111';
-    btn.style.color        = on ? '#FF441A' : '#ddd';
-    btn.textContent        = n + ' col' + (on ? ' ✓' : '');
-  });
-}
-
-// ── Preview mode ──────────────────────────────────────
-function mfeSetPreviewMode(mode) {
-  _mfePreviewMode = mode;
-  const frame = document.getElementById('mfePhoneFrame');
-  if (!frame) return;
-  ['mobile','tablet','full'].forEach(m => {
-    const btn = document.getElementById({ mobile:'mfeBtnMobile', tablet:'mfeBtnTablet', full:'mfeBtnFull' }[m]);
-    if (btn) {
-      btn.style.background = m === mode ? '#FF441A' : 'transparent';
-      btn.style.color      = m === mode ? '#fff' : 'rgba(255,255,255,.4)';
-    }
-  });
-  if (mode === 'mobile') {
-    frame.style.width = '375px'; frame.style.borderRadius = '32px';
-    frame.style.boxShadow = '0 0 0 10px #1A1A1A, 0 0 0 12px #2A2A2A, 0 30px 80px rgba(0,0,0,0.8)';
-  } else if (mode === 'tablet') {
-    frame.style.width = '720px'; frame.style.borderRadius = '18px';
-    frame.style.boxShadow = '0 0 0 8px #1A1A1A, 0 20px 60px rgba(0,0,0,0.7)';
-  } else {
-    frame.style.width = '900px'; frame.style.borderRadius = '8px';
-    frame.style.boxShadow = '0 8px 40px rgba(0,0,0,0.5)';
-  }
-}
-
-// ── Paletas rápidas ───────────────────────────────────
-const MFE_PALETAS = {
-  campestre: { colorPrimario:'#2D5A27', colorNombre:'#E8520A', colorFondo:'#F5EDD8', colorEslogan:'#6B3A2A' },
-  clasico:   { colorPrimario:'#1A1A1A', colorNombre:'#C0392B', colorFondo:'#FAFAFA', colorEslogan:'#222' },
-  elegante:  { colorPrimario:'#2C3E50', colorNombre:'#D4AF37', colorFondo:'#F8F6F0', colorEslogan:'#2C3E50' },
-  tropical:  { colorPrimario:'#1B6CA8', colorNombre:'#F39C12', colorFondo:'#EEF7FF', colorEslogan:'#1B6CA8' },
-  rosa:      { colorPrimario:'#8E44AD', colorNombre:'#E91E8C', colorFondo:'#FEF6FF', colorEslogan:'#6A1B9A' },
-  neutro:    { colorPrimario:'#555',    colorNombre:'#333',    colorFondo:'#F7F7F7', colorEslogan:'#444' }
-};
-function mfeAplicarPaleta(nombre) {
-  const p = MFE_PALETAS[nombre];
-  if (!p) return;
-  const cp = document.getElementById('mfeColorPrimario');
-  const cn = document.getElementById('mfeColorNombre');
-  const cf = document.getElementById('mfeColorFondo');
-  const ce = document.getElementById('mfeColorEslogan');
-  if (cp) { cp.value = p.colorPrimario; document.getElementById('mfeColorPrimarioLabel').textContent = p.colorPrimario; }
-  if (cn) { cn.value = p.colorNombre;   document.getElementById('mfeColorNombreLabel').textContent = p.colorNombre; }
-  if (cf) { cf.value = p.colorFondo;    document.getElementById('mfeColorFondoLabel').textContent = p.colorFondo; }
-  if (ce) { ce.value = p.colorEslogan;  document.getElementById('mfeColorEsloganLabel').textContent = p.colorEslogan; }
-  mfeActualizarPreview();
-}
-
-// ── Color labels live update ──────────────────────────
-document.addEventListener('input', (e) => {
-  const map = {
-    mfeColorPrimario:'mfeColorPrimarioLabel',
-    mfeColorNombre:'mfeColorNombreLabel',
-    mfeColorFondo:'mfeColorFondoLabel',
-    mfeColorEslogan:'mfeColorEsloganLabel'
-  };
-  if (map[e.target.id]) {
-    document.getElementById(map[e.target.id]).textContent = e.target.value;
-  }
-});
-
-// ── Membrete ──────────────────────────────────────────
-function mfeSubirMembrete(input) {
-  const file = input.files && input.files[0];
-  if (!file) return;
-  if (file.size > 5 * 1024 * 1024) { if(window.showToast) showToast('⚠️ Imagen muy grande (máx 5MB)'); return; }
-  const reader = new FileReader();
-  reader.onload = e => { _mfeMembrete2 = e.target.result; mfeActualizarMembreteUI(_mfeMembrete2); mfeActualizarPreview(); };
-  reader.readAsDataURL(file);
-}
-function mfeQuitarMembrete() { _mfeMembrete2 = null; mfeActualizarMembreteUI(null); mfeActualizarPreview(); }
-function mfeActualizarMembreteUI(data) {
-  const wrap = document.getElementById('mfeMembretePreviewWrap');
-  const prev = document.getElementById('mfeMembretePreview');
-  const txt  = document.getElementById('mfeMembreteUploadTxt');
-  const btn  = document.getElementById('mfeMembreteQuitarBtn');
-  if (wrap)  wrap.style.display = data ? '' : 'none';
-  if (prev)  prev.src = data || '';
-  if (txt)   txt.textContent = data ? 'Cambiar membrete' : 'Subir membrete';
-  if (btn)   btn.style.display = data ? '' : 'none';
-}
-
-// ── Fotos ─────────────────────────────────────────────
-function mfeRenderFotos() {
-  const grid = document.getElementById('mfeFotosGrid');
-  if (!grid) return;
-  grid.innerHTML = _mfeFotos.map((f, i) => `
-    <div style="aspect-ratio:1;border-radius:8px;overflow:hidden;background:#1A1A1A;border:1.5px dashed #333;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;" onclick="document.getElementById('mfeFotoInput${i}').click()">
-      <input type="file" id="mfeFotoInput${i}" accept="image/*" style="display:none" onchange="mfeSubirFoto(this,${i})">
-      ${f ? `<img src="${f}" style="width:100%;height:100%;object-fit:cover;position:absolute;inset:0;">
-             <div onclick="event.stopPropagation();mfeBorrarFoto(${i})" style="position:absolute;top:3px;right:3px;background:rgba(0,0,0,.7);color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:10px;cursor:pointer;z-index:2;">✕</div>`
-           : `<span style="font-size:22px;color:#444;">📷</span>`}
-    </div>`).join('');
-}
-function mfeSubirFoto(input, idx) {
-  const file = input.files && input.files[0];
-  if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { if(window.showToast) showToast('⚠️ Imagen muy grande (máx 3MB)'); return; }
-  const reader = new FileReader();
-  reader.onload = e => { _mfeFotos[idx] = e.target.result; mfeRenderFotos(); mfeActualizarPreview(); };
-  reader.readAsDataURL(file);
-}
-function mfeBorrarFoto(idx) { _mfeFotos[idx] = null; mfeRenderFotos(); mfeActualizarPreview(); }
-function mfeImportarFotos() {
-  let items = [], settings = {};
-  try { items    = JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){}
-  try { settings = JSON.parse(localStorage.getItem(MENU_SETTINGS_KEY||'helechos_menu_settings_v1')||'{}'); } catch(e){}
-  const fotos = [...items.map(i=>i.foto).filter(Boolean), ...Object.values(settings.categoryImages||{}).filter(Boolean)].slice(0,6);
-  if (!fotos.length) { if(window.showToast) showToast('⚠️ No hay fotos en el menú digital'); return; }
-  fotos.forEach((f,i) => { _mfeFotos[i] = f; });
-  mfeRenderFotos(); mfeActualizarPreview();
-  if(window.showToast) showToast('✅ ' + fotos.length + ' fotos importadas');
-}
-
-// ── Categorías ────────────────────────────────────────
-function mfeRenderCatToggles(catVisible) {
-  let items = [];
-  try { items = JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){}
-  const cats = [...new Set(items.map(i=>i.categoria).filter(Boolean))];
-  const wrap = document.getElementById('mfeCatToggles2');
-  if (!wrap) return;
-  if (!cats.length) { wrap.innerHTML = '<div style="font-size:12px;color:rgba(255,255,255,.35);">Sin categorías aún.</div>'; return; }
-  wrap.innerHTML = cats.map(c => {
-    const checked = catVisible[c] !== false;
-    const count   = items.filter(i => i.categoria === c).length;
-    return `<label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:#1E1E1E;border-radius:9px;border:1px solid #2A2A2A;cursor:pointer;">
-      <input type="checkbox" ${checked?'checked':''} data-mfcat2="${c.replace(/"/g,'&quot;')}" style="accent-color:#FF441A;width:16px;height:16px;flex-shrink:0;">
-      <span style="font-size:13px;flex:1;color:#ddd;">${c}</span>
-      <span style="font-size:11px;color:rgba(255,255,255,.3);">${count} platos</span>
-    </label>`;
-  }).join('');
-}
-function mfeLeerCatVisible2() {
-  const result = {};
-  document.querySelectorAll('[data-mfcat2]').forEach(cb => { result[cb.dataset.mfcat2] = cb.checked; });
-  return result;
-}
-
-// ── GENERAR PREVIEW HTML ──────────────────────────────
-function mfeActualizarPreview() {
-  const preview = document.getElementById('mfePreviewContent');
-  if (!preview) return;
-
-  // Leer valores actuales
-  const cp = (document.getElementById('mfeColorPrimario')||{}).value || '#2D5A27';
-  const cn = (document.getElementById('mfeColorNombre')  ||{}).value || '#E8520A';
-  const cf = (document.getElementById('mfeColorFondo')   ||{}).value || '#F5EDD8';
-  const ce = (document.getElementById('mfeColorEslogan') ||{}).value || '#6B3A2A';
-  const sede   = (document.getElementById('mfeSede')  ||{}).value || '';
-  const slogan = (document.getElementById('mfeSlogan')||{}).value || '';
-  const cierre = (document.getElementById('mfeCierre')||{}).value || 'Gracias por preferirnos';
-  const fuenteNombre = (document.getElementById('mfeFuenteNombre')||{}).value || 'Oswald';
-  const fuentePlatos = (document.getElementById('mfeFuentePlatos')||{}).value || 'Lato';
-  const tamano = parseInt((document.getElementById('mfeTamanoTexto')||{}).value) || 12;
-  const decorFernos = (document.getElementById('mfeDecorFernos')||{}).checked !== false;
-  const decorLeaf   = (document.getElementById('mfeDecorLeaf')  ||{}).checked !== false;
-  const decorEmoji  = (document.getElementById('mfeDecorEmoji') ||{}).value || '🌿';
-  const mostrarDesc = !!(document.getElementById('mfeMostrarDesc')||{}).checked;
-  const espaciado   = parseInt((document.getElementById('mfeEspaciadoItem')||{}).value) || 12;
-
-  // Datos del menú
-  let items = [], configData = {}, settings = {};
-  try { items      = JSON.parse(localStorage.getItem('helechos_menu_custom_v3')||'[]'); } catch(e){}
-  try { configData = JSON.parse(localStorage.getItem('helechos_config')||'{}'); } catch(e){}
-  try { settings   = JSON.parse(localStorage.getItem('helechos_menu_settings_v1')||'{}'); } catch(e){}
-
-  const logo    = settings.businessLogo || localStorage.getItem('helechos_logo') || '';
-  const nombre  = (configData.nombre && configData.nombre !== 'Mi Restaurante' ? configData.nombre : 'MI RESTAURANTE').toUpperCase();
-  const catVis  = mfeLeerCatVisible2();
-  const hidden  = settings.hiddenCategories || [];
-  const cats    = [...new Set(items.map(i=>i.categoria).filter(Boolean))]
-                    .filter(c => !hidden.includes(c))
-                    .filter(c => catVis[c] !== false);
-  const fotos   = _mfeFotos.filter(Boolean);
-
-  function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-  function fmt(n) { return '$' + Number(n||0).toLocaleString('es-CO'); }
-  function hexToRgb(hex) {
-    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
-    return isNaN(r)?'0,0,0':`${r},${g},${b}`;
-  }
-  const cpRgb = hexToRgb(cp);
-
-  // ── Encabezado ────────────────────────────────────────
-  let headerHtml = '';
-  if (_mfeMembrete2) {
-    headerHtml = `<div style="width:100%;overflow:hidden;position:relative;">
-      <img src="${_mfeMembrete2}" style="width:100%;display:block;max-height:200px;object-fit:cover;">
-      <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${cp};"></div>
-    </div>`;
-  } else {
-    const logoHtml = logo
-      ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">`
-      : `<span style="font-size:22px;">🍽️</span>`;
-    headerHtml = `
-      <div style="position:relative;background:${cf};overflow:hidden;">
-        <div style="height:5px;background:linear-gradient(90deg,${cp},rgba(${cpRgb},0.5),${cp});"></div>
-        <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 12px;">
-          <div style="flex-shrink:0;width:68px;height:68px;border-radius:50%;
-            border:3px solid ${cp};
-            background:rgba(${cpRgb},0.08);
-            display:flex;align-items:center;justify-content:center;overflow:hidden;
-            box-shadow:0 0 0 2px ${cf},0 0 0 5px ${cp},0 4px 12px rgba(${cpRgb},0.25);">
-            ${logoHtml}
-          </div>
-          <div style="flex:1;min-width:0;text-align:center;">
-            <div style="font-family:'Oswald',sans-serif;font-size:7.5px;font-weight:700;
-              color:rgba(${cpRgb},0.7);letter-spacing:3px;text-transform:uppercase;margin-bottom:2px;">
-              ✦ RESTAURANTE ✦
-            </div>
-            <div style="font-family:'${fuenteNombre}',sans-serif;font-size:26px;font-weight:900;
-              color:${cn};line-height:1;text-transform:uppercase;
-              text-shadow:0 1px 0 rgba(0,0,0,0.08);">
-              ${esc(nombre)}
-            </div>
-            ${sede ? `<div style="font-family:'Playfair Display',serif;font-size:10px;
-              font-style:italic;color:rgba(0,0,0,0.5);margin-top:3px;">${esc(sede)}</div>` : ''}
-            ${slogan ? `<div style="margin-top:5px;">
-              <span style="display:inline-block;background:${ce};color:#fff;
-                font-family:'${fuenteNombre}',sans-serif;font-size:7px;font-weight:700;
-                letter-spacing:1.8px;text-transform:uppercase;
-                padding:3px 12px;border-radius:999px;">
-                ${esc(slogan.toUpperCase())}
-              </span></div>` : ''}
-          </div>
-        </div>
-        <div style="position:relative;height:16px;margin:0 0 2px;">
-          <div style="position:absolute;top:50%;left:10px;right:10px;height:1.5px;
-            background:linear-gradient(90deg,transparent,${cp} 20%,${cp} 80%,transparent);
-            transform:translateY(-50%);"></div>
-          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
-            background:${cf};padding:0 6px;font-size:10px;color:${cp};line-height:1;">✦</div>
-        </div>
-      </div>`;
-  }
-
-  // ── Decorativos esquinas ──────────────────────────────
-  const fernosHtml = decorFernos ? `
-    <div style="position:absolute;top:6px;left:6px;font-size:28px;opacity:.12;transform:rotate(-30deg);pointer-events:none;line-height:1;">${decorEmoji}</div>
-    <div style="position:absolute;top:6px;right:6px;font-size:28px;opacity:.12;transform:rotate(30deg);pointer-events:none;line-height:1;">${decorEmoji}</div>
-    <div style="position:absolute;bottom:6px;left:6px;font-size:28px;opacity:.12;transform:rotate(150deg);pointer-events:none;line-height:1;">${decorEmoji}</div>
-    <div style="position:absolute;bottom:6px;right:6px;font-size:28px;opacity:.12;transform:rotate(-150deg);pointer-events:none;line-height:1;">${decorEmoji}</div>` : '';
-
-  // ── Categorías ────────────────────────────────────────
-  function renderCat(cat) {
-    const catItems = items.filter(i => i.categoria === cat && i.disponible !== false);
-    if (!catItems.length) return '';
-    return `
-      <div style="margin:10px 0 5px;display:flex;align-items:center;gap:6px;">
-        <div style="flex-shrink:0;height:1px;width:8px;background:rgba(${cpRgb},0.4);"></div>
-        <div style="display:inline-block;background:${cp};color:#fff;
-          font-family:'${fuenteNombre}',sans-serif;
-          font-size:${Math.max(8,tamano-1)}px;font-weight:700;
-          letter-spacing:1.8px;text-transform:uppercase;
-          padding:3px 10px 3px 9px;border-radius:3px;
-          box-shadow:0 1px 4px rgba(${cpRgb},0.3);">
-          ${esc(cat)}
-        </div>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(${cpRgb},0.35),transparent);"></div>
-      </div>
-      <div style="margin-bottom:4px;">
-        ${catItems.map(it=>`
-          <div style="display:flex;align-items:baseline;padding:2.5px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
-            ${decorLeaf?`<span style="color:${cp};font-size:9px;margin-right:4px;flex-shrink:0;opacity:0.8;">${decorEmoji}</span>`:''}
-            <div style="flex:1;min-width:0;">
-              <span style="font-size:${tamano}px;color:#1A1A1A;
-                font-family:'${fuentePlatos}',sans-serif;font-weight:500;line-height:1.3;">${esc(it.nombre)}</span>
-              ${mostrarDesc&&it.descripcion?`<div style="font-size:${Math.max(8,tamano-2)}px;color:#999;line-height:1.3;margin-top:0.5px;font-style:italic;">${esc(it.descripcion)}</div>`:''}
-            </div>
-            <span style="flex:0 0 auto;border-bottom:1.5px dotted rgba(0,0,0,0.18);
-              margin:0 4px 3px;align-self:flex-end;flex-grow:1;min-width:${espaciado}px;"></span>
-            <span style="font-size:${tamano}px;font-weight:800;
-              font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;
-              color:${cp};">${fmt(it.precio||it.precioLocal||0)}</span>
-          </div>`).join('')}
-      </div>`;
-  }
-
-  function renderFotos(arr) {
-    if (!arr.length) return '';
-    const cols = arr.length <= 2 ? '1fr 1fr' : '1fr 1fr 1fr';
-    return `<div style="display:grid;grid-template-columns:${cols};gap:5px;margin:8px 0;">
-      ${arr.map(f=>`<div style="aspect-ratio:1;border-radius:6px;overflow:hidden;background:#ddd;
-        box-shadow:0 2px 6px rgba(0,0,0,0.12);">
-        <img src="${f}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
-      </div>`).join('')}
-    </div>`;
-  }
-
-  // ── Layout ────────────────────────────────────────────
-  let bodyHtml = '';
-  if (!cats.length) {
-    bodyHtml = `<div style="text-align:center;padding:30px;color:#aaa;font-size:12px;font-style:italic;">Sin platos en el menú aún.</div>`;
-  } else if (_mfeCols === 1) {
-    bodyHtml = `<div style="padding:0 12px 12px;">
-      ${cats.map(renderCat).join('')}
-      ${renderFotos(fotos)}
-    </div>`;
-  } else {
-    const colL = [], colR = [];
-    cats.forEach((c,i) => (i%2===0?colL:colR).push(c));
-    const fotosL = fotos.slice(0,3), fotosR = fotos.slice(3,6);
-    bodyHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 10px 12px;gap:0 10px;">
-      <div style="padding-right:5px;border-right:1px solid rgba(${cpRgb},0.15);">
-        ${colL.map(renderCat).join('')}
-        ${renderFotos(fotosL)}
-      </div>
-      <div style="padding-left:5px;">
-        ${colR.map(renderCat).join('')}
-        ${renderFotos(fotosR)}
-      </div>
-    </div>`;
-  }
-
-  // ── Pie de página ─────────────────────────────────────
-  const footerHtml = `
-    <div style="padding:12px 12px 14px;text-align:center;">
-      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(${cpRgb},0.4));"></div>
-        <span style="font-size:11px;color:${cp};">✦</span>
-        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(${cpRgb},0.4),transparent);"></div>
-      </div>
-      <div style="font-family:'Playfair Display',serif;font-size:12px;font-style:italic;color:${ce};letter-spacing:0.3px;">${esc(cierre)}</div>
-      ${decorFernos?`<div style="margin-top:5px;font-size:13px;opacity:0.4;letter-spacing:4px;">${decorEmoji} ${decorEmoji} ${decorEmoji}</div>`:''}
-    </div>`;
-
-  preview.innerHTML = `
-    <div style="min-height:100%;background:${cf};position:relative;overflow:hidden;">
-      ${fernosHtml}
-      <div style="position:relative;z-index:1;">
-        ${headerHtml}
-        ${bodyHtml}
-        ${footerHtml}
-      </div>
-    </div>`;
-
-  preview.style.fontFamily = `'${fuentePlatos}', sans-serif`;
-
-  // Actualizar swatches en la tarjeta de config
-  if (typeof mfdActualizarSwatches === 'function') mfdActualizarSwatches();
-
-  // Auto-guardado con debounce
-  mfeAutoGuardar();
-}
-
-// ── Sincronizar con menu.html via localStorage ────────
-// El render de menu.html ya lee helechos_menu_fisico_cfg,
-// así que solo necesitamos guardar para que se refleje.
-
-// ── Compatibilidad: mfIniciarPanel ya no hace nada crítico ──
-const _mfIniciarPanelOrig = window.mfIniciarPanel;
-window.mfIniciarPanel = function() {
-  // No hacer nada (los campos legacy están ocultos)
-};
-
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
@@ -17470,416 +15923,6 @@ window.mfIniciarPanel = function() {
 
 </div>
 <!-- fin KDS inline -->
-
-<!-- ══ MODAL VISTA PREVIA MENÚ DIGITAL ════════════════════════════════ -->
-<div id="modalVistaMenu" style="display:none;position:fixed;inset:0;z-index:9999;background:#0F0F0F;flex-direction:column;">
-
-  <!-- Header -->
-  <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:#1A1A1A;border-bottom:1px solid #2A2A2A;flex-shrink:0;position:relative;z-index:20;">
-    <button onclick="cerrarVistaMenu()" style="width:36px;height:36px;border:none;background:#2A2A2A;border-radius:50%;color:#fff;font-size:18px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;">✕</button>
-    <div style="flex:1;min-width:0;">
-      <div style="font-size:15px;font-weight:900;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">📱 Vista previa · Menú digital</div>
-      <div style="font-size:11px;color:rgba(255,255,255,0.45);margin-top:1px;">Los cambios se ven en el menú en tiempo real</div>
-    </div>
-
-  </div>
-
-  <!-- Cuerpo: 2 columnas en landscape, apilado en portrait -->
-  <div style="flex:1;display:flex;overflow:hidden;gap:0;" id="vmBody">
-
-    <!-- Panel izquierdo: editor de productos -->
-    <div id="vmEditor" style="width:340px;flex-shrink:0;background:#1A1A1A;border-right:1px solid #2A2A2A;display:flex;flex-direction:column;overflow:hidden;">
-
-      <!-- Tabs del editor -->
-      <div style="display:flex;border-bottom:1px solid #2A2A2A;flex-shrink:0;">
-        <button class="vm-tab active" id="vmTabProductos" onclick="vmShowTab('productos')" style="flex:1;padding:11px 6px;font-size:11px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">🍽 Productos</button>
-        <button class="vm-tab" id="vmTabCats" onclick="vmShowTab('cats')" style="flex:1;padding:11px 6px;font-size:11px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">📂 Categorías</button>
-        <button class="vm-tab" id="vmTabAgregar" onclick="vmShowTab('agregar')" style="flex:1;padding:11px 6px;font-size:11px;font-weight:800;border:none;background:transparent;color:rgba(255,255,255,.55);cursor:pointer;border-bottom:3px solid transparent;font-family:inherit;text-transform:uppercase;letter-spacing:.5px;">➕ Nuevo</button>
-      </div>
-
-      <!-- Tab: lista de productos -->
-      <div id="vmPanelProductos" style="flex:1;overflow-y:auto;padding:10px;">
-        <div id="vmSearchWrap" style="margin-bottom:8px;">
-          <input id="vmSearch" type="search" placeholder="🔍 Buscar producto…" oninput="vmRenderLista()" style="width:100%;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;">
-        </div>
-        <div id="vmLista"></div>
-      </div>
-
-      <!-- Tab: orden de categorías -->
-      <div id="vmPanelCats" style="flex:1;overflow-y:auto;padding:12px;display:none;">
-        <p style="font-size:12px;color:rgba(255,255,255,.45);margin-bottom:10px;line-height:1.5;">Arrastra para reordenar cómo aparecen las categorías en el menú digital.</p>
-        <div id="vmCatList"></div>
-      </div>
-
-      <!-- Tab: nuevo producto (formulario inline) -->
-      <div id="vmPanelAgregar" style="flex:1;overflow-y:auto;padding:12px;display:none;">
-        <div style="display:flex;flex-direction:column;gap:10px;">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Nombre</label>
-            <input id="vmNewNombre" placeholder="Ej: Bandeja paisa" maxlength="40" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:14px;font-family:inherit;background:#111;color:#fff;outline:none;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Categoría</label>
-            <select id="vmNewCat" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:14px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;"></select>
-            <input id="vmNewCatNueva" placeholder="Nueva categoría…" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px dashed #FF441A;border-radius:10px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;display:none;">
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div>
-              <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Precio local</label>
-              <input id="vmNewPrecio" type="text" inputmode="numeric" placeholder="0" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;background:#111;color:#FF441A;outline:none;">
-            </div>
-            <div>
-              <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Precio domicilio</label>
-              <input id="vmNewPrecioDom" type="text" inputmode="numeric" placeholder="= local" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;background:#111;color:#FF7A5C;outline:none;">
-            </div>
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Descripción (opcional)</label>
-            <textarea id="vmNewDesc" placeholder="Breve descripción…" maxlength="120" rows="2" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;resize:none;"></textarea>
-          </div>
-          <button onclick="vmAgregarProducto()" style="padding:14px;background:#FF441A;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,68,26,0.35);">➕ Agregar al menú</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Panel derecho: iframe del menú -->
-    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#000;">
-      <!-- Toolbar del iframe -->
-      <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:#111;border-bottom:1px solid #222;flex-shrink:0;">
-        <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;">Preview</span>
-        <div style="flex:1;"></div>
-        <button onclick="vmRefrescarIframe()" title="Recargar preview" style="padding:6px 10px;border:1.5px solid #2A2A2A;background:transparent;color:rgba(255,255,255,.6);border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;">↺ Recargar</button>
-        <div id="vmDeviceToggle" style="display:flex;gap:4px;padding:3px;background:#1A1A1A;border-radius:8px;border:1px solid #2A2A2A;">
-          <button onclick="vmSetDevice('mobile')" id="vmBtnMobile" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:#FF441A;color:#fff;">📱</button>
-          <button onclick="vmSetDevice('tablet')" id="vmBtnTablet" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:rgba(255,255,255,.5);">📟</button>
-          <button onclick="vmSetDevice('full')" id="vmBtnFull" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:transparent;color:rgba(255,255,255,.5);">🖥</button>
-        </div>
-      </div>
-      <!-- Iframe container -->
-      <div style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:16px;background:#0A0A0A;" id="vmIframeWrap">
-        <div id="vmPhoneFrame" style="width:375px;max-height:100%;border-radius:32px;overflow:hidden;box-shadow:0 0 0 10px #1A1A1A,0 0 0 12px #2A2A2A,0 30px 80px rgba(0,0,0,0.8);position:relative;flex-shrink:0;transition:width .3s ease;">
-          <iframe id="vmIframe" src="menu.html" style="width:100%;height:700px;border:none;display:block;"></iframe>
-        </div>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Panel flotante de edición inline de producto -->
-  <div id="vmEditPanel" style="display:none;position:absolute;inset:0;z-index:10;background:rgba(0,0,0,0.75);align-items:flex-end;">
-    <div style="background:#1A1A1A;border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:90vh;overflow-y:auto;">
-      <div style="width:36px;height:4px;background:#444;border-radius:2px;margin:0 auto 16px;"></div>
-      <h3 id="vmEditTitle" style="font-size:16px;font-weight:900;color:#fff;margin-bottom:16px;">Editar producto</h3>
-      <input id="vmEditIdx" type="hidden">
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div>
-          <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Nombre</label>
-          <input id="vmEditNombre" maxlength="40" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:14px;font-family:inherit;background:#111;color:#fff;outline:none;">
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Categoría</label>
-          <select id="vmEditCat" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:14px;font-family:inherit;background:#111;color:#fff;outline:none;appearance:auto;"></select>
-          <input id="vmEditCatNueva" placeholder="Nombre de la nueva categoría…" maxlength="40" style="width:100%;margin-top:6px;padding:10px 12px;border:1.5px dashed #FF441A;border-radius:10px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;display:none;">
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-          <div>
-            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Precio local</label>
-            <input id="vmEditPrecio" type="text" inputmode="numeric" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;background:#111;color:#FF441A;outline:none;">
-          </div>
-          <div>
-            <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Precio domicilio</label>
-            <input id="vmEditPrecioDom" type="text" inputmode="numeric" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:15px;font-weight:700;font-family:inherit;background:#111;color:#FF7A5C;outline:none;">
-          </div>
-        </div>
-        <div>
-          <label style="font-size:11px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.5px;">Descripción</label>
-          <textarea id="vmEditDesc" maxlength="120" rows="2" style="width:100%;margin-top:4px;padding:10px 12px;border:1.5px solid #2A2A2A;border-radius:10px;font-size:13px;font-family:inherit;background:#111;color:#fff;outline:none;resize:none;"></textarea>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:4px;">
-          <button onclick="vmCerrarEditPanel()" style="flex:1;padding:13px;background:#2A2A2A;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;">Cancelar</button>
-          <button onclick="vmGuardarEdicion()" style="flex:2;padding:13px;background:#FF441A;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(255,68,26,0.35);">✅ Guardar cambios</button>
-        </div>
-        <button onclick="vmEliminarProducto()" style="padding:13px;background:rgba(211,47,47,0.15);color:#EF5350;border:1.5px solid rgba(211,47,47,0.3);border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">🗑 Eliminar producto</button>
-      </div>
-    </div>
-  </div>
-</div>
-
-<style>
-  .vm-tab.active { color:#FF441A !important; border-bottom-color:#FF441A !important; }
-  #vmLista .vm-prod-row { display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1.5px solid #2A2A2A;margin-bottom:6px;cursor:pointer;background:#111;transition:border-color .15s; }
-  #vmLista .vm-prod-row:hover { border-color:#FF441A44; }
-  #vmLista .vm-prod-row .vm-prod-name { font-size:13px;font-weight:700;color:#fff; }
-  #vmLista .vm-prod-row .vm-prod-cat  { font-size:11px;color:rgba(255,255,255,.4);margin-top:1px; }
-  #vmLista .vm-prod-row .vm-prod-price { font-size:13px;font-weight:800;color:#FF441A;margin-left:auto;flex-shrink:0; }
-  #vmCatList .vm-cat-row { display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;border:1.5px solid #2A2A2A;margin-bottom:6px;background:#111;cursor:grab;user-select:none; }
-  #vmCatList .vm-cat-row .vm-cat-name { font-size:13px;font-weight:700;color:#fff;flex:1; }
-  #vmCatList .vm-cat-row .vm-cat-count { font-size:11px;color:rgba(255,255,255,.4); }
-</style>
-
-<script>
-/* ══ VISTA MENÚ DIGITAL ══════════════════════════════════════════════ */
-let vmCatOrder = null; // orden personalizado de categorías
-
-function abrirVistaMenu() {
-  const el = document.getElementById('modalVistaMenu');
-  el.style.display = 'flex';
-  document.body.style.overflow = 'hidden';
-  vmCatOrder = null;
-  vmShowTab('productos');
-  vmRenderLista();
-  vmRenderCatList();
-  vmFillCatSelects();
-  // Asegura iframe cargado
-  const iframe = document.getElementById('vmIframe');
-  if (!iframe.src || !iframe.src.includes('menu.html')) {
-    iframe.src = 'menu.html';
-  }
-  vmSetDevice('mobile');
-}
-
-function cerrarVistaMenu() {
-  document.getElementById('modalVistaMenu').style.display = 'none';
-  document.body.style.overflow = '';
-}
-
-function vmShowTab(tab) {
-  ['productos','cats','agregar'].forEach(t => {
-    document.getElementById('vmPanel' + t.charAt(0).toUpperCase() + t.slice(1)).style.display = t === tab ? 'flex' : 'none';
-    const btn = document.getElementById('vmTab' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (btn) btn.classList.toggle('active', t === tab);
-  });
-  if (tab === 'productos') { document.getElementById('vmPanelProductos').style.display = 'flex'; document.getElementById('vmPanelProductos').style.flexDirection = 'column'; }
-  if (tab === 'agregar') vmFillCatSelects();
-}
-
-function vmFmt(n) {
-  return '$' + Number(n).toLocaleString('es-CO');
-}
-
-function vmRenderLista() {
-  const q = (document.getElementById('vmSearch')?.value || '').trim().toLowerCase();
-  let items = MENU.slice();
-  if (q) items = items.filter(i => i.nombre.toLowerCase().includes(q) || i.categoria.toLowerCase().includes(q));
-  const lista = document.getElementById('vmLista');
-  if (!lista) return;
-  if (!items.length) { lista.innerHTML = '<p style="font-size:12px;color:rgba(255,255,255,.35);text-align:center;padding:20px 0;">Sin resultados</p>'; return; }
-  lista.innerHTML = items.map(item => {
-    const realIdx = MENU.indexOf(item);
-    const dispon = item.disponible !== false;
-    return `<div class="vm-prod-row" onclick="vmAbrirEditar(${realIdx})">
-      <div>
-        <div class="vm-prod-name">${esc(item.nombre)}</div>
-        <div class="vm-prod-cat">${esc(item.categoria)}${!dispon ? ' · <span style="color:#EF5350;">No disponible</span>' : ''}</div>
-      </div>
-      <div class="vm-prod-price">${vmFmt(item.precio)}</div>
-      <span style="font-size:18px;opacity:.4;">›</span>
-    </div>`;
-  }).join('');
-}
-
-function vmRenderCatList() {
-  const cats = vmGetCats();
-  const el = document.getElementById('vmCatList');
-  if (!el) return;
-  el.innerHTML = cats.map((cat, i) => {
-    const count = MENU.filter(m => m.categoria === cat).length;
-    return `<div class="vm-cat-row" data-cat="${cat}">
-      <span style="font-size:16px;color:rgba(255,255,255,.25);">☰</span>
-      <span class="vm-cat-name">${esc(cat)}</span>
-      <span class="vm-cat-count">${count} producto${count !== 1 ? 's' : ''}</span>
-    </div>`;
-  }).join('');
-  // Simple drag-to-reorder
-  vmInitCatDrag();
-}
-
-function vmGetCats() {
-  const fromMenu = [...new Set(MENU.map(i => i.categoria))];
-  if (vmCatOrder) {
-    const ordered = vmCatOrder.filter(c => fromMenu.includes(c));
-    const newOnes = fromMenu.filter(c => !ordered.includes(c));
-    return [...ordered, ...newOnes];
-  }
-  return fromMenu;
-}
-
-function vmFillCatSelects() {
-  const cats = vmGetCats();
-  const makeOpts = (selected) => {
-    let o = cats.map(c => `<option value="${c}" ${c===selected?'selected':''}>${c}</option>`).join('');
-    o += `<option value="__nueva__">➕ Nueva categoría…</option>`;
-    return o;
-  };
-  const newCat = document.getElementById('vmNewCat');
-  if (newCat) { newCat.innerHTML = makeOpts(''); newCat.onchange = () => {
-    const ni = document.getElementById('vmNewCatNueva');
-    if (ni) ni.style.display = newCat.value === '__nueva__' ? 'block' : 'none';
-  }; }
-  const editCat = document.getElementById('vmEditCat');
-  if (editCat) { editCat.innerHTML = makeOpts(''); editCat.onchange = () => {
-    const ni = document.getElementById('vmEditCatNueva');
-    if (ni) ni.style.display = editCat.value === '__nueva__' ? 'block' : 'none';
-  }; }
-}
-
-function vmAbrirEditar(idx) {
-  const item = MENU[idx];
-  if (!item) return;
-  document.getElementById('vmEditIdx').value = idx;
-  document.getElementById('vmEditTitle').textContent = '✏️ ' + item.nombre;
-  document.getElementById('vmEditNombre').value = item.nombre;
-  document.getElementById('vmEditPrecio').value = item.precio ? Number(item.precio).toLocaleString('es-CO') : '';
-  document.getElementById('vmEditPrecioDom').value = item.precioDomicilio ? Number(item.precioDomicilio).toLocaleString('es-CO') : '';
-  document.getElementById('vmEditDesc').value = item.descripcion || '';
-  vmFillCatSelects();
-  document.getElementById('vmEditCat').value = item.categoria;
-  const panel = document.getElementById('vmEditPanel');
-  panel.style.display = 'flex';
-}
-
-function vmCerrarEditPanel() {
-  document.getElementById('vmEditPanel').style.display = 'none';
-}
-
-function vmGuardarEdicion() {
-  const idx = parseInt(document.getElementById('vmEditIdx').value);
-  const nombre = document.getElementById('vmEditNombre').value.trim();
-  let cat = document.getElementById('vmEditCat').value;
-  if (cat === '__nueva__') cat = (document.getElementById('vmEditCatNueva')?.value || '').trim();
-  const precio = parseInt(document.getElementById('vmEditPrecio').value.replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,''));
-  const precioDomRaw = document.getElementById('vmEditPrecioDom').value.replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,'');
-  const precioDom = precioDomRaw ? parseInt(precioDomRaw) : precio;
-  const descripcion = document.getElementById('vmEditDesc').value.trim();
-
-  if (!nombre) { showToast('⚠️ Nombre requerido'); return; }
-  if (!cat || cat === '__nueva__') { showToast('⚠️ Selecciona una categoría'); return; }
-  if (isNaN(precio) || precio <= 0) { showToast('⚠️ Precio inválido'); return; }
-
-  if (idx >= 0 && idx < MENU.length) {
-    const prev = MENU[idx];
-    MENU[idx] = { ...prev, nombre, categoria: cat, precio, precioDomicilio: precioDom, descripcion };
-    showToast('✅ ' + nombre + ' actualizado');
-  }
-  vmCerrarEditPanel();
-  vmRenderLista();
-  vmRenderCatList();
-  vmGuardarCambios();
-}
-
-function vmEliminarProducto() {
-  const idx = parseInt(document.getElementById('vmEditIdx').value);
-  if (idx < 0 || idx >= MENU.length) return;
-  const nombre = MENU[idx].nombre;
-  if (!confirm(`¿Eliminar "${nombre}" del menú?`)) return;
-  MENU.splice(idx, 1);
-  showToast('🗑 ' + nombre + ' eliminado');
-  vmCerrarEditPanel();
-  vmRenderLista();
-  vmRenderCatList();
-  vmGuardarCambios();
-}
-
-function vmAgregarProducto() {
-  const nombre = document.getElementById('vmNewNombre').value.trim();
-  let cat = document.getElementById('vmNewCat').value;
-  if (cat === '__nueva__') cat = (document.getElementById('vmNewCatNueva').value || '').trim();
-  const precio = parseInt((document.getElementById('vmNewPrecio').value || '').replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,''));
-  const precioDomRaw = (document.getElementById('vmNewPrecioDom').value || '').replace(/\./g,'').replace(/,/g,'').replace(/[^0-9]/g,'');
-  const precioDom = precioDomRaw ? parseInt(precioDomRaw) : precio;
-  const descripcion = document.getElementById('vmNewDesc').value.trim();
-
-  if (!nombre) { showToast('⚠️ Nombre requerido'); return; }
-  if (!cat) { showToast('⚠️ Categoría requerida'); return; }
-  if (isNaN(precio) || precio <= 0) { showToast('⚠️ Precio inválido'); return; }
-  if (MENU.some(m => m.nombre.toLowerCase() === nombre.toLowerCase())) { showToast('⚠️ Ya existe un producto con ese nombre'); return; }
-
-  MENU.push({ nombre, categoria: cat, precio, precioDomicilio: precioDom, descripcion, foto: '', iva: 8, disponible: true });
-  showToast('✅ ' + nombre + ' agregado');
-
-  // Limpiar form
-  document.getElementById('vmNewNombre').value = '';
-  document.getElementById('vmNewPrecio').value = '';
-  document.getElementById('vmNewPrecioDom').value = '';
-  document.getElementById('vmNewDesc').value = '';
-
-  vmShowTab('productos');
-  vmRenderLista();
-  vmRenderCatList();
-  vmGuardarCambios();
-}
-
-function vmGuardarCambios() {
-  guardarMenuLocalStorage();
-  renderCategorias();
-  renderMenu();
-  renderProductosConfig();
-  renderPreciosConfig();
-  vmRefrescarIframe();
-  showToast('💾 Guardado automáticamente');
-}
-
-function vmRefrescarIframe() {
-  // Inject updated MENU into iframe via localStorage then reload
-  try {
-    const data = MENU.map(i => ({
-      nombre: i.nombre, categoria: i.categoria,
-      precio: i.precio, precioLocal: i.precio,
-      precioDomicilio: i.precioDomicilio || i.precio,
-      descripcion: i.descripcion || '', foto: i.foto || '',
-      iva: i.iva ?? 8, disponible: i.disponible !== false
-    }));
-    localStorage.setItem('helechos_menu_custom_v3', JSON.stringify(data));
-    localStorage.setItem('helechos_menu', JSON.stringify(data));
-  } catch(e) {}
-  const iframe = document.getElementById('vmIframe');
-  const baseUrl = iframe.src.split('?')[0];
-  iframe.src = baseUrl + '?t=' + Date.now(); // fuerza recarga real en todos los navegadores
-}
-
-function vmSetDevice(mode) {
-  const frame = document.getElementById('vmPhoneFrame');
-  const iframe = document.getElementById('vmIframe');
-  document.getElementById('vmBtnMobile').style.background = mode==='mobile'?'#FF441A':'transparent';
-  document.getElementById('vmBtnMobile').style.color = mode==='mobile'?'#fff':'rgba(255,255,255,.5)';
-  document.getElementById('vmBtnTablet').style.background = mode==='tablet'?'#FF441A':'transparent';
-  document.getElementById('vmBtnTablet').style.color = mode==='tablet'?'#fff':'rgba(255,255,255,.5)';
-  document.getElementById('vmBtnFull').style.background = mode==='full'?'#FF441A':'transparent';
-  document.getElementById('vmBtnFull').style.color = mode==='full'?'#fff':'rgba(255,255,255,.5)';
-  if (mode === 'mobile') {
-    frame.style.width = '375px'; frame.style.borderRadius = '32px';
-    iframe.style.height = '700px';
-    frame.style.boxShadow = '0 0 0 10px #1A1A1A, 0 0 0 12px #2A2A2A, 0 30px 80px rgba(0,0,0,0.8)';
-  } else if (mode === 'tablet') {
-    frame.style.width = '768px'; frame.style.borderRadius = '20px';
-    iframe.style.height = '900px';
-    frame.style.boxShadow = '0 0 0 8px #1A1A1A, 0 0 0 10px #2A2A2A, 0 20px 60px rgba(0,0,0,0.7)';
-  } else {
-    frame.style.width = '100%'; frame.style.borderRadius = '12px';
-    iframe.style.height = '800px';
-    frame.style.boxShadow = '0 8px 40px rgba(0,0,0,0.5)';
-  }
-}
-
-// Drag-to-reorder categorías (simple touch/mouse)
-function vmInitCatDrag() {
-  const list = document.getElementById('vmCatList');
-  if (!list) return;
-  let dragging = null, over = null;
-  list.querySelectorAll('.vm-cat-row').forEach(row => {
-    row.draggable = true;
-    row.addEventListener('dragstart', e => { dragging = row; row.style.opacity = '.4'; });
-    row.addEventListener('dragend', e => { row.style.opacity = ''; dragging = null; vmSaveCatOrder(); });
-    row.addEventListener('dragover', e => { e.preventDefault(); if (dragging && row !== dragging) { list.insertBefore(dragging, row); } });
-  });
-}
-
-function vmSaveCatOrder() {
-  const rows = document.querySelectorAll('#vmCatList .vm-cat-row');
-  vmCatOrder = Array.from(rows).map(r => r.dataset.cat);
-  vmGuardarCambios();
-}
-</script>
 
 </body>
 </html>
