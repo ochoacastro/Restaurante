@@ -4212,6 +4212,122 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   <!-- ═══════════════════════════════════════
        MENÚ RESTAURANTE — editor tipo plantilla
   ═══════════════════════════════════════ -->
+  <style>
+    /* ── Tarjeta diseñador de menú ── */
+    .mfd-card {
+      margin: 0;
+      border-radius: 0;
+      overflow: hidden;
+    }
+    .mfd-hero {
+      position: relative;
+      background: linear-gradient(135deg, #0F1A0F 0%, #1A2E1A 50%, #0F1A0F 100%);
+      padding: 20px 16px 16px;
+      overflow: hidden;
+      cursor: pointer;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: filter 0.18s;
+    }
+    .mfd-hero:active { filter: brightness(0.88); }
+    .mfd-hero-bg {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        45deg, transparent, transparent 20px,
+        rgba(255,255,255,0.015) 20px, rgba(255,255,255,0.015) 40px
+      );
+      pointer-events: none;
+    }
+    .mfd-hero-accent {
+      position: absolute; top: -30px; right: -30px;
+      width: 120px; height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,68,26,0.18) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .mfd-hero-top {
+      display: flex; align-items: center; gap: 14px;
+      position: relative; z-index: 1;
+    }
+    .mfd-hero-icon {
+      width: 52px; height: 52px; border-radius: 16px; flex-shrink: 0;
+      background: linear-gradient(135deg, rgba(255,68,26,0.25), rgba(255,68,26,0.08));
+      border: 1.5px solid rgba(255,68,26,0.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 26px;
+    }
+    .mfd-hero-text { flex: 1; min-width: 0; }
+    .mfd-hero-title {
+      font-size: 16px; font-weight: 900; color: #fff;
+      letter-spacing: -0.3px; line-height: 1.1;
+    }
+    .mfd-hero-sub {
+      font-size: 11px; color: rgba(255,255,255,0.45);
+      margin-top: 3px; font-weight: 500;
+    }
+    .mfd-hero-arrow {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.6); font-size: 14px; flex-shrink: 0;
+    }
+
+    /* Paletas en el hero */
+    .mfd-paletas {
+      display: flex; gap: 8px; align-items: center;
+      position: relative; z-index: 1;
+      margin-top: 14px; padding-top: 14px;
+      border-top: 1px solid rgba(255,255,255,0.07);
+    }
+    .mfd-paletas-label {
+      font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.3);
+      text-transform: uppercase; letter-spacing: 0.6px; flex-shrink: 0;
+    }
+    .mfd-paleta-dot {
+      width: 26px; height: 26px; border-radius: 50%; cursor: pointer; flex-shrink: 0;
+      border: 2px solid rgba(255,255,255,0.15);
+      transition: transform 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mfd-paleta-dot:active { transform: scale(0.85); }
+
+    /* Acciones rápidas */
+    .mfd-actions {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+      padding: 10px 12px 12px;
+      background: var(--blanco);
+    }
+    .mfd-action-btn {
+      display: flex; align-items: center; gap: 8px;
+      padding: 11px 12px; border-radius: 12px;
+      border: 1.5px solid var(--borde); background: var(--fondo);
+      color: var(--negro); font-size: 12px; font-weight: 700;
+      cursor: pointer; font-family: inherit;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .mfd-action-btn:active { background: var(--gris-cl); }
+    .mfd-action-btn .mfd-ab-icon { font-size: 16px; flex-shrink: 0; }
+    .mfd-action-btn.accent {
+      background: linear-gradient(135deg, #1a5e20, #2e7d32);
+      color: #fff; border-color: transparent;
+      box-shadow: 0 3px 10px rgba(46,125,50,0.3);
+    }
+    .mfd-action-btn.accent:active { opacity: 0.85; }
+    body.dark .mfd-actions { background: var(--blanco); }
+    body.dark .mfd-action-btn { background: #1E1E1E; border-color: #2A2A2A; color: #DDD; }
+    body.dark .mfd-action-btn:active { background: #252525; }
+
+    /* Mini-preview de paleta actual */
+    .mfd-palette-preview {
+      display: flex; gap: 4px; margin-left: auto;
+    }
+    .mfd-pp-swatch {
+      width: 12px; height: 12px; border-radius: 3px;
+    }
+  </style>
+
   <div class="cfg-acc" id="cfgacc-menufisico">
     <div class="cfg-acc-header" data-cfgacc="cfgacc-menufisico">
       <div class="cfg-acc-left">
@@ -4224,24 +4340,54 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
       <span class="cfg-acc-arrow">▼</span>
     </div>
     <div class="cfg-acc-body">
-      <div class="cfg-acc-inner" style="padding:0;">
+      <div class="cfg-acc-inner" style="padding:0;" class="mfd-card">
 
-        <!-- Botón principal para abrir el editor completo -->
-        <div style="padding:12px;">
-          <button onclick="mfAbrirEditorCompleto()" style="width:100%;padding:18px 16px;background:linear-gradient(135deg,#1A1A1A,#333);color:#fff;border:none;border-radius:16px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:12px;box-shadow:0 4px 18px rgba(0,0,0,0.22);">
-            <span style="font-size:26px;">🍽️</span>
-            <div style="text-align:left;">
-              <div>Diseñar menú del restaurante</div>
-              <div style="font-size:11px;font-weight:500;opacity:0.6;margin-top:2px;">Editor visual completo — vista previa en tiempo real</div>
+        <!-- HERO: botón principal de acceso al editor -->
+        <div class="mfd-hero" onclick="mfAbrirEditorCompleto()">
+          <div class="mfd-hero-bg"></div>
+          <div class="mfd-hero-accent"></div>
+
+          <div class="mfd-hero-top">
+            <div class="mfd-hero-icon">🍽️</div>
+            <div class="mfd-hero-text">
+              <div class="mfd-hero-title">Diseñar menú del restaurante</div>
+              <div class="mfd-hero-sub">Editor visual completo · vista previa en tiempo real</div>
             </div>
-            <span style="margin-left:auto;font-size:18px;">→</span>
-          </button>
+            <div class="mfd-hero-arrow">→</div>
+          </div>
+
+          <!-- Paletas de color rápidas -->
+          <div class="mfd-paletas" onclick="event.stopPropagation()">
+            <span class="mfd-paletas-label">Paleta:</span>
+            <button class="mfd-paleta-dot" title="Campestre" style="background:linear-gradient(135deg,#2D5A27,#E8520A);" onclick="mfdAplicarPaleta('campestre')"></button>
+            <button class="mfd-paleta-dot" title="Clásico"   style="background:linear-gradient(135deg,#1A1A1A,#C0392B);" onclick="mfdAplicarPaleta('clasico')"></button>
+            <button class="mfd-paleta-dot" title="Elegante"  style="background:linear-gradient(135deg,#2C3E50,#D4AF37);" onclick="mfdAplicarPaleta('elegante')"></button>
+            <button class="mfd-paleta-dot" title="Tropical"  style="background:linear-gradient(135deg,#1B6CA8,#F39C12);" onclick="mfdAplicarPaleta('tropical')"></button>
+            <button class="mfd-paleta-dot" title="Rosado"    style="background:linear-gradient(135deg,#8E44AD,#E91E8C);" onclick="mfdAplicarPaleta('rosa')"></button>
+            <button class="mfd-paleta-dot" title="Neutro"    style="background:linear-gradient(135deg,#555,#888);"       onclick="mfdAplicarPaleta('neutro')"></button>
+            <!-- Swatches de la paleta actual -->
+            <div class="mfd-palette-preview" id="mfdSwatchPreview" style="margin-left:auto;"></div>
+          </div>
         </div>
 
-        <!-- Accesos rápidos -->
-        <div style="padding:0 12px 12px;display:flex;gap:8px;">
-          <button class="btn-save-config" style="flex:1;font-size:12px;" onclick="guardarMenuFisicoCfg()">💾 Guardar</button>
-          <button class="btn-save-config" style="flex:1;font-size:12px;background:#2D5A27;color:#fff;border:none;" onclick="mfDescargarPNG()">📥 Descargar PNG</button>
+        <!-- ACCIONES RÁPIDAS -->
+        <div class="mfd-actions">
+          <button class="mfd-action-btn" onclick="mfAbrirEditorCompleto()">
+            <span class="mfd-ab-icon">🎨</span>
+            <span>Diseño y colores</span>
+          </button>
+          <button class="mfd-action-btn" onclick="mfAbrirEditorCompleto();setTimeout(()=>mfeToggleTab('fotos'),400)">
+            <span class="mfd-ab-icon">📷</span>
+            <span>Fotos de platos</span>
+          </button>
+          <button class="mfd-action-btn" onclick="mfAbrirEditorCompleto();setTimeout(()=>mfeToggleTab('cats'),400)">
+            <span class="mfd-ab-icon">📋</span>
+            <span>Categorías</span>
+          </button>
+          <button class="mfd-action-btn accent" onclick="mfDescargarPNG()">
+            <span class="mfd-ab-icon">📥</span>
+            <span>Descargar PNG</span>
+          </button>
         </div>
 
         <!-- Campos legacy ocultos (compatibilidad con funciones existentes) -->
@@ -4260,6 +4406,52 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
       </div>
     </div>
   </div>
+
+  <script>
+  // ── Función helper para aplicar paleta desde la tarjeta de config ──
+  function mfdAplicarPaleta(nombre) {
+    // Aplicar al editor si está abierto, o solo guardar en cfg
+    if (typeof mfeAplicarPaleta === 'function') {
+      mfeAplicarPaleta(nombre);
+    }
+    // También guardar directamente en localStorage para que menu.html lo recoja
+    const paletas = {
+      campestre: { colorPrimario:'#2D5A27', colorNombre:'#E8520A', colorFondo:'#F5EDD8', colorEslogan:'#6B3A2A' },
+      clasico:   { colorPrimario:'#1A1A1A', colorNombre:'#C0392B', colorFondo:'#FAFAFA', colorEslogan:'#222' },
+      elegante:  { colorPrimario:'#2C3E50', colorNombre:'#D4AF37', colorFondo:'#F8F6F0', colorEslogan:'#2C3E50' },
+      tropical:  { colorPrimario:'#1B6CA8', colorNombre:'#F39C12', colorFondo:'#EEF7FF', colorEslogan:'#1B6CA8' },
+      rosa:      { colorPrimario:'#8E44AD', colorNombre:'#E91E8C', colorFondo:'#FEF6FF', colorEslogan:'#6A1B9A' },
+      neutro:    { colorPrimario:'#555',    colorNombre:'#333',    colorFondo:'#F7F7F7', colorEslogan:'#444' }
+    };
+    const p = paletas[nombre];
+    if (!p) return;
+    try {
+      const existing = JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}');
+      const updated = { ...existing, ...p };
+      localStorage.setItem('helechos_menu_fisico_cfg', JSON.stringify(updated));
+    } catch(e) {}
+    mfdActualizarSwatches();
+    if (window.showToast) showToast('🎨 Paleta "' + nombre + '" aplicada · guardada automáticamente');
+  }
+
+  function mfdActualizarSwatches() {
+    const el = document.getElementById('mfdSwatchPreview');
+    if (!el) return;
+    try {
+      const cfg = JSON.parse(localStorage.getItem('helechos_menu_fisico_cfg') || '{}');
+      const cp = cfg.colorPrimario || '#2D5A27';
+      const cn = cfg.colorNombre   || '#E8520A';
+      const cf = cfg.colorFondo    || '#F5EDD8';
+      el.innerHTML = [cp, cn, cf].map(c =>
+        `<div class="mfd-pp-swatch" style="background:${c};border:1px solid rgba(255,255,255,0.2);" title="${c}"></div>`
+      ).join('');
+    } catch(e) {}
+  }
+
+  // Inicializar swatches al cargar
+  document.addEventListener('DOMContentLoaded', mfdActualizarSwatches);
+  setTimeout(mfdActualizarSwatches, 500);
+  </script>
 
   <!-- Consecutivo -->
   <div class="cfg-acc" id="cfgacc-consec">
@@ -16610,7 +16802,6 @@ function mfDescargarPNG() {
         <button id="mfeBtnEditar" onclick="mfeAbrirUltimoTab()" style="padding:6px 12px;background:#2A2A2A;border:1.5px solid #FF441A;color:#FF441A;border-radius:8px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;display:none;">⚙ Editar</button>
         <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.35);text-transform:uppercase;letter-spacing:.5px;">Vista previa</span>
         <div style="flex:1;"></div>
-        <button onclick="mfeCerrarEditorCompleto()" style="padding:7px 16px;border:none;background:#FF441A;color:#fff;border-radius:8px;font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;box-shadow:0 2px 10px rgba(255,68,26,0.4);">✅ Aplicar</button>
         <button onclick="mfeActualizarPreview()" style="padding:6px 10px;border:1.5px solid #2A2A2A;background:transparent;color:rgba(255,255,255,.5);border-radius:8px;font-size:11px;cursor:pointer;font-family:inherit;">↺</button>
         <div style="display:flex;gap:3px;padding:3px;background:#1A1A1A;border-radius:8px;border:1px solid #2A2A2A;">
           <button onclick="mfeSetPreviewMode('mobile')" id="mfeBtnMobile" style="padding:5px 9px;border:none;border-radius:6px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;background:#FF441A;color:#fff;">📱</button>
@@ -16682,8 +16873,6 @@ function mfeAbrirEditorCompleto() {
 window.mfAbrirEditorCompleto = mfeAbrirEditorCompleto;
 
 function mfeCerrarEditorCompleto() {
-  clearTimeout(_mfeAutoSaveTimer); // cancelar debounce pendiente
-  mfeGuardarDesdeEditor();         // guardar inmediatamente antes de cerrar
   const screen = document.getElementById('mfEditorScreen');
   if (screen) screen.style.display = 'none';
   document.body.style.overflow = '';
@@ -17067,103 +17256,171 @@ function mfeActualizarPreview() {
 
   function esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
   function fmt(n) { return '$' + Number(n||0).toLocaleString('es-CO'); }
+  function hexToRgb(hex) {
+    const r=parseInt(hex.slice(1,3),16),g=parseInt(hex.slice(3,5),16),b=parseInt(hex.slice(5,7),16);
+    return isNaN(r)?'0,0,0':`${r},${g},${b}`;
+  }
+  const cpRgb = hexToRgb(cp);
 
+  // ── Encabezado ────────────────────────────────────────
+  let headerHtml = '';
+  if (_mfeMembrete2) {
+    headerHtml = `<div style="width:100%;overflow:hidden;position:relative;">
+      <img src="${_mfeMembrete2}" style="width:100%;display:block;max-height:200px;object-fit:cover;">
+      <div style="position:absolute;bottom:0;left:0;right:0;height:4px;background:${cp};"></div>
+    </div>`;
+  } else {
+    const logoHtml = logo
+      ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">`
+      : `<span style="font-size:22px;">🍽️</span>`;
+    headerHtml = `
+      <div style="position:relative;background:${cf};overflow:hidden;">
+        <div style="height:5px;background:linear-gradient(90deg,${cp},rgba(${cpRgb},0.5),${cp});"></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:14px 14px 12px;">
+          <div style="flex-shrink:0;width:68px;height:68px;border-radius:50%;
+            border:3px solid ${cp};
+            background:rgba(${cpRgb},0.08);
+            display:flex;align-items:center;justify-content:center;overflow:hidden;
+            box-shadow:0 0 0 2px ${cf},0 0 0 5px ${cp},0 4px 12px rgba(${cpRgb},0.25);">
+            ${logoHtml}
+          </div>
+          <div style="flex:1;min-width:0;text-align:center;">
+            <div style="font-family:'Oswald',sans-serif;font-size:7.5px;font-weight:700;
+              color:rgba(${cpRgb},0.7);letter-spacing:3px;text-transform:uppercase;margin-bottom:2px;">
+              ✦ RESTAURANTE ✦
+            </div>
+            <div style="font-family:'${fuenteNombre}',sans-serif;font-size:26px;font-weight:900;
+              color:${cn};line-height:1;text-transform:uppercase;
+              text-shadow:0 1px 0 rgba(0,0,0,0.08);">
+              ${esc(nombre)}
+            </div>
+            ${sede ? `<div style="font-family:'Playfair Display',serif;font-size:10px;
+              font-style:italic;color:rgba(0,0,0,0.5);margin-top:3px;">${esc(sede)}</div>` : ''}
+            ${slogan ? `<div style="margin-top:5px;">
+              <span style="display:inline-block;background:${ce};color:#fff;
+                font-family:'${fuenteNombre}',sans-serif;font-size:7px;font-weight:700;
+                letter-spacing:1.8px;text-transform:uppercase;
+                padding:3px 12px;border-radius:999px;">
+                ${esc(slogan.toUpperCase())}
+              </span></div>` : ''}
+          </div>
+        </div>
+        <div style="position:relative;height:16px;margin:0 0 2px;">
+          <div style="position:absolute;top:50%;left:10px;right:10px;height:1.5px;
+            background:linear-gradient(90deg,transparent,${cp} 20%,${cp} 80%,transparent);
+            transform:translateY(-50%);"></div>
+          <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+            background:${cf};padding:0 6px;font-size:10px;color:${cp};line-height:1;">✦</div>
+        </div>
+      </div>`;
+  }
+
+  // ── Decorativos esquinas ──────────────────────────────
+  const fernosHtml = decorFernos ? `
+    <div style="position:absolute;top:6px;left:6px;font-size:28px;opacity:.12;transform:rotate(-30deg);pointer-events:none;line-height:1;">${decorEmoji}</div>
+    <div style="position:absolute;top:6px;right:6px;font-size:28px;opacity:.12;transform:rotate(30deg);pointer-events:none;line-height:1;">${decorEmoji}</div>
+    <div style="position:absolute;bottom:6px;left:6px;font-size:28px;opacity:.12;transform:rotate(150deg);pointer-events:none;line-height:1;">${decorEmoji}</div>
+    <div style="position:absolute;bottom:6px;right:6px;font-size:28px;opacity:.12;transform:rotate(-150deg);pointer-events:none;line-height:1;">${decorEmoji}</div>` : '';
+
+  // ── Categorías ────────────────────────────────────────
   function renderCat(cat) {
     const catItems = items.filter(i => i.categoria === cat && i.disponible !== false);
     if (!catItems.length) return '';
-    return `<div style="margin:10px 0 4px;">
-      <div style="display:inline-block;background:${cp};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:${Math.max(9,tamano-1)}px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:4px;">${esc(cat)}</div>
-    </div>
-    <div>${catItems.map(it => `
-      <div style="display:flex;align-items:baseline;padding:2px 0;">
-        ${decorLeaf ? `<span style="color:${cp};font-size:9px;margin-right:3px;">${decorEmoji}</span>` : ''}
-        <div style="flex:1;min-width:0;">
-          <span style="font-size:${tamano}px;color:#1A1A1A;font-family:'${fuentePlatos}',sans-serif;">${esc(it.nombre)}</span>
-          ${mostrarDesc && it.descripcion ? `<div style="font-size:${Math.max(8,tamano-2)}px;color:#888;line-height:1.3;">${esc(it.descripcion)}</div>` : ''}
+    return `
+      <div style="margin:10px 0 5px;display:flex;align-items:center;gap:6px;">
+        <div style="flex-shrink:0;height:1px;width:8px;background:rgba(${cpRgb},0.4);"></div>
+        <div style="display:inline-block;background:${cp};color:#fff;
+          font-family:'${fuenteNombre}',sans-serif;
+          font-size:${Math.max(8,tamano-1)}px;font-weight:700;
+          letter-spacing:1.8px;text-transform:uppercase;
+          padding:3px 10px 3px 9px;border-radius:3px;
+          box-shadow:0 1px 4px rgba(${cpRgb},0.3);">
+          ${esc(cat)}
         </div>
-        <span style="flex:0 0 auto;min-width:${espaciado}px;border-bottom:1.5px dotted rgba(0,0,0,.2);margin:0 3px 3px;align-self:flex-end;flex-grow:1;"></span>
-        <span style="font-size:${tamano}px;font-weight:700;font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;color:#1A1A1A;">${fmt(it.precio||it.precioLocal||0)}</span>
-      </div>`).join('')}</div>`;
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(${cpRgb},0.35),transparent);"></div>
+      </div>
+      <div style="margin-bottom:4px;">
+        ${catItems.map(it=>`
+          <div style="display:flex;align-items:baseline;padding:2.5px 0;border-bottom:1px solid rgba(0,0,0,0.04);">
+            ${decorLeaf?`<span style="color:${cp};font-size:9px;margin-right:4px;flex-shrink:0;opacity:0.8;">${decorEmoji}</span>`:''}
+            <div style="flex:1;min-width:0;">
+              <span style="font-size:${tamano}px;color:#1A1A1A;
+                font-family:'${fuentePlatos}',sans-serif;font-weight:500;line-height:1.3;">${esc(it.nombre)}</span>
+              ${mostrarDesc&&it.descripcion?`<div style="font-size:${Math.max(8,tamano-2)}px;color:#999;line-height:1.3;margin-top:0.5px;font-style:italic;">${esc(it.descripcion)}</div>`:''}
+            </div>
+            <span style="flex:0 0 auto;border-bottom:1.5px dotted rgba(0,0,0,0.18);
+              margin:0 4px 3px;align-self:flex-end;flex-grow:1;min-width:${espaciado}px;"></span>
+            <span style="font-size:${tamano}px;font-weight:800;
+              font-family:'${fuenteNombre}',sans-serif;white-space:nowrap;
+              color:${cp};">${fmt(it.precio||it.precioLocal||0)}</span>
+          </div>`).join('')}
+      </div>`;
   }
 
   function renderFotos(arr) {
     if (!arr.length) return '';
     const cols = arr.length <= 2 ? '1fr 1fr' : '1fr 1fr 1fr';
-    return `<div style="display:grid;grid-template-columns:${cols};gap:4px;margin:8px 0;">
-      ${arr.map(f=>`<div style="aspect-ratio:1.1;border-radius:5px;overflow:hidden;background:#ddd;">
+    return `<div style="display:grid;grid-template-columns:${cols};gap:5px;margin:8px 0;">
+      ${arr.map(f=>`<div style="aspect-ratio:1;border-radius:6px;overflow:hidden;background:#ddd;
+        box-shadow:0 2px 6px rgba(0,0,0,0.12);">
         <img src="${f}" style="width:100%;height:100%;object-fit:cover;" crossorigin="anonymous">
       </div>`).join('')}
     </div>`;
   }
 
+  // ── Layout ────────────────────────────────────────────
   let bodyHtml = '';
-  if (_mfeCols === 1) {
-    // 1 columna
-    bodyHtml = `<div style="padding:0 10px 12px;">
-      ${cats.map(c => renderCat(c)).join('')}
+  if (!cats.length) {
+    bodyHtml = `<div style="text-align:center;padding:30px;color:#aaa;font-size:12px;font-style:italic;">Sin platos en el menú aún.</div>`;
+  } else if (_mfeCols === 1) {
+    bodyHtml = `<div style="padding:0 12px 12px;">
+      ${cats.map(renderCat).join('')}
       ${renderFotos(fotos)}
     </div>`;
   } else {
-    // 2 columnas
     const colL = [], colR = [];
-    cats.forEach((c, i) => (i % 2 === 0 ? colL : colR).push(c));
-    const fotosL = fotos.slice(0, 3), fotosR = fotos.slice(3, 6);
-    bodyHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 8px 12px;">
-      <div style="padding:0 4px;border-right:1.5px solid rgba(0,0,0,.1);">
-        ${colL.map(c => renderCat(c)).join('')}
+    cats.forEach((c,i) => (i%2===0?colL:colR).push(c));
+    const fotosL = fotos.slice(0,3), fotosR = fotos.slice(3,6);
+    bodyHtml = `<div style="display:grid;grid-template-columns:1fr 1fr;padding:0 10px 12px;gap:0 10px;">
+      <div style="padding-right:5px;border-right:1px solid rgba(${cpRgb},0.15);">
+        ${colL.map(renderCat).join('')}
         ${renderFotos(fotosL)}
       </div>
-      <div style="padding:0 4px;">
-        ${colR.map(c => renderCat(c)).join('')}
+      <div style="padding-left:5px;">
+        ${colR.map(renderCat).join('')}
         ${renderFotos(fotosR)}
       </div>
     </div>`;
   }
 
-  // Encabezado
-  let headerHtml = '';
-  if (_mfeMembrete2) {
-    headerHtml = `<div style="width:100%;border-bottom:3px solid ${cp};">
-      <img src="${_mfeMembrete2}" style="width:100%;display:block;max-height:200px;object-fit:cover;">
-    </div>`;
-  } else {
-    const logoHtml = logo
-      ? `<img src="${logo}" style="width:100%;height:100%;object-fit:contain;" crossorigin="anonymous">`
-      : `<span style="font-size:10px;color:#aaa;">Logo</span>`;
-    headerHtml = `<div style="display:flex;align-items:center;gap:10px;padding:14px 12px 10px;border-bottom:3px solid ${cp};">
-      <div style="width:72px;height:72px;flex-shrink:0;border-radius:50%;border:3px solid ${cp};background:#EDE0C4;display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 0 0 2px ${cf},0 0 0 4px ${cp};">
-        ${logoHtml}
+  // ── Pie de página ─────────────────────────────────────
+  const footerHtml = `
+    <div style="padding:12px 12px 14px;text-align:center;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(${cpRgb},0.4));"></div>
+        <span style="font-size:11px;color:${cp};">✦</span>
+        <div style="flex:1;height:1px;background:linear-gradient(90deg,rgba(${cpRgb},0.4),transparent);"></div>
       </div>
-      <div style="flex:1;text-align:center;">
-        <div style="font-family:'Oswald',sans-serif;font-size:8px;font-weight:700;color:${cp};letter-spacing:2px;text-transform:uppercase;">RESTAURANTE</div>
-        <div style="font-family:'${fuenteNombre}',sans-serif;font-size:28px;font-weight:900;color:${cn};line-height:1;text-transform:uppercase;">${esc(nombre)}</div>
-        ${sede ? `<div style="font-family:'Playfair Display',serif;font-size:11px;font-style:italic;color:#1A1A1A;">${esc(sede)}</div>` : ''}
-        ${slogan ? `<div style="margin-top:4px;"><span style="background:${ce};color:#fff;font-family:'${fuenteNombre}',sans-serif;font-size:7px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:3px 10px;border-radius:3px;">${esc(slogan.toUpperCase())}</span></div>` : ''}
-      </div>
+      <div style="font-family:'Playfair Display',serif;font-size:12px;font-style:italic;color:${ce};letter-spacing:0.3px;">${esc(cierre)}</div>
+      ${decorFernos?`<div style="margin-top:5px;font-size:13px;opacity:0.4;letter-spacing:4px;">${decorEmoji} ${decorEmoji} ${decorEmoji}</div>`:''}
     </div>`;
-  }
-
-  // Decorativos de esquinas
-  const fernosHtml = decorFernos ? `
-    <div style="position:absolute;top:4px;left:4px;font-size:24px;opacity:.18;transform:rotate(-30deg);pointer-events:none;">${decorEmoji}</div>
-    <div style="position:absolute;top:4px;right:4px;font-size:24px;opacity:.18;transform:rotate(30deg);pointer-events:none;">${decorEmoji}</div>
-    <div style="position:absolute;bottom:4px;left:4px;font-size:24px;opacity:.18;transform:rotate(150deg);pointer-events:none;">${decorEmoji}</div>
-    <div style="position:absolute;bottom:4px;right:4px;font-size:24px;opacity:.18;transform:rotate(-150deg);pointer-events:none;">${decorEmoji}</div>` : '';
 
   preview.innerHTML = `
     <div style="min-height:100%;background:${cf};position:relative;overflow:hidden;">
       ${fernosHtml}
-      ${headerHtml}
-      ${cats.length ? bodyHtml : `<div style="text-align:center;padding:30px;color:#999;font-size:12px;">Sin platos en el menú aún.</div>`}
-      <div style="text-align:center;padding:8px 10px 14px;border-top:2px solid ${cp};position:relative;z-index:1;">
-        <div style="font-family:'Playfair Display',serif;font-size:13px;font-style:italic;color:${ce};">${esc(cierre)}</div>
+      <div style="position:relative;z-index:1;">
+        ${headerHtml}
+        ${bodyHtml}
+        ${footerHtml}
       </div>
     </div>`;
 
-  // Forzar carga de fuente en el preview
   preview.style.fontFamily = `'${fuentePlatos}', sans-serif`;
 
-  // Auto-guardado con debounce (800ms tras el último cambio)
+  // Actualizar swatches en la tarjeta de config
+  if (typeof mfdActualizarSwatches === 'function') mfdActualizarSwatches();
+
+  // Auto-guardado con debounce
   mfeAutoGuardar();
 }
 
