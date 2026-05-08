@@ -5635,7 +5635,9 @@ let feTelefono = "";
 let sesionFacturas = 0;
 let sesionTotal = 0;
 
-let logoBase64 = null;
+// window.logoBase64: expuesto en window para que qr2Generar (script separado) lo lea correctamente
+// Las variables `let` no son propiedades de window, por eso usamos window directamente.
+window.logoBase64 = null;
 let loginBgBase64 = null;
 let catActiva = "Todos";
 let btDevice = null;
@@ -6577,14 +6579,14 @@ function cargarConfig() {
   actualizarConsecDisplay();
   try {
     const savedLogo = posStore.getItem('pos_logo');
-    if (savedLogo) { logoBase64 = savedLogo; mostrarLogoPreview(); }
+    if (savedLogo) { window.logoBase64 = savedLogo; mostrarLogoPreview(); }
     else {
       try {
         const raw = posStore.getItem('pos_menu_settings_v1');
         const ms = raw ? JSON.parse(raw) : {};
         if (ms.businessLogo) {
-          logoBase64 = ms.businessLogo;
-          posStore.setItem('pos_logo', logoBase64); // normalizar en clave del POS
+          window.logoBase64 = ms.businessLogo;
+          posStore.setItem('pos_logo', window.logoBase64); // normalizar en clave del POS
           mostrarLogoPreview();
         } else { actualizarManifestConLogo(null); }
       } catch(_) { actualizarManifestConLogo(null); }
@@ -7304,7 +7306,7 @@ function saveConfig() {
     const appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
     if (appleTitle) appleTitle.setAttribute('content', brand);
   } catch(_) {}
-  actualizarManifestConLogo(logoBase64);
+  actualizarManifestConLogo(window.logoBase64);
 
   // Ocultar banner de primer uso
   const firstRunBanner = document.getElementById('firstRunBanner');
@@ -9996,7 +9998,7 @@ function imprimirResumenFiltradoDirecto() {
   if (!texto) { showToast('Sin facturas para imprimir'); return; }
   var win = window.open('', '_blank', 'width=320,height=800');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
-  var logoHTML = logoBase64 ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + logoBase64 + '" style="max-width:36mm;max-height:60px;"></div>' : '';
+  var logoHTML = window.logoBase64 ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + window.logoBase64 + '" style="max-width:36mm;max-height:60px;"></div>' : '';
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:58mm auto;margin:0;}body{font-family:\'Courier New\',monospace;font-size:10px;margin:0;padding:2px 2px;width:58mm;}pre{white-space:pre;margin:0;width:100%;}@media print{body{margin:0;padding:1px;}}</style></head><body>' + logoHTML + '<pre>' + texto + '</pre><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');
   win.document.close();
   setTimeout(function(){ showToast('🖨️ Imprimiendo resumen filtrado'); }, 600);
@@ -10630,14 +10632,14 @@ function generarPdfDesdeHistorial(numeroFactura) {
     const lineas = texto.split('\n');
     const margen = 2;
     let y = margen;
-    if (logoBase64) {
+    if (window.logoBase64) {
       try {
-        const imgProps = doc.getImageProperties(logoBase64);
+        const imgProps = doc.getImageProperties(window.logoBase64);
         const logoType = imgProps.fileType || 'PNG';
         const ratio = imgProps.width / imgProps.height;
         const imgW = Math.min(30, 58 - margen * 2);
         const imgH = imgW / ratio;
-        doc.addImage(logoBase64, logoType, (58 - imgW) / 2, y, imgW, imgH);
+        doc.addImage(window.logoBase64, logoType, (58 - imgW) / 2, y, imgW, imgH);
         y += imgH + 3;
       } catch(e) {}
     }
@@ -10713,7 +10715,7 @@ function reimprimirDirecto(f) {
   const win = window.open('', '_blank', 'width=320,height=600');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
   const texto = generarTextoDesdeFactura(f, false);
-  const logoHTML = logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${logoBase64}" style="max-width:36mm;max-height:60px;"></div>` : '';
+  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:36mm;max-height:60px;"></div>` : '';
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:58mm auto;margin:0;}body{font-family:\'Courier New\',monospace;font-size:10px;margin:0;padding:2px 2px;width:58mm;}pre{white-space:pre;margin:0;width:100%;}@media print{body{margin:0;padding:1px;}}</style></head><body>' + logoHTML + '<pre>' + texto + '</pre><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');
   win.document.close();
 }
@@ -10900,8 +10902,8 @@ async function imprimirBluetooth() {
   const encoder = new TextEncoder();
   const escInit = new Uint8Array([ESC, 0x40]);
   let partes = [escInit];
-  if (logoBase64) {
-    const logoBytes = await logoAEscPos(logoBase64, 280);
+  if (window.logoBase64) {
+    const logoBytes = await logoAEscPos(window.logoBase64, 280);
     if (logoBytes) partes.push(logoBytes);
   }
   const feed = new Uint8Array([ESC, 0x64, 0x04]);
@@ -10924,7 +10926,7 @@ async function imprimirBluetooth() {
 
 function imprimirDirecto() {
   const texto = generarTextoTicket();
-  const logoHTML = logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${logoBase64}" style="max-width:100px;max-height:60px;"></div>` : '';
+  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:100px;max-height:60px;"></div>` : '';
   const win = window.open('', '_blank', 'width=320,height=600');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
 
@@ -11178,12 +11180,12 @@ function enviarWhatsapp() { abrirModalWhatsapp(); }function generarPdfFactura(te
   // Estimar altura del logo (si existe) usando una relación 1:1 máx 30mm
   let alturaLogo = 0;
   let logoW = 0, logoH = 0, logoType = 'PNG';
-  if (logoBase64) {
+  if (window.logoBase64) {
     try {
       // Necesitamos un doc temporal solo para leer propiedades de la imagen
       const { jsPDF } = window.jspdf;
       const tmp = new jsPDF({ unit: 'mm', format: [ANCHO_MM, 100] });
-      const imgProps = tmp.getImageProperties(logoBase64);
+      const imgProps = tmp.getImageProperties(window.logoBase64);
       logoType = imgProps.fileType || 'PNG';
       const ratio = imgProps.width / imgProps.height;
       logoW = Math.min(30, ANCHO_MM - MARGEN * 2);
@@ -11202,9 +11204,9 @@ function enviarWhatsapp() { abrirModalWhatsapp(); }function generarPdfFactura(te
   let y = MARGEN;
 
   // Logo
-  if (logoBase64 && alturaLogo > 0) {
+  if (window.logoBase64 && alturaLogo > 0) {
     try {
-      doc.addImage(logoBase64, logoType, (ANCHO_MM - logoW) / 2, y, logoW, logoH);
+      doc.addImage(window.logoBase64, logoType, (ANCHO_MM - logoW) / 2, y, logoW, logoH);
       y += alturaLogo;
     } catch(e) { /* si falla el logo, continuar sin él */ }
   }
@@ -11494,7 +11496,7 @@ function imprimirCierreDiaDirecto() {
   const win = window.open('', '_blank', 'width=320,height=800');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
   const texto = generarTextoCierre(false);
-  const logoHTML = logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${logoBase64}" style="max-width:36mm;max-height:60px;"></div>` : '';
+  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:36mm;max-height:60px;"></div>` : '';
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:58mm auto;margin:0;}body{font-family:\'Courier New\',monospace;font-size:10px;margin:0;padding:2px 2px;width:58mm;}pre{white-space:pre;margin:0;width:100%;}@media print{body{margin:0;padding:1px;}}</style></head><body>' + logoHTML + '<pre>' + texto + '</pre><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');
   win.document.close();
   // BUG 13 fix: esperar a que la ventana de impresión se abra antes de cerrar el modal,
@@ -11616,19 +11618,19 @@ function cargarLogo(input) {
     // Redimensionar a máx 400×400 px manteniendo proporciones
     redimensionarImagen(e.target.result, 200, 200, (b64) => {
       try {
-        logoBase64 = b64;
+        window.logoBase64 = b64;
         // Intentar guardar en localStorage, si falla por cuota solo usar Firebase
-        try { posStore.setItem('pos_logo', logoBase64); } catch(eq) {
+        try { posStore.setItem('pos_logo', window.logoBase64); } catch(eq) {
           console.warn('localStorage lleno, logo solo en Firebase');
         }
         try {
           const raw = posStore.getItem('pos_menu_settings_v1');
           const ms = raw ? JSON.parse(raw) : {};
-          ms.businessLogo = logoBase64;
+          ms.businessLogo = window.logoBase64;
           posStore.setItem('pos_menu_settings_v1', JSON.stringify(ms));
         } catch(_) {}
-        try { fbSync('logo', { data: logoBase64 }); } catch(_) {}
-        try { fbSync('decorImages/businessLogo', logoBase64); } catch(_) {}
+        try { fbSync('logo', { data: window.logoBase64 }); } catch(_) {}
+        try { fbSync('decorImages/businessLogo', window.logoBase64); } catch(_) {}
         mostrarLogoPreview();
         showToast('✅ Logo del restaurante guardado');
       } catch(err) {
@@ -11648,7 +11650,7 @@ function actualizarIconosApp() {
     const lEmoji = document.getElementById('loginLogoEmoji');
 
     // Header: usa el logo del RESTAURANTE (pos_logo)
-    const restLogo = logoBase64 || posStore.getItem('pos_logo');
+    const restLogo = window.logoBase64 || posStore.getItem('pos_logo');
     if (restLogo) {
       if (hImg)   { hImg.src = restLogo; hImg.style.display = 'block'; }
       if (hEmoji) hEmoji.style.display = 'none';
@@ -11705,8 +11707,8 @@ function mostrarLogoPreview() {
   const img  = document.getElementById('logoPreview');
   const btn  = document.getElementById('logoQuitarBtn');
   const txt  = document.getElementById('logoUploadTxt');
-  if (logoBase64) {
-    img.src = logoBase64;
+  if (window.logoBase64) {
+    img.src = window.logoBase64;
     wrap.style.display = 'block';
     btn.style.display  = 'block';
     txt.textContent    = 'Cambiar logo';
@@ -11720,7 +11722,7 @@ function mostrarLogoPreview() {
 
 function quitarLogo() {
   confirmar({ icono:'🖼️', titulo:'Quitar logo', mensaje:'¿Quitar el logo del recibo?', textoOk:'Quitar', callback() {
-    logoBase64 = null;
+    window.logoBase64 = null;
     posStore.removeItem('pos_logo');
     try {
       const raw = posStore.getItem('pos_menu_settings_v1');
@@ -12561,9 +12563,9 @@ function fbEscucharCambios() {
     },
     { path: 'restaurante/logo', handler: (val) => {
         if (!val || !val.data) return;
-        if (val.data === logoBase64) return; // Sin cambio
-        logoBase64 = val.data;
-        posStore.setItem('pos_logo', logoBase64);
+        if (val.data === window.logoBase64) return; // Sin cambio
+        window.logoBase64 = val.data;
+        posStore.setItem('pos_logo', window.logoBase64);
         mostrarLogoPreview();
         actualizarIconosApp();
       }
@@ -12731,7 +12733,7 @@ async function fbPrimerSync() {
       await fbSync('menu',     MENU);
       await fbSync('historial', historial);
       await fbSync('usuarios',  usuarios);
-      if (logoBase64) await fbSync('logo', { data: logoBase64 });
+      if (window.logoBase64) await fbSync('logo', { data: window.logoBase64 });
       // Inicializar consecutivo global en Firebase con el valor local
       await set(ref(db, 'restaurante/consecutivo'), config.consecutivo);
       // FIX D: crear también los nodos granulares historial_items para que
@@ -17499,7 +17501,7 @@ window.recargarMenuPreview = recargarMenuPreview;
 // ════════════════════════════════════════════════════════════
 // QR DOBLE — Menú Restaurante + Domicilios
 // URLs guardadas indefinidamente en localStorage
-// Logo tomado de logoBase64 (variable global del POS)
+// Logo tomado de window.logoBase64 (variable global del POS)
 // ════════════════════════════════════════════════════════════
 
 const QR2_KEY_MENU = 'qr2_url_menu';
@@ -17559,14 +17561,29 @@ function qr2HacerLogoRedondo(base64, callback) {
   const img = new Image();
   img.onload = function() {
     const size   = 500;
+    const pad    = 30; // anillo blanco alrededor
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
     const ctx = canvas.getContext('2d');
+
+    // Fondo blanco circular (borde)
     ctx.beginPath();
     ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+
+    // Clip circular para la imagen (con padding)
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(size/2, size/2, size/2 - pad, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
-    ctx.drawImage(img, 0, 0, size, size);
+
+    // Dibujar imagen centrada y cubriendo el círculo interior
+    const r = size/2 - pad;
+    ctx.drawImage(img, size/2 - r, size/2 - r, r*2, r*2);
+    ctx.restore();
+
     callback(canvas.toDataURL('image/png'));
   };
   img.src = base64;
@@ -17609,7 +17626,7 @@ function qr2Generar(tipo) {
 
     if (logoSrc) {
       opts.image = logoSrc;
-      opts.imageOptions = { margin: 8, imageSize: 0.22 };
+      opts.imageOptions = { margin: 6, imageSize: 0.28, hideBackgroundDots: true, crossOrigin: 'anonymous' };
     }
 
     _qr2[tipo] = new QRCodeStyling(opts);
