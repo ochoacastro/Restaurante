@@ -129,6 +129,14 @@
   }
   body:not(.estilo-lista) .item-precio-dom { font-size: 11px; color: var(--subtext); font-weight: 400; }
 
+  /* ── Foto decorativa de categoría ── */
+  .cat-foto-banner {
+    width: 100%; max-height: 180px;
+    object-fit: cover; border-radius: 12px;
+    margin-top: 14px; display: block;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+  }
+
   /* ── 2 COLUMNAS (tarjetas) ── */
   body:not(.estilo-lista) #menuBody.dos-columnas .cat-section { padding: 0 14px; }
   body:not(.estilo-lista) #menuBody.dos-columnas .items-grid {
@@ -591,10 +599,15 @@ function renderMenu(menu, settings) {
     const renderCatSections = (catList) => catList.map(cat => {
       const items = disponibles.filter(i => i.categoria === cat);
       if (!items.length) return '';
+      const catFotos = settings.catFotos || {};
+      const bannerHtml = catFotos[cat]
+        ? `<img class="cat-foto-banner" src="${catFotos[cat]}" alt="${cat}" loading="lazy">`
+        : '';
       return `
         <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
           <div class="cat-title">${cat}</div>
           <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
+          ${bannerHtml}
         </div>`;
     }).join('');
 
@@ -605,10 +618,15 @@ function renderMenu(menu, settings) {
     body.innerHTML = cats.map(cat => {
       const items = disponibles.filter(i => i.categoria === cat);
       if (!items.length) return '';
+      const catFotos = settings.catFotos || {};
+      const bannerHtml = catFotos[cat]
+        ? `<img class="cat-foto-banner" src="${catFotos[cat]}" alt="${cat}" loading="lazy">`
+        : '';
       return `
         <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
           <div class="cat-title">${cat}</div>
           <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
+          ${bannerHtml}
         </div>`;
     }).join('');
   }
