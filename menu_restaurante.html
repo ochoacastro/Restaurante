@@ -282,26 +282,30 @@ const db  = getDatabase(app);
 
 async function cargarMenu() {
   try {
-    const [snapMenu, snapConfig, snapMenuSettings] = await Promise.all([
+    const [snapMenu, snapConfig, snapMenuSettings, snapMenuImages] = await Promise.all([
       get(ref(db, 'restaurante/menu')),
       get(ref(db, 'restaurante/config')),
       get(ref(db, 'restaurante/menuSettings')),
+      get(ref(db, 'restaurante/menuImages')),
     ]);
 
-    const menu   = snapMenu.exists()   ? snapMenu.val()   : [];
-    const cfg    = snapConfig.exists() ? snapConfig.val() : {};
+    const menu   = snapMenu.exists()         ? snapMenu.val()         : [];
+    const cfg    = snapConfig.exists()       ? snapConfig.val()       : {};
     const ms     = snapMenuSettings.exists() ? snapMenuSettings.val() : {};
+    const imgs   = snapMenuImages.exists()   ? snapMenuImages.val()   : {};
 
-    // Fallback desde localStorage (settings del editor)
+    // Fallback desde localStorage (mismo origen)
     let editorSettings = {};
     try {
       const ls = localStorage.getItem('menu_editor_settings_v1');
       if (ls) editorSettings = JSON.parse(ls);
     } catch(e) {}
-    const settings = { ...ms, ...editorSettings };
 
-    window._menuData   = menu;
-    window._menuConfig = cfg;
+    // Firebase tiene prioridad; imágenes vienen del nodo menuImages
+    const settings = { ...editorSettings, ...ms, ...imgs };
+
+    window._menuData     = menu;
+    window._menuConfig   = cfg;
     window._menuSettings = settings;
 
     aplicarSettings(cfg, settings);
