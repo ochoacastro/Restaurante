@@ -16775,11 +16775,21 @@ function meGuardar() {
 
   if (window._FB && window._FB.db) {
     const { db, ref, set } = window._FB;
-    set(ref(db, 'restaurante/menuSettings'), forFirebase)
+    const saves = [
+      set(ref(db, 'restaurante/menuSettings'), forFirebase),
+      set(ref(db, 'restaurante/menuImages/headerLogo'), settings.headerLogo || null),
+      set(ref(db, 'restaurante/menuImages/headerBg'),   settings.headerBg   || null),
+      set(ref(db, 'restaurante/menuImages/footerBg'),   settings.footerBg   || null),
+      set(ref(db, 'restaurante/menuImages/footerLogo'), settings.footerLogo || null),
+    ];
+    Promise.all(saves)
       .then(() => {
         if (typeof showToast === 'function') showToast('✅ Menú guardado');
       })
-      .catch(e => console.warn('menuSettings sync:', e));
+      .catch(e => {
+        console.warn('menuSettings sync:', e);
+        if (typeof showToast === 'function') showToast('⚠️ Guardado local (error Firebase)');
+      });
   } else {
     if (typeof showToast === 'function') showToast('✅ Menú guardado localmente');
   }
