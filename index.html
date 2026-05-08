@@ -14,6 +14,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://unpkg.com/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -36,9 +37,10 @@
       databaseURL:       "https://los-helechos-8-default-rtdb.firebaseio.com",
       authDomain:        "los-helechos-8.firebaseapp.com",
       projectId:         "los-helechos-8",
-      storageBucket:     "los-helechos-8.appspot.com",
+      storageBucket:     "los-helechos-8.firebasestorage.app",
       messagingSenderId: "630169032531",
-      appId:             "1:630169032531:web:ce244307347e192277b3a6",
+      appId:             "1:630169032531:web:bdfbc2219f89f01c77b3a6",
+      measurementId:     "G-LZ7YZJP760",
     };
   }
 
@@ -2597,6 +2599,70 @@
   .qr-note { font-size: 11px; color: var(--gris); margin-top: 8px; line-height: 1.4; }
   .qr-action-btn { border: none; border-radius: 12px; padding: 12px 14px; font-weight: 900; font-size: 13px; background: var(--fondo); color: var(--negro); border: 1.5px solid var(--borde); cursor: pointer; font-family: inherit; }
 
+  /* ── QR Doble (menú + domicilios) ── */
+  .qr2-tabs { display: flex; background: var(--fondo); border-radius: 12px; padding: 4px; gap: 4px; margin-bottom: 16px; }
+  .qr2-tab {
+    flex: 1; padding: 9px 6px; text-align: center;
+    font-size: 12px; font-weight: 700; border-radius: 9px;
+    cursor: pointer; border: none; background: transparent;
+    color: var(--gris); font-family: inherit; transition: all 0.18s;
+  }
+  .qr2-tab.active { background: var(--blanco); color: var(--negro); box-shadow: 0 2px 8px rgba(0,0,0,0.10); }
+  .qr2-panel { display: none; }
+  .qr2-panel.active { display: block; }
+  .qr2-url-wrap { position: relative; margin-bottom: 10px; }
+  .qr2-url-input {
+    width: 100%; padding: 11px 42px 11px 13px; box-sizing: border-box;
+    border: 1.5px solid var(--borde); border-radius: 12px;
+    font-size: 13px; color: var(--negro); background: var(--blanco);
+    outline: none; font-family: inherit; transition: border-color 0.2s;
+  }
+  .qr2-url-input:focus { border-color: var(--rappi); }
+  .qr2-url-saved {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 16px; opacity: 0; transition: opacity 0.3s;
+  }
+  .qr2-url-saved.show { opacity: 1; }
+  .qr2-gen-btn {
+    width: 100%; padding: 13px; border: none; border-radius: 12px;
+    font-size: 14px; font-weight: 800; cursor: pointer;
+    font-family: inherit; transition: opacity 0.2s, transform 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .qr2-gen-btn:active { opacity: 0.85; transform: scale(0.98); }
+  .qr2-gen-btn.menu-btn { background: linear-gradient(135deg,#2d5a27,#4a8c3f); color: #fff; }
+  .qr2-gen-btn.dom-btn  { background: linear-gradient(135deg,#1565C0,#1976D2); color: #fff; }
+  .qr2-canvas-wrap { display: flex; justify-content: center; margin: 14px 0 10px; min-height: 60px; }
+  .qr2-canvas-wrap canvas { border-radius: 12px; box-shadow: 0 4px 16px rgba(0,0,0,0.12); }
+  .qr2-link-row {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--fondo); border: 1.5px solid var(--borde);
+    border-radius: 12px; padding: 10px 12px; margin-bottom: 10px;
+  }
+  .qr2-link-text { flex: 1; font-size: 12px; color: var(--gris); word-break: break-all; line-height: 1.4; font-style: italic; }
+  .qr2-copy-btn {
+    flex-shrink: 0; padding: 7px 13px; border-radius: 10px;
+    border: none; font-size: 12px; font-weight: 900;
+    cursor: pointer; font-family: inherit;
+    background: var(--negro); color: #fff; white-space: nowrap;
+    transition: background 0.15s;
+  }
+  .qr2-copy-btn:active { background: #444; }
+  .qr2-download-btn {
+    width: 100%; padding: 11px; border-radius: 12px;
+    border: 1.5px solid var(--borde); background: var(--blanco);
+    font-size: 13px; font-weight: 700; color: var(--negro);
+    cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .qr2-no-logo {
+    background: rgba(255,68,26,0.06); border: 1.5px solid rgba(255,68,26,0.2);
+    border-radius: 10px; padding: 10px 12px;
+    font-size: 12px; color: #c0392b; font-weight: 600;
+    display: none; margin-bottom: 10px;
+  }
+  .qr2-no-logo.show { display: block; }
+
   /* ── Cat manager ── */
   .cat-mgr-item { display: flex; align-items: center; gap: 10px; background: var(--fondo); border: 1.5px solid var(--borde); border-radius: 12px; padding: 10px 12px; }
   .cat-mgr-name { flex: 1; font-size: 14px; font-weight: 700; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -4469,6 +4535,90 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     </div>
   </div>
 
+
+  <!-- ══ CÓDIGO QR (Menú + Domicilios) ══ -->
+  <div class="cfg-acc" id="cfgacc-qr">
+    <div class="cfg-acc-header" data-cfgacc="cfgacc-qr">
+      <div class="cfg-acc-left">
+        <span class="cfg-acc-icon">📲</span>
+        <div>
+          <div class="cfg-acc-title">Código QR</div>
+          <div class="cfg-acc-sub">Menú restaurante · Domicilios</div>
+        </div>
+      </div>
+      <span class="cfg-acc-arrow">▼</span>
+    </div>
+    <div class="cfg-acc-body">
+      <div class="cfg-acc-inner">
+
+        <!-- Tabs -->
+        <div class="qr2-tabs">
+          <button class="qr2-tab active" onclick="qr2Tab('menu',this)">🌿 Menú</button>
+          <button class="qr2-tab" onclick="qr2Tab('dom',this)">🛵 Domicilios</button>
+        </div>
+
+        <!-- Aviso sin logo -->
+        <div class="qr2-no-logo" id="qr2NoLogo">⚠️ Sube el logo del restaurante en <b>Datos del restaurante</b> para que aparezca en el centro del QR.</div>
+
+        <!-- ── PANEL MENÚ ── -->
+        <div class="qr2-panel active" id="qr2-panel-menu">
+
+          <div style="font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">URL del menú</div>
+          <div class="qr2-url-wrap">
+            <input class="qr2-url-input" id="qr2UrlMenu" type="url"
+              placeholder="https://tusitio.com/menu restaurante.html"
+              oninput="qr2AutoSaveUrl('menu')">
+            <span class="qr2-url-saved" id="qr2SavedMenu">💾</span>
+          </div>
+
+          <button class="qr2-gen-btn menu-btn" onclick="qr2Generar('menu')">
+            ✨ Generar QR del menú
+          </button>
+
+          <div class="qr2-canvas-wrap" id="qr2CanvasMenu"></div>
+
+          <div class="qr2-link-row" id="qr2LinkRowMenu" style="display:none;">
+            <span class="qr2-link-text" id="qr2LinkTextMenu"></span>
+            <button class="qr2-copy-btn" onclick="qr2CopiarUrl('menu')">📋 Copiar</button>
+          </div>
+
+          <button class="qr2-download-btn" id="qr2DlMenu" style="display:none;" onclick="qr2Descargar('menu')">
+            ⬇️ Descargar QR (HD)
+          </button>
+
+        </div><!-- /panel-menu -->
+
+        <!-- ── PANEL DOMICILIOS ── -->
+        <div class="qr2-panel" id="qr2-panel-dom">
+
+          <div style="font-size:11px;font-weight:700;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">URL de domicilios</div>
+          <div class="qr2-url-wrap">
+            <input class="qr2-url-input" id="qr2UrlDom" type="url"
+              placeholder="https://tusitio.com/domicilio.html"
+              oninput="qr2AutoSaveUrl('dom')">
+            <span class="qr2-url-saved" id="qr2SavedDom">💾</span>
+          </div>
+
+          <button class="qr2-gen-btn dom-btn" onclick="qr2Generar('dom')">
+            ✨ Generar QR de domicilios
+          </button>
+
+          <div class="qr2-canvas-wrap" id="qr2CanvasDom"></div>
+
+          <div class="qr2-link-row" id="qr2LinkRowDom" style="display:none;">
+            <span class="qr2-link-text" id="qr2LinkTextDom"></span>
+            <button class="qr2-copy-btn" onclick="qr2CopiarUrl('dom')">📋 Copiar</button>
+          </div>
+
+          <button class="qr2-download-btn" id="qr2DlDom" style="display:none;" onclick="qr2Descargar('dom')">
+            ⬇️ Descargar QR (HD)
+          </button>
+
+        </div><!-- /panel-dom -->
+
+      </div>
+    </div>
+  </div>
 
   <!-- Consecutivo -->
   <div class="cfg-acc" id="cfgacc-consec">
@@ -11817,7 +11967,7 @@ function guardarConfigFirebase() {
 
   const cfg = { apiKey, databaseURL: dbUrl, projectId, appId,
                 authDomain: projectId + '.firebaseapp.com',
-                storageBucket: projectId + '.appspot.com' };
+                storageBucket: projectId + '.firebasestorage.app' };
   localStorage.setItem('pos_fb_config', JSON.stringify(cfg));
   errEl.style.display = 'none';
   showToast('🔥 Configuración guardada — recargando...');
@@ -12831,6 +12981,7 @@ function onCfgAccOpen(id) {
   if (id === 'cfgacc-diseno')   { cfgRenderDiseno(); renderClosedBgPreview(); }
   if (id === 'cfgacc-publicidad') { renderAdBannerPreview(); }
   if (id === 'cfgacc-restaurante') { renderHorarios(); renderFestivos(); }
+  if (id === 'cfgacc-qr')      { qr2Init(); }
 
   if (id === 'cfgAccFE') {
     // Handled by toggleCfgAccFE()
@@ -12852,6 +13003,7 @@ const PERM_SECTIONS = {
   pagos:     'cfgacc-pagos',
   diseno:    'cfgacc-diseno',
   publicidad:'cfgacc-publicidad',
+  qr:        'cfgacc-qr',
 };
 
 function loadMasterPerms() {
@@ -16672,6 +16824,180 @@ window.meDragEnd        = meDragEnd;
 window.abrirMenuPreview  = abrirMenuPreview;
 window.cerrarMenuPreview = cerrarMenuPreview;
 window.recargarMenuPreview = recargarMenuPreview;
+</script>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// QR DOBLE — Menú Restaurante + Domicilios
+// URLs guardadas indefinidamente en localStorage
+// Logo tomado de logoBase64 (variable global del POS)
+// ════════════════════════════════════════════════════════════
+
+const QR2_KEY_MENU = 'qr2_url_menu';
+const QR2_KEY_DOM  = 'qr2_url_dom';
+
+// Instancias de QRCodeStyling
+const _qr2 = { menu: null, dom: null };
+
+// ── Inicializar al abrir el accordion ───────────────────────
+function qr2Init() {
+  // Cargar URLs guardadas
+  const urlMenu = localStorage.getItem(QR2_KEY_MENU) || '';
+  const urlDom  = localStorage.getItem(QR2_KEY_DOM)  || '';
+
+  const inputMenu = document.getElementById('qr2UrlMenu');
+  const inputDom  = document.getElementById('qr2UrlDom');
+  if (inputMenu && urlMenu) inputMenu.value = urlMenu;
+  if (inputDom  && urlDom)  inputDom.value  = urlDom;
+
+  // Mostrar aviso si no hay logo
+  const noLogo = document.getElementById('qr2NoLogo');
+  if (noLogo) noLogo.classList.toggle('show', !window.logoBase64);
+
+  // Si ya había URL guardada, regenerar automáticamente
+  if (urlMenu) qr2Generar('menu');
+  if (urlDom)  qr2Generar('dom');
+}
+
+// ── Cambio de tab ────────────────────────────────────────────
+function qr2Tab(id, el) {
+  document.querySelectorAll('.qr2-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.qr2-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('qr2-panel-' + id).classList.add('active');
+}
+
+// ── Guardar URL al escribir (debounce 800ms) ─────────────────
+const _qr2SaveTimers = {};
+function qr2AutoSaveUrl(tipo) {
+  clearTimeout(_qr2SaveTimers[tipo]);
+  _qr2SaveTimers[tipo] = setTimeout(() => {
+    const key   = tipo === 'menu' ? QR2_KEY_MENU : QR2_KEY_DOM;
+    const input = document.getElementById(tipo === 'menu' ? 'qr2UrlMenu' : 'qr2UrlDom');
+    const saved = document.getElementById(tipo === 'menu' ? 'qr2SavedMenu' : 'qr2SavedDom');
+    if (!input) return;
+    localStorage.setItem(key, input.value.trim());
+    // Animación guardado
+    if (saved) {
+      saved.classList.add('show');
+      setTimeout(() => saved.classList.remove('show'), 1800);
+    }
+  }, 800);
+}
+
+// ── Hacer logo circular ──────────────────────────────────────
+function qr2HacerLogoRedondo(base64, callback) {
+  const img = new Image();
+  img.onload = function() {
+    const size   = 500;
+    const canvas = document.createElement('canvas');
+    canvas.width = canvas.height = size;
+    const ctx = canvas.getContext('2d');
+    ctx.beginPath();
+    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    ctx.drawImage(img, 0, 0, size, size);
+    callback(canvas.toDataURL('image/png'));
+  };
+  img.src = base64;
+}
+
+// ── Generar QR ───────────────────────────────────────────────
+function qr2Generar(tipo) {
+  const inputId   = tipo === 'menu' ? 'qr2UrlMenu'    : 'qr2UrlDom';
+  const canvasId  = tipo === 'menu' ? 'qr2CanvasMenu' : 'qr2CanvasDom';
+  const linkRowId = tipo === 'menu' ? 'qr2LinkRowMenu': 'qr2LinkRowDom';
+  const linkTxtId = tipo === 'menu' ? 'qr2LinkTextMenu':'qr2LinkTextDom';
+  const dlBtnId   = tipo === 'menu' ? 'qr2DlMenu'     : 'qr2DlDom';
+  const color     = tipo === 'menu' ? '#2d5a27'        : '#1565C0';
+
+  const input = document.getElementById(inputId);
+  if (!input) return;
+  const url = input.value.trim();
+  if (!url) {
+    if (typeof showToast === 'function') showToast('⚠️ Escribe la URL primero');
+    return;
+  }
+
+  // Guardar URL definitivamente
+  localStorage.setItem(tipo === 'menu' ? QR2_KEY_MENU : QR2_KEY_DOM, url);
+
+  const doGenerar = (logoSrc) => {
+    const wrap = document.getElementById(canvasId);
+    if (!wrap) return;
+    wrap.innerHTML = '';
+
+    const opts = {
+      width: 1000, height: 1000,
+      data: url,
+      dotsOptions:          { color: '#000000', type: 'rounded' },
+      cornersSquareOptions: { color: color,     type: 'extra-rounded' },
+      cornersDotOptions:    { color: color },
+      backgroundOptions:    { color: '#ffffff' },
+      qrOptions:            { errorCorrectionLevel: 'H' },
+    };
+
+    if (logoSrc) {
+      opts.image = logoSrc;
+      opts.imageOptions = { margin: 8, imageSize: 0.22 };
+    }
+
+    _qr2[tipo] = new QRCodeStyling(opts);
+    _qr2[tipo].append(wrap);
+
+    // Mostrar link + botón descarga
+    const linkRow = document.getElementById(linkRowId);
+    const linkTxt = document.getElementById(linkTxtId);
+    const dlBtn   = document.getElementById(dlBtnId);
+    if (linkRow) { linkRow.style.display = 'flex'; linkTxt.textContent = url; }
+    if (dlBtn)   dlBtn.style.display = 'flex';
+
+    if (typeof showToast === 'function') showToast('✅ QR generado');
+  };
+
+  // Usar logo del restaurante si existe
+  if (window.logoBase64) {
+    qr2HacerLogoRedondo(window.logoBase64, doGenerar);
+  } else {
+    doGenerar(null);
+  }
+}
+
+// ── Copiar URL ───────────────────────────────────────────────
+function qr2CopiarUrl(tipo) {
+  const txtId = tipo === 'menu' ? 'qr2LinkTextMenu' : 'qr2LinkTextDom';
+  const el    = document.getElementById(txtId);
+  if (!el || !el.textContent) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    if (typeof showToast === 'function') showToast('📋 Link copiado');
+  }).catch(() => {
+    // Fallback para dispositivos sin clipboard API
+    const ta = document.createElement('textarea');
+    ta.value = el.textContent;
+    ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (typeof showToast === 'function') showToast('📋 Link copiado');
+  });
+}
+
+// ── Descargar QR HD ──────────────────────────────────────────
+function qr2Descargar(tipo) {
+  const qr = _qr2[tipo];
+  if (!qr) { if (typeof showToast === 'function') showToast('⚠️ Primero genera el QR'); return; }
+  const name = tipo === 'menu' ? 'qr_menu_restaurante' : 'qr_domicilios';
+  qr.download({ name, extension: 'png' });
+}
+
+// Exponer globalmente
+window.qr2Tab        = qr2Tab;
+window.qr2Init       = qr2Init;
+window.qr2AutoSaveUrl= qr2AutoSaveUrl;
+window.qr2Generar    = qr2Generar;
+window.qr2CopiarUrl  = qr2CopiarUrl;
+window.qr2Descargar  = qr2Descargar;
 </script>
 
 </body>
