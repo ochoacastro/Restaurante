@@ -141,6 +141,9 @@
   /* ═══════════════════════════════════════
      ESTILO LISTA CLÁSICA
   ═══════════════════════════════════════ */
+  body.estilo-lista {
+    background: #f5efe0;
+  }
   body.estilo-lista #catNav {
     display: none;
   }
@@ -153,7 +156,6 @@
   }
   body.estilo-lista .menu-lista-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
     gap: 0;
     align-items: start;
     width: 100%;
@@ -179,7 +181,6 @@
     padding: 5px 8px;
     border-radius: 3px;
     margin-bottom: 2px;
-    scroll-margin-top: 50px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -366,6 +367,7 @@
   </div>
 </div>
 
+
 <!-- IMG BTN -->
 <button id="btnPdf" onclick="generarImagen()">🖼️ Descargar imagen JPG</button>
 
@@ -449,7 +451,7 @@ function aplicarSettings(cfg, settings) {
     document.documentElement.style.setProperty('--accent', settings.colorAccent);
   }
 
-  // Fuente — solo aplica al header que ya existe; los elementos dinámicos se aplican en renderMenu
+  // Fuente — solo aplica al header; los elementos dinámicos se aplican en renderMenu
   const fuente = settings.fuente || 'Playfair Display';
   const fuenteUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fuente) + ':wght@400;700;900&display=swap';
   if (!document.querySelector('link[data-mefuente]')) {
@@ -545,10 +547,11 @@ function renderMenu(menu, settings) {
   const esLista = settings.estiloVisual === 'lista';
 
   if (esLista) {
-    // Diseño lista clásica: dos columnas de categorías
-    const mitad = Math.ceil(cats.length / 2);
-    const col1 = cats.slice(0, mitad);
-    const col2 = cats.slice(mitad);
+    // Diseño lista clásica: N columnas según settings.columnas
+    const numCols = parseInt(settings.columnas) || 2;
+    const cols = [];
+    for (let i = 0; i < numCols; i++) cols.push([]);
+    cats.forEach((cat, i) => cols[i % numCols].push(cat));
 
     const renderCatSections = (catList) => catList.map(cat => {
       const items = disponibles.filter(i => i.categoria === cat);
@@ -560,11 +563,8 @@ function renderMenu(menu, settings) {
         </div>`;
     }).join('');
 
-    body.innerHTML = `
-      <div class="menu-lista-grid">
-        <div>${renderCatSections(col1)}</div>
-        <div>${renderCatSections(col2)}</div>
-      </div>`;
+    const colsHtml = cols.map(c => `<div>${renderCatSections(c)}</div>`).join('');
+    body.innerHTML = `<div class="menu-lista-grid" style="grid-template-columns:repeat(${numCols},1fr)">${colsHtml}</div>`;
   } else {
     // Diseño tarjetas
     body.innerHTML = cats.map(cat => {
@@ -667,6 +667,7 @@ window.generarImagen = async function() {
   btn.innerHTML = '🖼️ Descargar imagen JPG';
   btn.disabled = false;
 };
+
 
 // Mostrar botón PDF solo si la URL contiene ?admin=1
 // El editor abre el menú como: window.open('menu restaurante.html?admin=1', '_blank')
