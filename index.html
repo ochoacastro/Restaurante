@@ -16860,7 +16860,7 @@ function meLoadImg(e, key) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
-    const b64 = ev.target.result;
+    redimensionarImagen(ev.target.result, 1200, 1200, (b64) => {
     _meSettings[{logo:'headerLogo',headerBg:'headerBg',footerBg:'footerBg',footerLogo:'footerLogo'}[key]] = b64;
     if (key === 'logo') {
       meRestoreImg('logo', b64, 'meLogoPreview', 'meLogoRemove', 'meLogoUpload');
@@ -16873,6 +16873,7 @@ function meLoadImg(e, key) {
     } else if (key === 'footerLogo') {
       meRestoreImg('footerLogo', b64, 'meFooterLogoPreview', 'meFooterLogoRemove', null);
     }
+    }); // fin redimensionarImagen
   };
   reader.readAsDataURL(file);
 }
