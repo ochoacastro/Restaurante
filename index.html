@@ -17034,6 +17034,20 @@ function renderPedido(p) {
         <div class="me-upload-sub">PNG, JPG · formato horizontal apaisado</div>
       </div>
 
+      <div class="me-divider"></div>
+      <div class="me-section-title">🪧 Membrete del pie de página</div>
+
+      <div class="me-info-chip">💡 Imagen que reemplazará el pie de página completo. Recomendado formato apaisado (ej: 1100×400 px).</div>
+
+      <img class="me-img-preview" id="meFooterMembretePreview" src="" alt="Membrete pie">
+      <button class="me-remove-img" id="meFooterMembreteRemove" onclick="meRemoveImg('footerMembrete')">✕ Quitar membrete</button>
+      <div class="me-upload" id="meFooterMembreteUpload">
+        <input type="file" accept="image/*" onchange="meLoadImg(event,'footerMembrete')">
+        <div class="me-upload-icon">🪧</div>
+        <div class="me-upload-label">Subir membrete / banner</div>
+        <div class="me-upload-sub">PNG, JPG · formato horizontal apaisado</div>
+      </div>
+
     </div><!-- /diseno -->
 
     <!-- ══ PANEL FOTOS ══ -->
@@ -17310,10 +17324,11 @@ function meCargarSettings() {
   // Controles de diseño extra
   meCargarEstiloExtra(s);
 
-  meRestoreImg('logo',      s.headerLogo,   'meLogoPreview',      'meLogoRemove',      'meLogoUpload');
-  meRestoreImg('headerBg',  s.headerBg,     'meHeaderBgPreview',  'meHeaderBgRemove',  null);
-  meRestoreImg('footerBg',  s.footerBg,     'meFooterBgPreview',  'meFooterBgRemove',  null);
-  meRestoreImg('footerLogo',s.footerLogo,   'meFooterLogoPreview','meFooterLogoRemove',null);
+  meRestoreImg('logo',          s.headerLogo,      'meLogoPreview',            'meLogoRemove',            'meLogoUpload');
+  meRestoreImg('headerBg',      s.headerBg,        'meHeaderBgPreview',        'meHeaderBgRemove',        null);
+  meRestoreImg('footerBg',      s.footerBg,        'meFooterBgPreview',        'meFooterBgRemove',        null);
+  meRestoreImg('footerLogo',    s.footerLogo,      'meFooterLogoPreview',      'meFooterLogoRemove',      null);
+  meRestoreImg('footerMembrete',s.footerMembrete,  'meFooterMembretePreview',  'meFooterMembreteRemove',  'meFooterMembreteUpload');
 
   if (s.headerBg) {
     const bg = document.getElementById('mePreviewBg');
@@ -17388,7 +17403,7 @@ function meLoadImg(e, key) {
   const reader = new FileReader();
   reader.onload = ev => {
     redimensionarImagen(ev.target.result, 1200, 1200, (b64) => {
-    _meSettings[{logo:'headerLogo',headerBg:'headerBg',footerBg:'footerBg',footerLogo:'footerLogo'}[key]] = b64;
+    _meSettings[{logo:'headerLogo',headerBg:'headerBg',footerBg:'footerBg',footerLogo:'footerLogo',footerMembrete:'footerMembrete'}[key]] = b64;
     if (key === 'logo') {
       meRestoreImg('logo', b64, 'meLogoPreview', 'meLogoRemove', 'meLogoUpload');
     } else if (key === 'headerBg') {
@@ -17399,6 +17414,8 @@ function meLoadImg(e, key) {
       meRestoreImg('footerBg', b64, 'meFooterBgPreview', 'meFooterBgRemove', null);
     } else if (key === 'footerLogo') {
       meRestoreImg('footerLogo', b64, 'meFooterLogoPreview', 'meFooterLogoRemove', null);
+    } else if (key === 'footerMembrete') {
+      meRestoreImg('footerMembrete', b64, 'meFooterMembretePreview', 'meFooterMembreteRemove', 'meFooterMembreteUpload');
     }
     }); // fin redimensionarImagen
   };
@@ -17406,13 +17423,14 @@ function meLoadImg(e, key) {
 }
 
 function meRemoveImg(key) {
-  const keyMap = {logo:'headerLogo', headerBg:'headerBg', footerBg:'footerBg', footerLogo:'footerLogo'};
+  const keyMap = {logo:'headerLogo', headerBg:'headerBg', footerBg:'footerBg', footerLogo:'footerLogo', footerMembrete:'footerMembrete'};
   delete _meSettings[keyMap[key]];
   const uiMap = {
-    logo:      ['meLogoPreview',      'meLogoRemove',      'meLogoUpload'],
-    headerBg:  ['meHeaderBgPreview',  'meHeaderBgRemove',  null],
-    footerBg:  ['meFooterBgPreview',  'meFooterBgRemove',  null],
-    footerLogo:['meFooterLogoPreview','meFooterLogoRemove',null],
+    logo:           ['meLogoPreview',             'meLogoRemove',             'meLogoUpload'],
+    headerBg:       ['meHeaderBgPreview',         'meHeaderBgRemove',         null],
+    footerBg:       ['meFooterBgPreview',         'meFooterBgRemove',         null],
+    footerLogo:     ['meFooterLogoPreview',       'meFooterLogoRemove',       null],
+    footerMembrete: ['meFooterMembretePreview',   'meFooterMembreteRemove',   'meFooterMembreteUpload'],
   };
   const [pId, rId, uId] = uiMap[key];
   const preview = document.getElementById(pId);
@@ -17476,6 +17494,7 @@ function meGuardar() {
   delete forFirebase.headerBg;
   delete forFirebase.footerBg;
   delete forFirebase.footerLogo;
+  delete forFirebase.footerMembrete;
 
   if (window._FB && window._FB.db) {
     const { db, ref, set } = window._FB;
@@ -17485,6 +17504,7 @@ function meGuardar() {
       set(ref(db, 'restaurante/menuImages/headerBg'),   settings.headerBg   || null),
       set(ref(db, 'restaurante/menuImages/footerBg'),   settings.footerBg   || null),
       set(ref(db, 'restaurante/menuImages/footerLogo'), settings.footerLogo || null),
+      set(ref(db, 'restaurante/menuImages/footerMembrete'), settings.footerMembrete || null),
     ];
     Promise.all(saves)
       .then(() => {
