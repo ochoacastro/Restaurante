@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="pageTitle">Menú · Restaurante</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --primary: #2d5a27;
+    --accent:  #e07b39;
+    --bg:      #fdf8f0;
+    --text:    #1a1a1a;
+    --subtext: #6b5a45;
+    --border:  #d4c4a0;
+    --card:    #ffffff;
+    --shadow:  0 2px 16px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin:0; padding:0; }
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  #menuHeader {
+    position: relative;
+    min-height: 160px;
+    background: linear-gradient(160deg, #2d5a27 0%, #1a3a15 100%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  #headerBgImg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+    opacity: 0.35;
+    display: none;
+  }
+  #headerContent {
+    position: relative; z-index: 2;
+    text-align: center; padding: 24px 20px;
+  }
+  #headerLogoImg {
+    max-height: 120px; max-width: 280px;
+    object-fit: contain; display: none;
+    margin-bottom: 10px;
+    filter: drop-shadow(0 2px 8px rgba(0,0,0,0.4));
+  }
+  #headerTitle {
+    font-family: 'Playfair Display', serif;
+    font-size: 32px; font-weight: 900;
+    color: #fff; line-height: 1.1;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  #headerSub {
+    font-size: 13px; color: rgba(255,255,255,0.75);
+    margin-top: 6px; font-weight: 400; letter-spacing: 1.5px;
+    text-transform: uppercase;
+  }
+
+  /* ── CATEGORIES NAV ── */
+  #catNav {
+    background: var(--primary);
+    position: sticky; top: 0; z-index: 50;
+    overflow-x: auto; white-space: nowrap;
+    display: flex; gap: 0;
+    scrollbar-width: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+  }
+  #catNav::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    display: inline-block;
+    padding: 10px 18px;
+    font-size: 12px; font-weight: 700;
+    color: rgba(255,255,255,0.65);
+    cursor: pointer; border-bottom: 3px solid transparent;
+    transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.8px;
+    white-space: nowrap;
+  }
+  .cat-pill.active, .cat-pill:hover {
+    color: #fff;
+    border-bottom-color: var(--accent);
+  }
+
+  /* ── BODY ── */
+  #menuBody { max-width: 700px; margin: 0 auto; padding: 0 0 100px; }
+
+  /* ── CATEGORY SECTION ── */
+  .cat-section { padding: 0 14px; margin-top: 28px; }
+  .cat-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 22px; font-weight: 700;
+    color: var(--primary);
+    border-left: 4px solid var(--accent);
+    padding-left: 12px; margin-bottom: 14px;
+    scroll-margin-top: 50px;
+  }
+
+  /* ── ITEM CARD ── */
+  .item-card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
+    display: flex; align-items: stretch;
+    overflow: hidden; margin-bottom: 10px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .item-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.13); }
+  .item-img-wrap {
+    width: 90px; flex-shrink: 0;
+    background: #f0ebe2;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .item-img-wrap img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+  }
+  .item-no-img {
+    font-size: 30px; opacity: 0.35;
+  }
+  .item-info {
+    flex: 1; padding: 12px 14px;
+    display: flex; flex-direction: column; justify-content: center; gap: 4px;
+  }
+  .item-nombre {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; font-weight: 700; color: var(--text);
+    line-height: 1.3;
+  }
+  .item-desc {
+    font-size: 12px; color: var(--subtext); line-height: 1.4;
+  }
+  .item-precio {
+    font-size: 16px; font-weight: 700;
+    color: var(--accent);
+    font-family: 'Lato', sans-serif;
+    margin-top: 4px;
+  }
+  .item-precio-dom {
+    font-size: 11px; color: var(--subtext);
+    font-weight: 400;
+  }
+
+  /* ── FOOTER ── */
+  #menuFooter {
+    position: relative;
+    min-height: 70px;
+    background: linear-gradient(160deg, #1a3a15 0%, #2d5a27 100%);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden; margin-top: 20px;
+  }
+  #footerBgImg {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover; opacity: 0.3;
+    display: none;
+  }
+  #footerContent {
+    position: relative; z-index: 2;
+    text-align: center; padding: 20px;
+    color: rgba(255,255,255,0.85);
+    font-size: 13px; line-height: 1.7;
+  }
+  #footerLogoImg {
+    max-height: 60px; max-width: 180px;
+    object-fit: contain; display: none;
+    margin-bottom: 8px;
+  }
+  #footerText { color: rgba(255,255,255,0.8); font-size: 13px; }
+  #footerClosing {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; color: #fff; font-style: italic; margin-top: 4px;
+  }
+
+  /* ── PDF BTN (solo admin) ── */
+  #btnPdf {
+    position: fixed; bottom: 22px; right: 18px; z-index: 200;
+    background: var(--accent);
+    color: #fff; border: none; border-radius: 50px;
+    padding: 13px 20px; font-size: 14px; font-weight: 700;
+    cursor: pointer; box-shadow: 0 4px 18px rgba(224,123,57,0.55);
+    display: none; align-items: center; gap: 8px;
+    font-family: 'Lato', sans-serif;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  #btnPdf.visible { display: flex; }
+  #btnPdf:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(224,123,57,0.60); }
+  #btnPdf:active { transform: scale(0.96); }
+
+  /* ── EMPTY / LOADING ── */
+  #loadingState {
+    text-align: center; padding: 60px 20px;
+    color: var(--subtext);
+  }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid var(--border);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 14px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── PRINT STYLES ── */
+  @media print {
+    #btnPdf, #catNav { display: none !important; }
+    #menuHeader { min-height: 120px; }
+    .item-card { break-inside: avoid; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div id="menuHeader">
+  <img id="headerBgImg" src="" alt="">
+  <div id="headerContent">
+    <img id="headerLogoImg" src="" alt="Logo">
+    <div id="headerTitle">Restaurante</div>
+    <div id="headerSub">Sabor · Naturaleza · Tradición</div>
+  </div>
+</div>
+
+<!-- CATEGORY NAV -->
+<div id="catNav"></div>
+
+<!-- BODY -->
+<div id="menuBody">
+  <div id="loadingState">
+    <div class="spinner"></div>
+    <p>Cargando menú...</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div id="menuFooter">
+  <img id="footerBgImg" src="" alt="">
+  <div id="footerContent">
+    <img id="footerLogoImg" src="" alt="">
+    <div id="footerText"></div>
+    <div id="footerClosing">¡Gracias por preferirnos!</div>
+  </div>
+</div>
+
+<!-- PDF BTN -->
+<button id="btnPdf" onclick="generarPDF()">📄 Descargar PDF</button>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+let firebaseConfig;
+try {
+  const raw = localStorage.getItem('pos_fb_config');
+  if (raw) firebaseConfig = JSON.parse(raw);
+} catch(e) {}
+
+if (!firebaseConfig) {
+  firebaseConfig = {
+    apiKey: "AIzaSyDqkmnJoldzILAY41ll_sQ4n29WM1XSvyA",
+    databaseURL: "https://los-helechos-8-default-rtdb.firebaseio.com",
+    authDomain: "los-helechos-8.firebaseapp.com",
+    projectId: "los-helechos-8",
+    storageBucket: "los-helechos-8.appspot.com",
+    messagingSenderId: "630169032531",
+    appId: "1:630169032531:web:ce244307347e192277b3a6",
+  };
+}
+
+const app = initializeApp(firebaseConfig);
+const db  = getDatabase(app);
+
+async function cargarMenu() {
+  try {
+    const [snapMenu, snapConfig, snapMenuSettings] = await Promise.all([
+      get(ref(db, 'restaurante/menu')),
+      get(ref(db, 'restaurante/config')),
+      get(ref(db, 'restaurante/menuSettings')),
+    ]);
+
+    const menu   = snapMenu.exists()   ? snapMenu.val()   : [];
+    const cfg    = snapConfig.exists() ? snapConfig.val() : {};
+    const ms     = snapMenuSettings.exists() ? snapMenuSettings.val() : {};
+
+    // Fallback desde localStorage (settings del editor)
+    let editorSettings = {};
+    try {
+      const ls = localStorage.getItem('menu_editor_settings_v1');
+      if (ls) editorSettings = JSON.parse(ls);
+    } catch(e) {}
+    const settings = { ...ms, ...editorSettings };
+
+    window._menuData   = menu;
+    window._menuConfig = cfg;
+    window._menuSettings = settings;
+
+    aplicarSettings(cfg, settings);
+    renderMenu(menu, settings);
+  } catch(e) {
+    document.getElementById('loadingState').innerHTML =
+      '<p style="color:#c0392b;">⚠️ Error al cargar el menú.<br>Verifica tu conexión.</p>';
+  }
+}
+
+function aplicarSettings(cfg, settings) {
+  // Título de la página
+  const nombre = settings.restaurantNombre || cfg.nombre || 'Restaurante';
+  document.getElementById('pageTitle').textContent = 'Menú · ' + nombre;
+  document.getElementById('headerTitle').textContent = nombre;
+
+  // Eslogan
+  if (settings.eslogan) document.getElementById('headerSub').textContent = settings.eslogan;
+
+  // Color primario
+  if (settings.colorPrimario) {
+    document.documentElement.style.setProperty('--primary', settings.colorPrimario);
+  }
+  if (settings.colorAccent) {
+    document.documentElement.style.setProperty('--accent', settings.colorAccent);
+  }
+
+  // Header: fondo
+  if (settings.headerBg) {
+    const bgImg = document.getElementById('headerBgImg');
+    bgImg.src = settings.headerBg; bgImg.style.display = 'block';
+  }
+  // Header: logo/membrete
+  if (settings.headerLogo) {
+    const logoImg = document.getElementById('headerLogoImg');
+    logoImg.src = settings.headerLogo; logoImg.style.display = 'block';
+    document.getElementById('headerTitle').style.display = 'none';
+    document.getElementById('headerSub').style.display = 'none';
+  }
+
+  // Footer
+  if (settings.footerBg) {
+    const fBg = document.getElementById('footerBgImg');
+    fBg.src = settings.footerBg; fBg.style.display = 'block';
+  }
+  if (settings.footerLogo) {
+    const fLogo = document.getElementById('footerLogoImg');
+    fLogo.src = settings.footerLogo; fLogo.style.display = 'block';
+  }
+  const tel = cfg.telefono || settings.telefono || '';
+  const dir = cfg.direccion || settings.direccion || '';
+  const info = [tel ? '📞 ' + tel : '', dir ? '📍 ' + dir : ''].filter(Boolean).join('  ·  ');
+  document.getElementById('footerText').textContent = info;
+  if (settings.textoCierre) document.getElementById('footerClosing').textContent = settings.textoCierre;
+}
+
+function fmt(n) {
+  return '$' + Number(n).toLocaleString('es-CO');
+}
+
+function renderMenu(menu, settings) {
+  document.getElementById('loadingState').remove();
+
+  const disponibles = menu.filter(i => i.disponible !== false);
+  if (!disponibles.length) {
+    document.getElementById('menuBody').innerHTML =
+      '<p style="text-align:center;padding:40px;color:#888;">El menú está vacío.</p>';
+    return;
+  }
+
+  // Orden de categorías
+  const catOrder = settings.catOrder ? settings.catOrder : [];
+  const allCats  = [...new Set(disponibles.map(i => i.categoria).filter(Boolean))];
+  const cats = catOrder.length
+    ? [...catOrder.filter(c => allCats.includes(c)), ...allCats.filter(c => !catOrder.includes(c))]
+    : allCats;
+
+  // Category nav
+  const catNav = document.getElementById('catNav');
+  catNav.innerHTML = cats.map(c =>
+    `<span class="cat-pill" onclick="scrollToCat('${c.replace(/'/g,"\\'")}', this)">${c}</span>`
+  ).join('');
+
+  // Render items
+  const body = document.getElementById('menuBody');
+  body.innerHTML = cats.map(cat => {
+    const items = disponibles.filter(i => i.categoria === cat);
+    if (!items.length) return '';
+    return `
+      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
+        <div class="cat-title">${cat}</div>
+        ${items.map(item => itemCard(item, settings)).join('')}
+      </div>`;
+  }).join('');
+}
+
+function itemCard(item, settings) {
+  const showDom = settings.mostrarPrecioDomicilio && item.precioDomicilio && item.precioDomicilio !== item.precio;
+  const imgHtml = item.foto
+    ? `<img src="${item.foto}" alt="${item.nombre}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=item-no-img>🍽️</span>'">`
+    : `<span class="item-no-img">🍽️</span>`;
+  return `
+    <div class="item-card">
+      <div class="item-img-wrap">${imgHtml}</div>
+      <div class="item-info">
+        <div class="item-nombre">${item.nombre}</div>
+        ${item.descripcion ? `<div class="item-desc">${item.descripcion}</div>` : ''}
+        <div class="item-precio">${fmt(item.precio)}
+          ${showDom ? `<span class="item-precio-dom"> · Dom: ${fmt(item.precioDomicilio)}</span>` : ''}
+        </div>
+      </div>
+    </div>`;
+}
+
+window.scrollToCat = function(cat, el) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  const sec = document.getElementById('cat-' + cat.replace(/\s+/g,'_'));
+  if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+window.generarPDF = async function() {
+  const btn = document.getElementById('btnPdf');
+  btn.textContent = '⏳ Generando...';
+  btn.disabled = true;
+
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const settings = window._menuSettings || {};
+    const cfg      = window._menuConfig   || {};
+    const menu     = (window._menuData    || []).filter(i => i.disponible !== false);
+    const W = 210, margin = 14;
+    let y = 0;
+
+    function checkPage(h) {
+      if (y + h > 280) { doc.addPage(); y = 14; }
+    }
+
+    // Header background color
+    const primHex = settings.colorPrimario || '#2d5a27';
+    const accentHex = settings.colorAccent || '#e07b39';
+
+    function hexToRgb(hex) {
+      const r = parseInt(hex.slice(1,3),16), g = parseInt(hex.slice(3,5),16), b = parseInt(hex.slice(5,7),16);
+      return [r,g,b];
+    }
+    const [pr,pg,pb] = hexToRgb(primHex);
+    const [ar,ag,ab] = hexToRgb(accentHex);
+
+    // Header block
+    doc.setFillColor(pr,pg,pb);
+    doc.rect(0, 0, W, 38, 'F');
+    const nombre = settings.restaurantNombre || cfg.nombre || 'Restaurante';
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(22); doc.setFont('helvetica','bold');
+    doc.text(nombre, W/2, 18, {align:'center'});
+    if (settings.eslogan) {
+      doc.setFontSize(9); doc.setFont('helvetica','normal');
+      doc.text(settings.eslogan.toUpperCase(), W/2, 26, {align:'center'});
+    }
+    y = 44;
+
+    // Items by category
+    const allCats = [...new Set(menu.map(i => i.categoria).filter(Boolean))];
+    const catOrder = settings.catOrder || [];
+    const cats = catOrder.length
+      ? [...catOrder.filter(c => allCats.includes(c)), ...allCats.filter(c => !catOrder.includes(c))]
+      : allCats;
+
+    for (const cat of cats) {
+      const items = menu.filter(i => i.categoria === cat);
+      if (!items.length) continue;
+
+      checkPage(14);
+      // Cat header
+      doc.setFillColor(ar,ag,ab);
+      doc.roundedRect(margin, y, W - margin*2, 8, 2, 2, 'F');
+      doc.setTextColor(255,255,255);
+      doc.setFontSize(10); doc.setFont('helvetica','bold');
+      doc.text(cat.toUpperCase(), margin+5, y+5.5);
+      y += 12;
+
+      for (const item of items) {
+        checkPage(10);
+        doc.setTextColor(30,30,30);
+        doc.setFontSize(10); doc.setFont('helvetica','bold');
+        doc.text(item.nombre, margin, y);
+        const precioStr = '$' + Number(item.precio).toLocaleString('es-CO');
+        doc.setFontSize(10); doc.setFont('helvetica','bold');
+        doc.setTextColor(ar,ag,ab);
+        doc.text(precioStr, W - margin, y, {align:'right'});
+
+        if (item.descripcion) {
+          y += 4.5;
+          doc.setFontSize(8); doc.setFont('helvetica','normal');
+          doc.setTextColor(100,100,100);
+          const desc = doc.splitTextToSize(item.descripcion, W - margin*2 - 30);
+          doc.text(desc, margin, y);
+          y += desc.length * 3.8;
+        } else {
+          y += 4;
+        }
+
+        // Separator line
+        doc.setDrawColor(220,220,210);
+        doc.setLineWidth(0.3);
+        doc.line(margin, y, W - margin, y);
+        y += 4;
+      }
+      y += 4;
+    }
+
+    // Footer
+    checkPage(18);
+    doc.setFillColor(pr,pg,pb);
+    doc.rect(0, 285, W, 12, 'F');
+    doc.setTextColor(255,255,255);
+    doc.setFontSize(8); doc.setFont('helvetica','normal');
+    const closing = settings.textoCierre || '¡Gracias por preferirnos!';
+    const tel = cfg.telefono || '';
+    const dir = cfg.direccion || '';
+    const info = [tel, dir].filter(Boolean).join('  ·  ');
+    doc.text(closing + (info ? '  |  ' + info : ''), W/2, 291, {align:'center'});
+
+    const filename = (nombre + ' - Menú').replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ0-9 ·-]/g,'') + '.pdf';
+    doc.save(filename);
+  } catch(e) {
+    alert('Error al generar PDF: ' + e.message);
+  }
+
+  btn.innerHTML = '📄 Descargar PDF';
+  btn.disabled = false;
+};
+
+// Mostrar botón PDF solo si la URL contiene ?admin=1
+// El editor abre el menú como: window.open('menu restaurante.html?admin=1', '_blank')
+if (new URLSearchParams(location.search).get('admin') === '1') {
+  document.getElementById('btnPdf').classList.add('visible');
+}
+
+cargarMenu();
+</script>
+</body>
+</html>
