@@ -3512,6 +3512,12 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   display: flex; flex-direction: column;
   overflow: hidden;
   animation: slideUp 0.32s cubic-bezier(0.34,1.56,0.64,1);
+  transition: max-height 0.25s ease, border-radius 0.25s ease;
+}
+#menuEditorModal.preview-fullscreen {
+  max-height: 100dvh;
+  height: 100dvh;
+  border-radius: 0;
 }
 @keyframes slideUp {
   from { transform: translateY(100%); opacity:0; }
@@ -17204,7 +17210,7 @@ function renderPedido(p) {
     <iframe id="mePreviewIframe" src="" title="Vista previa menú"></iframe>
     <div class="me-iframe-refresh">
       <button onclick="recargarMenuPreview()">🔄 Recargar</button>
-      <button class="primary" onclick="window.open('menu restaurante.html?admin=1','_blank')">↗ Abrir en nueva pestaña</button>
+      <button class="primary" onclick="window.open(meGetPreviewUrl(),'_blank')">↗ Abrir en nueva pestaña</button>
     </div>
   </div>
 </div>
@@ -17464,26 +17470,28 @@ function meGetPreviewUrl() {
 }
 
 function meSetMode(mode) {
-  const editBtn    = document.getElementById('meModeEditBtn');
-  const previewBtn = document.getElementById('meModePreviewBtn');
-  const tabBar     = document.getElementById('meTabBar');
-  const body       = document.querySelector('.me-body');
+  const editBtn      = document.getElementById('meModeEditBtn');
+  const previewBtn   = document.getElementById('meModePreviewBtn');
+  const tabBar       = document.getElementById('meTabBar');
+  const body         = document.querySelector('.me-body');
   const previewPanel = document.getElementById('me-panel-preview');
-  const iframe     = document.getElementById('mePreviewIframeInner');
+  const modal        = document.getElementById('menuEditorModal');
+  const iframe       = document.getElementById('mePreviewIframeInner');
 
   if (mode === 'preview') {
     editBtn.classList.remove('active');
     previewBtn.classList.add('active');
     if (tabBar) tabBar.style.display = 'none';
     if (body)   body.style.display   = 'none';
+    if (modal)  modal.classList.add('preview-fullscreen');
     previewPanel.classList.add('active');
-    // Cargar iframe
     iframe.src = meGetPreviewUrl();
   } else {
     previewBtn.classList.remove('active');
     editBtn.classList.add('active');
     if (tabBar) tabBar.style.display = '';
     if (body)   body.style.display   = '';
+    if (modal)  modal.classList.remove('preview-fullscreen');
     previewPanel.classList.remove('active');
     iframe.src = '';
   }
