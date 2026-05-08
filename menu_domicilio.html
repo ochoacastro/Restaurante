@@ -418,8 +418,15 @@
   .payment-box{border:1.5px solid var(--gris-cl); border-radius:16px; background:var(--fondo); padding:12px;}
   .payment-title{font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; color:var(--gris); margin-bottom:10px;}
   .payment-list{display:flex; flex-direction:column; gap:8px;}
-  .payment-item{display:grid; grid-template-columns:46px 46px 72px 1fr auto; gap:8px; align-items:center;}
-  .payment-header-row{display:grid; grid-template-columns:46px 46px 72px 1fr auto; gap:8px; align-items:center; margin-bottom:6px; padding-bottom:6px; border-bottom:1.5px solid var(--gris-cl);}
+  .payment-item{display:grid; grid-template-columns:46px 46px 52px 1fr auto; gap:8px; align-items:start;}
+  .payment-header-row{display:grid; grid-template-columns:46px 46px 52px 1fr auto; gap:8px; align-items:center; margin-bottom:6px; padding-bottom:6px; border-bottom:1.5px solid var(--gris-cl);}
+  .pay-img-btn-dom{width:52px;height:40px;border:1.5px solid var(--gris-cl);border-radius:10px;background:var(--fondo);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;}
+  .pay-img-btn-dom img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:none;}
+  .pay-img-btn-dom img.show{display:block;}
+  .pay-img-btn-dom input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .pay-img-placeholder-dom{font-size:10px;color:var(--gris);text-align:center;line-height:1.2;pointer-events:none;}
+  .pay-name-info-col{display:flex;flex-direction:column;gap:4px;min-width:0;}
+  .pay-info-input-dom{width:100%;border:1.5px solid var(--gris-cl);border-radius:10px;padding:7px 10px;font-size:11px;background:var(--fondo);color:var(--negro);font-family:inherit;}
   .pay-col-label{font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.6px; color:var(--gris); text-align:center; line-height:1.2;}
   .add-pay-btn{width:100%; margin-top:10px;}
 
@@ -2937,12 +2944,24 @@ function renderPaymentOptions(){
     wrap.innerHTML = `<div class="empty" style="padding:18px 10px;font-size:13px;">No hay formas de pago activas.</div>`;
     return;
   }
-  wrap.innerHTML = methods.map(m => `
+  wrap.innerHTML = methods.map(m => {
+    const iconHtml = m.img
+      ? `<img src="${m.img}" style="width:26px;height:26px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
+      : `<span>${escapeHtml(m.emoji || '💳')}</span>`;
+    const infoHtml = m.info
+      ? `<div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:400;margin-top:2px;letter-spacing:0;">${escapeHtml(m.info)}</div>`
+      : '';
+    return `
     <button type="button" class="pay-pill ${m.id === current ? 'active' : ''}" data-pay-id="${escapeHtml(m.id)}">
-      <span>${escapeHtml(m.emoji || '💳')}</span>
-      <strong>${escapeHtml(m.label)}</strong>
-    </button>
-  `).join('');
+      <div style="display:flex;align-items:center;gap:6px;">
+        ${iconHtml}
+        <div style="text-align:left;">
+          <strong>${escapeHtml(m.label)}</strong>
+          ${infoHtml}
+        </div>
+      </div>
+    </button>`;
+  }).join('');
   wrap.querySelectorAll('[data-pay-id]').forEach(btn => {
     btn.addEventListener('click', () => setSelectedPayment(btn.dataset.payId));
   });
@@ -2959,14 +2978,16 @@ function renderPaymentEditor(){
     <div class="payment-header-row">
       <div class="pay-col-label">🍽<br>Rest.</div>
       <div class="pay-col-label">🛵<br>Dom.</div>
-      <div></div>
-      <div class="pay-col-label" style="text-align:left;">Método</div>
+      <div class="pay-col-label">Img</div>
+      <div class="pay-col-label" style="text-align:left;">Nombre / Número</div>
       <div></div>
     </div>`;
 
   // Bug 7 fix: guardar el ID del método en data-id en lugar del índice del array filtrado,
   // para que al mutar settings.paymentMethods usemos el índice real del array completo.
-  wrap.innerHTML = header + list.map((m) => `
+  wrap.innerHTML = header + list.map((m) => {
+    const imgSrc = m.img || '';
+    return `
     <div class="payment-item" data-id="${escapeHtml(m.id || '')}">
       <div class="toggle-wrap">
         <input class="toggle-input pay-vis-rest" type="checkbox" id="paytoggle_rest_${escapeHtml(m.id || '')}" ${m.visibleRest !== false ? 'checked' : ''}>
@@ -2976,11 +2997,18 @@ function renderPaymentEditor(){
         <input class="toggle-input pay-vis-dom" type="checkbox" id="paytoggle_dom_${escapeHtml(m.id || '')}" ${m.visibleDom !== false ? 'checked' : ''}>
         <label class="toggle-label" for="paytoggle_dom_${escapeHtml(m.id || '')}"></label>
       </div>
-      <input class="field pay-emoji" placeholder="Emoji" value="${escapeHtml(m.emoji || '')}" style="width:72px;">
-      <input class="field pay-label" placeholder="Nombre" value="${escapeHtml(m.label || '')}">
+      <div class="pay-img-btn-dom" title="Subir imagen">
+        <img id="domPayImg_${escapeHtml(m.id || '')}" src="${imgSrc}" class="${imgSrc ? 'show' : ''}" alt="">
+        <span class="pay-img-placeholder-dom" id="domPayPh_${escapeHtml(m.id || '')}" style="${imgSrc ? 'display:none' : ''}">📷</span>
+        <input type="file" accept="image/*" class="pay-imgload">
+      </div>
+      <div class="pay-name-info-col">
+        <input class="field pay-label" placeholder="Nombre" value="${escapeHtml(m.label || '')}">
+        <input class="field pay-info-input-dom pay-info" placeholder="Nro. cuenta / teléfono / alias" value="${escapeHtml(m.info || '')}">
+      </div>
       <button type="button" class="btn-danger pay-del">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   wrap.querySelectorAll('.payment-item').forEach(row => {
     const methodId = row.dataset.id;
@@ -3002,14 +3030,41 @@ function renderPaymentEditor(){
       arr[idx].visible = arr[idx].visibleRest || arr[idx].visibleDom;
       commit();
     });
-    row.querySelector('.pay-emoji').addEventListener('input', (e) => {
+    row.querySelector('.pay-imgload').addEventListener('change', (e) => {
       const idx = getIdx(); if(idx === -1) return;
-      arr[idx].emoji = e.target.value;
-      commit();
+      const file = e.target.files[0];
+      if(!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const canvas = document.createElement('canvas');
+        const img = new Image();
+        img.onload = () => {
+          const s = 200;
+          canvas.width = canvas.height = s;
+          const ctx = canvas.getContext('2d');
+          const ratio = Math.max(s/img.width, s/img.height);
+          const w = img.width*ratio, h = img.height*ratio;
+          ctx.drawImage(img, (s-w)/2, (s-h)/2, w, h);
+          const b64 = canvas.toDataURL('image/jpeg', 0.85);
+          arr[idx].img = b64;
+          commit();
+          const imgEl = document.getElementById('domPayImg_' + arr[idx].id);
+          const phEl  = document.getElementById('domPayPh_'  + arr[idx].id);
+          if(imgEl){ imgEl.src = b64; imgEl.classList.add('show'); }
+          if(phEl) phEl.style.display = 'none';
+        };
+        img.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
     });
     row.querySelector('.pay-label').addEventListener('input', (e) => {
       const idx = getIdx(); if(idx === -1) return;
       arr[idx].label = e.target.value;
+      commit();
+    });
+    row.querySelector('.pay-info').addEventListener('input', (e) => {
+      const idx = getIdx(); if(idx === -1) return;
+      arr[idx].info = e.target.value;
       commit();
     });
     row.querySelector('.pay-del').addEventListener('click', () => {
@@ -3023,7 +3078,7 @@ function renderPaymentEditor(){
 
 function addPaymentMethod(modeKey){
   ensurePaymentMethods();
-  settings.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', emoji: '💳', visible: true, visibleRest: true, visibleDom: true });
+  settings.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', visible: true, visibleRest: true, visibleDom: true });
   saveSettings();
   renderPaymentEditor();
   renderCart();
