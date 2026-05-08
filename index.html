@@ -3684,6 +3684,44 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 .me-cat-drag { font-size: 16px; color: var(--gris); flex-shrink: 0; }
 .me-cat-name { flex: 1; font-size: 14px; font-weight: 600; }
 .me-cat-count { font-size: 11px; color: var(--gris); }
+/* Toggle visibilidad en me-cat-item */
+.me-cat-vis-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 13px 7px;
+  border-top: 1px solid var(--borde);
+  background: var(--fondo);
+}
+.me-cat-vis-label {
+  font-size: 11px; font-weight: 600; color: var(--gris-osc);
+  display: flex; align-items: center; gap: 5px;
+}
+.me-cat-vis-badge {
+  display: inline-block; font-size: 10px; font-weight: 700;
+  padding: 2px 7px; border-radius: 20px; margin-left: 4px;
+}
+.me-cat-vis-badge.visible  { background: rgba(0,200,83,0.12); color: #00a854; }
+.me-cat-vis-badge.oculta   { background: rgba(229,57,53,0.10); color: #c62828; }
+.me-cat-item.cat-oculta { border-color: rgba(229,57,53,0.3); opacity: 0.75; }
+.me-cat-item.cat-oculta .me-cat-name { color: var(--gris); }
+
+/* Sección filtro de visibilidad en panel categorías */
+.me-vis-summary {
+  background: var(--fondo); border: 1.5px solid var(--borde);
+  border-radius: var(--r-sm); padding: 10px 13px 6px;
+  margin-bottom: 14px;
+}
+.me-vis-summary-title {
+  font-size: 11px; font-weight: 700; color: var(--gris);
+  text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+}
+.me-vis-summary-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 0; border-bottom: 1px solid var(--borde);
+}
+.me-vis-summary-row:last-child { border-bottom: none; }
+.me-vis-summary-name { font-size: 13px; font-weight: 500; flex: 1; }
+.me-vis-summary-name.oculta { color: var(--gris); text-decoration: line-through; }
+
 /* Foto decorativa por categoría */
 .me-cat-foto-block {
   border-top: 1px solid var(--borde);
@@ -17130,8 +17168,17 @@ function renderPedido(p) {
 
     <!-- ══ PANEL CATEGORÍAS ══ -->
     <div class="me-panel" id="me-panel-categorias">
-      <div class="me-section-title">🗂️ Orden de categorías</div>
-      <div class="me-info-chip">💡 Arrastra para reordenar las categorías en el menú. El orden que pongas aquí aparecerá en el menú digital y en el PDF.</div>
+
+      <div class="me-section-title">👁️ Visibilidad de categorías</div>
+      <div class="me-info-chip">💡 Activa o desactiva qué categorías ve el cliente en el menú digital. Las categorías desactivadas no aparecerán, pero sus platos siguen en el sistema.</div>
+      <div class="me-vis-summary" id="meVisSummary">
+        <div class="me-vis-summary-title">Resumen — todas las categorías del sistema</div>
+        <div id="meVisSummaryList"><p style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">Cargando...</p></div>
+      </div>
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">🗂️ Orden de categorías visibles</div>
+      <div class="me-info-chip">💡 Solo se muestran las categorías habilitadas. Arrastra para reordenarlas en el menú digital y en el PDF.</div>
       <ul class="me-cat-list" id="meCatList">
         <li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Cargando categorías...</li>
       </ul>
@@ -17427,7 +17474,54 @@ function meCargarCategorias() {
   const menu = (typeof MENU !== 'undefined' ? MENU : []);
   const catOrder = _meSettings.catOrder || [];
   const allCats  = [...new Set(menu.map(i => i.categoria).filter(Boolean))];
-  _meCatOrder = [...catOrder.filter(c => allCats.includes(c)), ...allCats.filter(c => !catOrder.includes(c))];
+  // _meCatOrder contiene SOLO las categorías visibles (no ocultas), ordenadas
+  const hidden = Array.isArray(_meSettings.hiddenCategories) ? _meSettings.hiddenCategories : [];
+  const visibleCats = allCats.filter(c => !hidden.includes(c));
+  _meCatOrder = [...catOrder.filter(c => visibleCats.includes(c)), ...visibleCats.filter(c => !catOrder.includes(c))];
+  renderMeVisSummary(allCats);
+  renderMeCatList();
+}
+
+function renderMeVisSummary(allCats) {
+  const container = document.getElementById('meVisSummaryList');
+  if (!container) return;
+  const menu = (typeof MENU !== 'undefined' ? MENU : []);
+  const hidden = Array.isArray(_meSettings.hiddenCategories) ? _meSettings.hiddenCategories : [];
+  if (!allCats || !allCats.length) {
+    container.innerHTML = '<p style="font-size:12px;color:#aaa;text-align:center;padding:8px 0;">Sin categorías.</p>';
+    return;
+  }
+  container.innerHTML = allCats.map(cat => {
+    const isHidden = hidden.includes(cat);
+    const count = menu.filter(i => i.categoria === cat).length;
+    const safeCat = cat.replace(/'/g, "\\'");
+    return `<div class="me-vis-summary-row">
+      <span class="me-vis-summary-name${isHidden ? ' oculta' : ''}" id="meVisSumName_${cat.replace(/[^a-zA-Z0-9]/g,'_')}">${cat} <span style="font-size:11px;color:#aaa;">(${count})</span></span>
+      <label class="me-toggle" style="flex-shrink:0;margin-left:10px;">
+        <input type="checkbox" ${isHidden ? '' : 'checked'} onchange="meToggleCatVis('${safeCat}', this.checked)">
+        <span class="me-toggle-slider"></span>
+      </label>
+    </div>`;
+  }).join('');
+}
+
+function meToggleCatVis(cat, visible) {
+  if (!Array.isArray(_meSettings.hiddenCategories)) _meSettings.hiddenCategories = [];
+  if (visible) {
+    _meSettings.hiddenCategories = _meSettings.hiddenCategories.filter(c => c !== cat);
+  } else {
+    if (!_meSettings.hiddenCategories.includes(cat)) _meSettings.hiddenCategories.push(cat);
+  }
+  // Actualizar estilo del nombre en el resumen
+  const nameEl = document.getElementById('meVisSumName_' + cat.replace(/[^a-zA-Z0-9]/g,'_'));
+  if (nameEl) nameEl.className = 'me-vis-summary-name' + (visible ? '' : ' oculta');
+  // Recargar la lista de orden (solo visibles)
+  const menu = (typeof MENU !== 'undefined' ? MENU : []);
+  const allCats = [...new Set(menu.map(i => i.categoria).filter(Boolean))];
+  const hidden = _meSettings.hiddenCategories;
+  const visibleCats = allCats.filter(c => !hidden.includes(c));
+  _meCatOrder = _meCatOrder.filter(c => visibleCats.includes(c));
+  visibleCats.forEach(c => { if (!_meCatOrder.includes(c)) _meCatOrder.push(c); });
   renderMeCatList();
 }
 
@@ -17435,7 +17529,7 @@ function renderMeCatList() {
   const menu = (typeof MENU !== 'undefined' ? MENU : []);
   const list = document.getElementById('meCatList');
   if (!_meCatOrder.length) {
-    list.innerHTML = '<li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Sin categorías en el menú actual.</li>';
+    list.innerHTML = '<li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Sin categorías visibles. Activa al menos una arriba.</li>';
     return;
   }
   const catFotos = (_meSettings.catFotos || {});
@@ -17598,6 +17692,7 @@ function meGuardar() {
     mostrarFotos:           document.getElementById('meToggleFotos').checked,
     catOrder:               _meCatOrder,
     catFotos:               (_meSettings.catFotos || {}),
+    hiddenCategories:       Array.isArray(_meSettings.hiddenCategories) ? _meSettings.hiddenCategories : [],
     columnas:               parseInt(document.getElementById('meColumnas').value) || 1,
     catsEnCol1:             parseInt(document.getElementById('meCatsCol1').value) || null,
     fuente:                 document.getElementById('meFuente').value || 'Playfair Display',
@@ -17858,6 +17953,7 @@ window.meDragStart      = meDragStart;
 window.meDragOver       = meDragOver;
 window.meDrop           = meDrop;
 window.meDragEnd        = meDragEnd;
+window.meToggleCatVis   = meToggleCatVis;
 window.abrirMenuPreview  = abrirMenuPreview;
 window.cerrarMenuPreview = cerrarMenuPreview;
 window.recargarMenuPreview = recargarMenuPreview;
