@@ -414,20 +414,54 @@
     object-fit:cover;
     display:block;
   }
+  /* ── FORMAS DE PAGO — tarjetas amplias ── */
   .payment-editor{display:grid; grid-template-columns:1fr; gap:10px; margin-bottom:10px;}
-  .payment-box{border:1.5px solid var(--gris-cl); border-radius:16px; background:var(--fondo); padding:12px;}
+  .payment-box{border:none; border-radius:0; background:transparent; padding:0;}
   .payment-title{font-size:12px; font-weight:900; text-transform:uppercase; letter-spacing:.8px; color:var(--gris); margin-bottom:10px;}
-  .payment-list{display:flex; flex-direction:column; gap:8px;}
-  .payment-item{display:grid; grid-template-columns:46px 46px 52px 1fr auto; gap:8px; align-items:start;}
-  .payment-header-row{display:grid; grid-template-columns:46px 46px 52px 1fr auto; gap:8px; align-items:center; margin-bottom:6px; padding-bottom:6px; border-bottom:1.5px solid var(--gris-cl);}
-  .pay-img-btn-dom{width:52px;height:40px;border:1.5px solid var(--gris-cl);border-radius:10px;background:var(--fondo);display:flex;align-items:center;justify-content:center;cursor:pointer;overflow:hidden;position:relative;}
-  .pay-img-btn-dom img{width:100%;height:100%;object-fit:cover;border-radius:8px;display:none;}
+  .payment-list{display:flex; flex-direction:column; gap:12px;}
+  .payment-header-row{display:none;}
+  .pay-col-label{display:none;}
+  /* Tarjeta por método */
+  .payment-item{
+    display:flex; flex-direction:column; gap:12px;
+    background:var(--blanco); border:1.5px solid var(--gris-cl);
+    border-radius:16px; padding:14px 14px 12px;
+    box-shadow:var(--sombra-s);
+  }
+  /* Fila superior: imagen + nombre + botón eliminar */
+  .pay-top-row{display:flex; align-items:center; gap:10px;}
+  .pay-img-btn-dom{
+    width:56px; height:56px; border:1.5px solid var(--gris-cl);
+    border-radius:14px; background:var(--fondo);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; overflow:hidden; position:relative; flex-shrink:0;
+  }
+  .pay-img-btn-dom img{width:100%;height:100%;object-fit:cover;border-radius:12px;display:none;}
   .pay-img-btn-dom img.show{display:block;}
   .pay-img-btn-dom input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-  .pay-img-placeholder-dom{font-size:10px;color:var(--gris);text-align:center;line-height:1.2;pointer-events:none;}
-  .pay-name-info-col{display:flex;flex-direction:column;gap:4px;min-width:0;}
-  .pay-info-input-dom{width:100%;border:1.5px solid var(--gris-cl);border-radius:10px;padding:7px 10px;font-size:11px;background:var(--fondo);color:var(--negro);font-family:inherit;}
-  .pay-col-label{font-size:10px; font-weight:900; text-transform:uppercase; letter-spacing:.6px; color:var(--gris); text-align:center; line-height:1.2;}
+  .pay-img-placeholder-dom{font-size:10px;color:var(--gris);text-align:center;line-height:1.3;pointer-events:none;}
+  .pay-name-info-col{display:flex;flex-direction:column;gap:6px;min-width:0;flex:1;}
+  .pay-info-input-dom{width:100%;border:1.5px solid var(--gris-cl);border-radius:10px;padding:9px 12px;font-size:13px;background:var(--fondo);color:var(--negro);font-family:inherit;box-sizing:border-box;}
+  .pay-info-input-dom:focus{outline:none;border-color:var(--rappi);}
+  .pay-del-dom{
+    border:none; background:#D32F2F; color:#fff; border-radius:12px;
+    width:38px; height:38px; font-weight:900; font-size:16px;
+    cursor:pointer; flex-shrink:0; display:flex; align-items:center; justify-content:center;
+    align-self:flex-start;
+  }
+  /* Fila de toggles */
+  .pay-toggles-row{display:flex; gap:8px;}
+  .pay-toggle-card{
+    flex:1; display:flex; align-items:center; justify-content:space-between;
+    gap:8px; background:var(--fondo); border:1.5px solid var(--gris-cl);
+    border-radius:12px; padding:10px 12px; cursor:pointer;
+  }
+  .pay-toggle-card-label{font-size:12px; font-weight:700; color:var(--gris-osc); line-height:1.2;}
+  .pay-toggle-card-sub{font-size:10px; color:var(--gris); margin-top:1px;}
+  .pay-toggle-card.active-rest{border-color:var(--rappi); background:var(--rappi-soft);}
+  .pay-toggle-card.active-rest .pay-toggle-card-label{color:var(--rappi);}
+  .pay-toggle-card.active-dom{border-color:#1565C0; background:rgba(21,101,192,0.08);}
+  .pay-toggle-card.active-dom .pay-toggle-card-label{color:#1565C0;}
   .add-pay-btn{width:100%; margin-top:10px;}
 
   /* Toggle switch */
@@ -2973,45 +3007,52 @@ function renderPaymentEditor(){
   if(!wrap) return;
   const list = paymentMethodsForMode('shared');
 
-  // Fila de encabezado
-  const header = `
-    <div class="payment-header-row">
-      <div class="pay-col-label">🍽<br>Rest.</div>
-      <div class="pay-col-label">🛵<br>Dom.</div>
-      <div class="pay-col-label">Img</div>
-      <div class="pay-col-label" style="text-align:left;">Nombre / Número</div>
-      <div></div>
-    </div>`;
-
   // Bug 7 fix: guardar el ID del método en data-id en lugar del índice del array filtrado,
   // para que al mutar settings.paymentMethods usemos el índice real del array completo.
-  wrap.innerHTML = header + list.map((m) => {
+  wrap.innerHTML = list.map((m) => {
     const imgSrc = m.img || '';
+    const visRest = m.visibleRest !== false;
+    const visDom  = m.visibleDom  !== false;
+    const mid = escapeHtml(m.id || '');
     return `
-    <div class="payment-item" data-id="${escapeHtml(m.id || '')}">
-      <div class="toggle-wrap">
-        <input class="toggle-input pay-vis-rest" type="checkbox" id="paytoggle_rest_${escapeHtml(m.id || '')}" ${m.visibleRest !== false ? 'checked' : ''}>
-        <label class="toggle-label" for="paytoggle_rest_${escapeHtml(m.id || '')}"></label>
+    <div class="payment-item" data-id="${mid}">
+      <!-- Fila superior: imagen · nombre · eliminar -->
+      <div class="pay-top-row">
+        <div class="pay-img-btn-dom" title="Subir imagen">
+          <img id="domPayImg_${mid}" src="${imgSrc}" class="${imgSrc ? 'show' : ''}" alt="">
+          <span class="pay-img-placeholder-dom" id="domPayPh_${mid}" style="${imgSrc ? 'display:none' : ''}">📷<br>Foto</span>
+          <input type="file" accept="image/*" class="pay-imgload">
+        </div>
+        <div class="pay-name-info-col">
+          <input class="field pay-label" placeholder="Nombre del método" value="${escapeHtml(m.label || '')}" style="font-size:15px;font-weight:600;">
+          <label style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gris);cursor:pointer;user-select:none;">
+            <input type="checkbox" class="pay-needsinfo" ${m.needsInfo ? 'checked' : ''} style="width:15px;height:15px;cursor:pointer;accent-color:var(--rappi);">
+            Pide número / cuenta
+          </label>
+          <input class="field pay-info-input-dom pay-info" placeholder="Nro. cuenta / teléfono / alias" value="${escapeHtml(m.info || '')}"
+            style="${m.needsInfo ? '' : 'display:none'}">
+        </div>
+        <button type="button" class="pay-del-dom pay-del" title="Eliminar">✕</button>
       </div>
-      <div class="toggle-wrap">
-        <input class="toggle-input pay-vis-dom" type="checkbox" id="paytoggle_dom_${escapeHtml(m.id || '')}" ${m.visibleDom !== false ? 'checked' : ''}>
-        <label class="toggle-label" for="paytoggle_dom_${escapeHtml(m.id || '')}"></label>
-      </div>
-      <div class="pay-img-btn-dom" title="Subir imagen">
-        <img id="domPayImg_${escapeHtml(m.id || '')}" src="${imgSrc}" class="${imgSrc ? 'show' : ''}" alt="">
-        <span class="pay-img-placeholder-dom" id="domPayPh_${escapeHtml(m.id || '')}" style="${imgSrc ? 'display:none' : ''}">📷</span>
-        <input type="file" accept="image/*" class="pay-imgload">
-      </div>
-      <div class="pay-name-info-col">
-        <input class="field pay-label" placeholder="Nombre" value="${escapeHtml(m.label || '')}">
-        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gris);cursor:pointer;user-select:none;">
-          <input type="checkbox" class="pay-needsinfo" ${m.needsInfo ? 'checked' : ''} style="width:14px;height:14px;cursor:pointer;">
-          Pide número / cuenta
+      <!-- Fila inferior: toggles Restaurante / Domicilio -->
+      <div class="pay-toggles-row">
+        <label class="pay-toggle-card ${visRest ? 'active-rest' : ''}" id="pay-rest-card-${mid}" for="paytoggle_rest_${mid}">
+          <div>
+            <div class="pay-toggle-card-label">🍽️ Restaurante</div>
+            <div class="pay-toggle-card-sub">Visible en salón</div>
+          </div>
+          <input class="toggle-input pay-vis-rest" type="checkbox" id="paytoggle_rest_${mid}" ${visRest ? 'checked' : ''}>
+          <label class="toggle-label" for="paytoggle_rest_${mid}" onclick="event.stopPropagation()"></label>
         </label>
-        <input class="field pay-info-input-dom pay-info" placeholder="Nro. cuenta / teléfono / alias" value="${escapeHtml(m.info || '')}"
-          style="${m.needsInfo ? '' : 'display:none'}">
+        <label class="pay-toggle-card ${visDom ? 'active-dom' : ''}" id="pay-dom-card-${mid}" for="paytoggle_dom_${mid}">
+          <div>
+            <div class="pay-toggle-card-label">🛵 Domicilio</div>
+            <div class="pay-toggle-card-sub">Visible en delivery</div>
+          </div>
+          <input class="toggle-input pay-vis-dom" type="checkbox" id="paytoggle_dom_${mid}" ${visDom ? 'checked' : ''}>
+          <label class="toggle-label" for="paytoggle_dom_${mid}" onclick="event.stopPropagation()"></label>
+        </label>
       </div>
-      <button type="button" class="btn-danger pay-del">✕</button>
     </div>`;
   }).join('');
 
@@ -3027,12 +3068,16 @@ function renderPaymentEditor(){
       const idx = getIdx(); if(idx === -1) return;
       arr[idx].visibleRest = e.target.checked;
       arr[idx].visible = arr[idx].visibleRest || arr[idx].visibleDom;
+      const card = row.querySelector(`#pay-rest-card-${methodId}`);
+      if(card) card.classList.toggle('active-rest', e.target.checked);
       commit();
     });
     row.querySelector('.pay-vis-dom').addEventListener('change', (e) => {
       const idx = getIdx(); if(idx === -1) return;
       arr[idx].visibleDom = e.target.checked;
       arr[idx].visible = arr[idx].visibleRest || arr[idx].visibleDom;
+      const card = row.querySelector(`#pay-dom-card-${methodId}`);
+      if(card) card.classList.toggle('active-dom', e.target.checked);
       commit();
     });
     row.querySelector('.pay-imgload').addEventListener('change', (e) => {
