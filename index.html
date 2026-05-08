@@ -57,7 +57,10 @@
   };
 
   // Señal de que Firebase está listo
+  // BUG 9 fix: marcar window._fbReady para que listeners registrados tarde
+  // puedan verificar si el evento ya fue despachado antes de suscribirse.
   _fbReadyDispatched = true;
+  window._fbReady = true;
   window.dispatchEvent(new Event('firebase-ready'));
   } catch(e) {
     if (!e.message.includes('no configurado')) {
@@ -65,6 +68,8 @@
     }
     // Disparar el evento solo si aún no fue disparado (init falló antes de llegar al dispatch)
     if (!_fbReadyDispatched) {
+      _fbReadyDispatched = true;
+      window._fbReady = true;
       window.dispatchEvent(new Event('firebase-ready'));
     }
   }
@@ -13015,7 +13020,8 @@ window.addEventListener('beforeunload', () => {
 });
 
 // ── Mostrar modal de setup si la config está en el módulo como placeholder
-window.addEventListener('firebase-ready', () => {
+// BUG 9 fix: usar { once: true } y guard _fbReady para evitar pérdida del evento
+function _checkFirebaseSetup() {
   // Corrección Bug 14: window._FB puede ser undefined cuando no hay config guardada
   if (!window._FB || !window._FB.db) {
     renderEstadoFirebase();
@@ -13035,7 +13041,9 @@ window.addEventListener('firebase-ready', () => {
     }
   } catch(_) {}
   renderEstadoFirebase();
-});
+}
+window.addEventListener('firebase-ready', _checkFirebaseSetup, { once: true });
+if (window._fbReady) { _checkFirebaseSetup(); }
 
 // ── MÓDULO ESTADÍSTICAS ──────────────────────────────────────────────
 
@@ -15551,10 +15559,12 @@ function renderBadgeCajeroHeader() {
   actualizarBadgeCajero();
 }
 
-// Inicializar badge al cargar
+// BUG 9 fix: verificar si firebase-ready ya fue disparado antes de registrar el listener
 window.addEventListener('firebase-ready', () => {
   setTimeout(actualizarBadgeCajero, 500);
-});
+}, { once: true });
+// Si Firebase ya estaba listo antes de registrar el listener
+if (window._fbReady) { setTimeout(actualizarBadgeCajero, 500); }
 
 // Sincronizar cobros desde Firebase
 let _fbUnsubCobros = null; // Bug 4 fix: guardar referencia para evitar listeners duplicados
@@ -18237,14 +18247,14 @@ function qr2CopiarUrl(tipo) {
   navigator.clipboard.writeText(el.textContent).then(() => {
     if (typeof showToast === 'function') showToast('📋 Link copiado');
   }).catch(() => {
-    // Fallback para dispositivos sin clipboard API
-    const ta = document.createElement('textarea');
-    ta.value = el.textContent;
-    ta.style.position = 'fixed'; ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select(); document.execCommand('copy');
-    document.body.removeChild(ta);
-    if (typeof showToast === 'function') showToast('📋 Link copiado');
+    // BUG 10 fix: execCommand('copy') está deprecado y falla en iOS Safari 16.4+.
+    // Fallback: mostrar el texto en un prompt para que el usuario lo copie manualmente.
+    try {
+      window.prompt('Copia este enlace:', el.textContent);
+      if (typeof showToast === 'function') showToast('📋 Copia el enlace del cuadro');
+    } catch(_) {
+      if (typeof showToast === 'function') showToast('⚠️ No se pudo copiar automáticamente');
+    }
   });
 }
 
