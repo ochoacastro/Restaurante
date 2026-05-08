@@ -47,11 +47,11 @@
   #headerLogoImg {
     display: none;
   }
-  /* Membrete cubre todo el header */
+  /* Membrete / banner horizontal cubre todo el header */
   #menuHeader.has-membrete {
     min-height: unset;
     padding: 0;
-    background: #000;
+    background: #1a1a1a;
   }
   #menuHeader.has-membrete #headerContent {
     padding: 0;
@@ -61,11 +61,18 @@
     display: block;
     width: 100%;
     max-width: 100%;
-    max-height: none;
     height: auto;
-    object-fit: cover;
+    max-height: none;
+    object-fit: contain;   /* conserva proporciones, no recorta */
+    object-position: center;
     margin: 0;
     filter: none;
+    vertical-align: bottom;
+  }
+  /* Ocultar título y eslogan cuando hay membrete */
+  #menuHeader.has-membrete #headerTitle,
+  #menuHeader.has-membrete #headerSub {
+    display: none;
   }
   #headerTitle {
     font-family: 'Playfair Display', serif;
@@ -409,11 +416,13 @@ function aplicarSettings(cfg, settings) {
     const bgImg = document.getElementById('headerBgImg');
     bgImg.src = settings.headerBg; bgImg.style.display = 'block';
   }
-  // Header: logo/membrete
+  // Header: membrete/banner horizontal
   if (settings.headerLogo) {
     const logoImg = document.getElementById('headerLogoImg');
     logoImg.src = settings.headerLogo;
-    document.getElementById('menuHeader').classList.add('has-membrete');
+    const hdr = document.getElementById('menuHeader');
+    hdr.classList.add('has-membrete');
+    hdr.style.background = 'none';   // sin gradiente verde detrás
     document.getElementById('headerTitle').style.display = 'none';
     document.getElementById('headerSub').style.display = 'none';
   }
