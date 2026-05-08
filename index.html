@@ -17856,7 +17856,7 @@ function meGuardar() {
   delete forFirebase.footerBg;
   delete forFirebase.footerLogo;
   delete forFirebase.footerMembrete;
-  delete forFirebase.catFotos; // base64 — solo localStorage
+  delete forFirebase.catFotos; // base64 — se sube por separado a menuImages/catFotos
   delete forFirebase.menuIcono; // base64 — solo localStorage
 
   if (window._FB && window._FB.db) {
@@ -17868,6 +17868,7 @@ function meGuardar() {
       set(ref(db, 'restaurante/menuImages/footerBg'),   settings.footerBg   || null),
       set(ref(db, 'restaurante/menuImages/footerLogo'), settings.footerLogo || null),
       set(ref(db, 'restaurante/menuImages/footerMembrete'), settings.footerMembrete || null),
+      set(ref(db, 'restaurante/menuImages/catFotos'), settings.catFotos && Object.keys(settings.catFotos).length ? settings.catFotos : null),
     ];
     Promise.all(saves)
       .then(() => {
