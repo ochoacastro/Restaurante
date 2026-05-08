@@ -44,36 +44,16 @@
     position: relative; z-index: 2;
     text-align: center; padding: 24px 20px;
   }
-  #headerLogoImg {
-    display: none;
-  }
-  /* Membrete / banner horizontal cubre todo el header */
-  #menuHeader.has-membrete {
-    min-height: unset;
-    padding: 0;
-    background: #1a1a1a;
-  }
-  #menuHeader.has-membrete #headerContent {
-    padding: 0;
-    width: 100%;
-  }
+  #headerLogoImg { display: none; }
+  #menuHeader.has-membrete { min-height: unset; padding: 0; background: #1a1a1a; }
+  #menuHeader.has-membrete #headerContent { padding: 0; width: 100%; }
   #menuHeader.has-membrete #headerLogoImg {
-    display: block;
-    width: 100%;
-    max-width: 100%;
-    height: auto;
-    max-height: none;
-    object-fit: contain;   /* conserva proporciones, no recorta */
-    object-position: center;
-    margin: 0;
-    filter: none;
-    vertical-align: bottom;
+    display: block; width: 100%; max-width: 100%; height: auto;
+    max-height: none; object-fit: contain; object-position: center;
+    margin: 0; filter: none; vertical-align: bottom;
   }
-  /* Ocultar título y eslogan cuando hay membrete */
   #menuHeader.has-membrete #headerTitle,
-  #menuHeader.has-membrete #headerSub {
-    display: none;
-  }
+  #menuHeader.has-membrete #headerSub { display: none; }
   #headerTitle {
     font-family: 'Playfair Display', serif;
     font-size: 32px; font-weight: 900;
@@ -97,50 +77,23 @@
   }
   #catNav::-webkit-scrollbar { display: none; }
   .cat-pill {
-    display: inline-block;
-    padding: 10px 18px;
+    display: inline-block; padding: 10px 18px;
     font-size: 12px; font-weight: 700;
     color: rgba(255,255,255,0.65);
     cursor: pointer; border-bottom: 3px solid transparent;
     transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.8px;
     white-space: nowrap;
   }
-  .cat-pill.active, .cat-pill:hover {
-    color: #fff;
-    border-bottom-color: var(--accent);
-  }
+  .cat-pill.active, .cat-pill:hover { color: #fff; border-bottom-color: var(--accent); }
 
   /* ── BODY ── */
   #menuBody { max-width: 700px; margin: 0 auto; padding: 0 0 100px; }
 
-  /* ── 2 COLUMNAS ── */
-  #menuBody.dos-columnas .cat-section { padding: 0 14px; }
-  #menuBody.dos-columnas .items-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  #menuBody.dos-columnas .item-card {
-    flex-direction: column;
-  }
-  #menuBody.dos-columnas .item-img-wrap {
-    width: 100%; height: 110px;
-  }
-
-  /* ── TAMAÑO letra ── */
-  body.tamano-small  { font-size: 13px; }
-  body.tamano-small  .item-nombre { font-size: 13px; }
-  body.tamano-small  .item-precio { font-size: 13px; }
-  body.tamano-small  .cat-title   { font-size: 18px; }
-  body.tamano-medium { font-size: 15px; }
-  body.tamano-large  { font-size: 17px; }
-  body.tamano-large  .item-nombre { font-size: 17px; }
-  body.tamano-large  .item-precio { font-size: 17px; }
-  body.tamano-large  .cat-title   { font-size: 26px; }
-
-  /* ── CATEGORY SECTION ── */
-  .cat-section { padding: 0 14px; margin-top: 28px; }
-  .cat-title {
+  /* ═══════════════════════════════════════
+     ESTILO TARJETAS (default)
+  ═══════════════════════════════════════ */
+  body:not(.estilo-lista) .cat-section { padding: 0 14px; margin-top: 28px; }
+  body:not(.estilo-lista) .cat-title {
     font-family: 'Playfair Display', serif;
     font-size: 22px; font-weight: 700;
     color: var(--primary);
@@ -148,78 +101,173 @@
     padding-left: 12px; margin-bottom: 14px;
     scroll-margin-top: 50px;
   }
-
-  /* ── ITEM CARD ── */
-  .item-card {
-    background: var(--card);
-    border-radius: 12px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
+  body:not(.estilo-lista) .item-card {
+    background: var(--card); border-radius: 12px;
+    box-shadow: var(--shadow); border: 1px solid var(--border);
     display: flex; align-items: stretch;
     overflow: hidden; margin-bottom: 10px;
     transition: transform 0.15s, box-shadow 0.15s;
   }
-  .item-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.13); }
-  .item-img-wrap {
-    width: 90px; flex-shrink: 0;
-    background: #f0ebe2;
-    display: flex; align-items: center; justify-content: center;
-    overflow: hidden;
+  body:not(.estilo-lista) .item-card:hover { transform: translateY(-2px); box-shadow: 0 6px 24px rgba(0,0,0,0.13); }
+  body:not(.estilo-lista) .item-img-wrap {
+    width: 90px; flex-shrink: 0; background: #f0ebe2;
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
   }
-  .item-img-wrap img {
-    width: 100%; height: 100%;
-    object-fit: cover;
-  }
-  .item-no-img {
-    font-size: 30px; opacity: 0.35;
-  }
-  .item-info {
+  body:not(.estilo-lista) .item-img-wrap img { width: 100%; height: 100%; object-fit: cover; }
+  body:not(.estilo-lista) .item-no-img { font-size: 30px; opacity: 0.35; }
+  body:not(.estilo-lista) .item-info {
     flex: 1; padding: 12px 14px;
     display: flex; flex-direction: column; justify-content: center; gap: 4px;
   }
-  .item-nombre {
+  body:not(.estilo-lista) .item-nombre {
     font-family: 'Playfair Display', serif;
-    font-size: 15px; font-weight: 700; color: var(--text);
-    line-height: 1.3;
+    font-size: 15px; font-weight: 700; color: var(--text); line-height: 1.3;
   }
-  .item-desc {
-    font-size: 12px; color: var(--subtext); line-height: 1.4;
+  body:not(.estilo-lista) .item-desc { font-size: 12px; color: var(--subtext); line-height: 1.4; }
+  body:not(.estilo-lista) .item-precio {
+    font-size: 16px; font-weight: 700; color: var(--accent);
+    font-family: 'Lato', sans-serif; margin-top: 4px;
   }
-  .item-precio {
-    font-size: 16px; font-weight: 700;
-    color: var(--accent);
+  body:not(.estilo-lista) .item-precio-dom { font-size: 11px; color: var(--subtext); font-weight: 400; }
+
+  /* ── 2 COLUMNAS (tarjetas) ── */
+  body:not(.estilo-lista) #menuBody.dos-columnas .cat-section { padding: 0 14px; }
+  body:not(.estilo-lista) #menuBody.dos-columnas .items-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+  }
+  body:not(.estilo-lista) #menuBody.dos-columnas .item-card { flex-direction: column; }
+  body:not(.estilo-lista) #menuBody.dos-columnas .item-img-wrap { width: 100%; height: 110px; }
+
+  /* ═══════════════════════════════════════
+     ESTILO LISTA CLÁSICA
+  ═══════════════════════════════════════ */
+  body.estilo-lista {
+    background: #f5efe0;
+  }
+  body.estilo-lista #menuBody {
+    max-width: 700px;
+    padding: 8px 10px 100px;
+  }
+  body.estilo-lista .menu-lista-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 12px;
+    align-items: start;
+  }
+  body.estilo-lista .cat-section {
+    margin-top: 10px;
+    padding: 0;
+    break-inside: avoid;
+  }
+  body.estilo-lista .cat-title {
+    background: var(--primary);
+    color: #fff;
     font-family: 'Lato', sans-serif;
-    margin-top: 4px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    scroll-margin-top: 50px;
   }
-  .item-precio-dom {
-    font-size: 11px; color: var(--subtext);
-    font-weight: 400;
+  body.estilo-lista .items-grid { display: block; }
+  body.estilo-lista .item-card {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0;
+    padding: 5px 2px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    box-shadow: none;
+    margin-bottom: 0;
+    overflow: visible;
+    border-bottom: 1px dotted #b8a98a;
   }
+  body.estilo-lista .item-card:last-child { border-bottom: none; }
+  /* Ocultar imagen en lista clásica */
+  body.estilo-lista .item-img-wrap { display: none !important; }
+  body.estilo-lista .item-info {
+    display: flex;
+    flex-direction: row;
+    align-items: baseline;
+    justify-content: space-between;
+    flex: 1;
+    padding: 0;
+    gap: 4px;
+  }
+  body.estilo-lista .item-nombre-wrap {
+    display: flex;
+    align-items: baseline;
+    gap: 0;
+    flex: 1;
+    min-width: 0;
+  }
+  body.estilo-lista .item-nombre {
+    font-family: 'Lato', sans-serif;
+    font-size: 13px; font-weight: 400;
+    color: var(--text);
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: clip;
+    flex-shrink: 1;
+  }
+  body.estilo-lista .item-dots {
+    flex: 1;
+    border-bottom: 1.5px dotted #b8a98a;
+    margin: 0 4px 2px;
+    min-width: 8px;
+  }
+  body.estilo-lista .item-desc { display: none; }
+  body.estilo-lista .item-precio {
+    font-family: 'Lato', sans-serif;
+    font-size: 13px; font-weight: 900;
+    color: var(--text);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  body.estilo-lista .item-precio-dom { display: none; }
+
+  /* Icono hoja decorativo */
+  body.estilo-lista .item-leaf {
+    font-size: 11px; margin-right: 4px; flex-shrink: 0;
+    opacity: 0.7; color: var(--primary);
+  }
+
+  /* ── TAMAÑO letra ── */
+  body.tamano-small  { font-size: 13px; }
+  body.tamano-small:not(.estilo-lista)  .item-nombre { font-size: 13px; }
+  body.tamano-small:not(.estilo-lista)  .item-precio { font-size: 13px; }
+  body.tamano-small:not(.estilo-lista)  .cat-title   { font-size: 18px; }
+  body.tamano-medium { font-size: 15px; }
+  body.tamano-large  { font-size: 17px; }
+  body.tamano-large:not(.estilo-lista)  .item-nombre { font-size: 17px; }
+  body.tamano-large:not(.estilo-lista)  .item-precio { font-size: 17px; }
+  body.tamano-large:not(.estilo-lista)  .cat-title   { font-size: 26px; }
 
   /* ── FOOTER ── */
   #menuFooter {
-    position: relative;
-    min-height: 70px;
+    position: relative; min-height: 70px;
     background: linear-gradient(160deg, #1a3a15 0%, #2d5a27 100%);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; margin-top: 20px;
   }
   #footerBgImg {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover; opacity: 0.3;
-    display: none;
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; opacity: 0.3; display: none;
   }
   #footerContent {
-    position: relative; z-index: 2;
-    text-align: center; padding: 20px;
-    color: rgba(255,255,255,0.85);
+    position: relative; z-index: 2; text-align: center;
+    padding: 20px; color: rgba(255,255,255,0.85);
     font-size: 13px; line-height: 1.7;
   }
   #footerLogoImg {
-    max-height: 60px; max-width: 180px;
-    object-fit: contain; display: none;
-    margin-bottom: 8px;
+    max-height: 60px; max-width: 180px; object-fit: contain;
+    display: none; margin-bottom: 8px;
   }
   #footerText { color: rgba(255,255,255,0.8); font-size: 13px; }
   #footerClosing {
@@ -227,37 +275,29 @@
     font-size: 15px; color: #fff; font-style: italic; margin-top: 4px;
   }
 
-  /* ── PDF BTN (solo admin) ── */
+  /* ── PDF BTN ── */
   #btnPdf {
     position: fixed; bottom: 22px; right: 18px; z-index: 200;
-    background: var(--accent);
-    color: #fff; border: none; border-radius: 50px;
+    background: var(--accent); color: #fff; border: none; border-radius: 50px;
     padding: 13px 20px; font-size: 14px; font-weight: 700;
     cursor: pointer; box-shadow: 0 4px 18px rgba(224,123,57,0.55);
     display: none; align-items: center; gap: 8px;
-    font-family: 'Lato', sans-serif;
-    transition: transform 0.15s, box-shadow 0.15s;
+    font-family: 'Lato', sans-serif; transition: transform 0.15s, box-shadow 0.15s;
   }
   #btnPdf.visible { display: flex; }
   #btnPdf:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(224,123,57,0.60); }
   #btnPdf:active { transform: scale(0.96); }
 
   /* ── EMPTY / LOADING ── */
-  #loadingState {
-    text-align: center; padding: 60px 20px;
-    color: var(--subtext);
-  }
+  #loadingState { text-align: center; padding: 60px 20px; color: var(--subtext); }
   .spinner {
     width: 36px; height: 36px;
-    border: 3px solid var(--border);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 14px;
+    border: 3px solid var(--border); border-top-color: var(--primary);
+    border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px;
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  /* ── PRINT STYLES ── */
+  /* ── PRINT ── */
   @media print {
     #btnPdf, #catNav { display: none !important; }
     #menuHeader { min-height: 120px; }
@@ -407,6 +447,13 @@ function aplicarSettings(cfg, settings) {
     menuBody.classList.remove('dos-columnas');
   }
 
+  // Estilo visual
+  if (settings.estiloVisual === 'lista') {
+    body.classList.add('estilo-lista');
+  } else {
+    body.classList.remove('estilo-lista');
+  }
+
   // Tamaño
   ['tamano-small','tamano-medium','tamano-large'].forEach(c => body.classList.remove(c));
   body.classList.add('tamano-' + (settings.tamano || 'medium'));
@@ -470,21 +517,62 @@ function renderMenu(menu, settings) {
     `<span class="cat-pill" onclick="scrollToCat('${c.replace(/'/g,"\\'")}', this)">${c}</span>`
   ).join('');
 
-  // Render items
   const body = document.getElementById('menuBody');
-  body.innerHTML = cats.map(cat => {
-    const items = disponibles.filter(i => i.categoria === cat);
-    if (!items.length) return '';
-    return `
-      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
-        <div class="cat-title">${cat}</div>
-        <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
+  const esLista = settings.estiloVisual === 'lista';
+
+  if (esLista) {
+    // Diseño lista clásica: dos columnas de categorías
+    const mitad = Math.ceil(cats.length / 2);
+    const col1 = cats.slice(0, mitad);
+    const col2 = cats.slice(mitad);
+
+    const renderCatSections = (catList) => catList.map(cat => {
+      const items = disponibles.filter(i => i.categoria === cat);
+      if (!items.length) return '';
+      return `
+        <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
+          <div class="cat-title">${cat}</div>
+          <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
+        </div>`;
+    }).join('');
+
+    body.innerHTML = `
+      <div class="menu-lista-grid">
+        <div>${renderCatSections(col1)}</div>
+        <div>${renderCatSections(col2)}</div>
       </div>`;
-  }).join('');
+  } else {
+    // Diseño tarjetas
+    body.innerHTML = cats.map(cat => {
+      const items = disponibles.filter(i => i.categoria === cat);
+      if (!items.length) return '';
+      return `
+        <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
+          <div class="cat-title">${cat}</div>
+          <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
+        </div>`;
+    }).join('');
+  }
 }
 
 function itemCard(item, settings) {
+  const esLista = settings.estiloVisual === 'lista';
   const showDom = settings.mostrarPrecioDomicilio && item.precioDomicilio && item.precioDomicilio !== item.precio;
+
+  if (esLista) {
+    return `
+      <div class="item-card">
+        <div class="item-info">
+          <div class="item-nombre-wrap">
+            <span class="item-leaf">🌿</span>
+            <span class="item-nombre">${item.nombre}</span>
+            <span class="item-dots"></span>
+          </div>
+          <div class="item-precio">${fmt(item.precio)}</div>
+        </div>
+      </div>`;
+  }
+
   const imgHtml = item.foto
     ? `<img src="${item.foto}" alt="${item.nombre}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=item-no-img>🍽️</span>'">`
     : `<span class="item-no-img">🍽️</span>`;
@@ -493,7 +581,7 @@ function itemCard(item, settings) {
       <div class="item-img-wrap">${imgHtml}</div>
       <div class="item-info">
         <div class="item-nombre">${item.nombre}</div>
-        ${item.descripcion ? `<div class="item-desc">${item.descripcion}</div>` : ''}
+        ${item.descripcion && settings.mostrarDescripcion !== false ? `<div class="item-desc">${item.descripcion}</div>` : ''}
         <div class="item-precio">${fmt(item.precio)}
           ${showDom ? `<span class="item-precio-dom"> · Dom: ${fmt(item.precioDomicilio)}</span>` : ''}
         </div>
