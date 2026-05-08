@@ -11350,8 +11350,13 @@ function redimensionarImagen(src, maxW, maxH, callback) {
     }
     const canvas = document.createElement('canvas');
     canvas.width = w; canvas.height = h;
-    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
-    callback(canvas.toDataURL('image/png'));
+    const ctx = canvas.getContext('2d');
+    // NO rellenar fondo — dejar canal alpha vacío para preservar transparencia PNG
+    ctx.clearRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    // Si la fuente es PNG exportar como PNG para conservar transparencia
+    const esPNG = src.startsWith('data:image/png') || src.startsWith('data:image/webp');
+    callback(canvas.toDataURL(esPNG ? 'image/png' : 'image/jpeg', 0.92));
   };
   img.onerror = () => callback(src); // si falla, usar original
   img.src = src;
@@ -11425,21 +11430,27 @@ function cargarLogo(input) {
     showToast(msg, 5000); mostrarErrorSubida(msg); input.value = ''; return;
   }
   const reader = new FileReader();
+  reader.onerror = () => mostrarErrorSubida('No se pudo leer el archivo. Intenta con otra imagen.');
   reader.onload = (e) => {
     // Redimensionar a máx 400×400 px manteniendo proporciones
     redimensionarImagen(e.target.result, 400, 400, (b64) => {
-      logoBase64 = b64;
-      localStorage.setItem('pos_logo', logoBase64);
       try {
-        const raw = localStorage.getItem('pos_menu_settings_v1');
-        const ms = raw ? JSON.parse(raw) : {};
-        ms.businessLogo = logoBase64;
-        localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
-      } catch(_) {}
-      fbSync('logo', { data: logoBase64 });
-      fbSync('decorImages/businessLogo', logoBase64);
-      mostrarLogoPreview();
-      showToast('✅ Logo guardado');
+        logoBase64 = b64;
+        localStorage.setItem('pos_logo', logoBase64);
+        try {
+          const raw = localStorage.getItem('pos_menu_settings_v1');
+          const ms = raw ? JSON.parse(raw) : {};
+          ms.businessLogo = logoBase64;
+          localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
+        } catch(_) {}
+        try { fbSync('logo', { data: logoBase64 }); } catch(_) {}
+        try { fbSync('decorImages/businessLogo', logoBase64); } catch(_) {}
+        mostrarLogoPreview();
+        showToast('✅ Logo del restaurante guardado');
+      } catch(err) {
+        console.error('cargarLogo error:', err);
+        mostrarErrorSubida('Error al guardar el logo: ' + err.message);
+      }
     });  // fin redimensionarImagen
   };
   reader.readAsDataURL(file);
