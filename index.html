@@ -26,7 +26,7 @@
   // Lee credenciales guardadas por el usuario en localStorage
   let firebaseConfig;
   try {
-    const raw = localStorage.getItem('helechos_fb_config');
+    const raw = localStorage.getItem('pos_fb_config');
     if (raw) firebaseConfig = JSON.parse(raw);
   } catch(e) {}
 
@@ -3403,6 +3403,286 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 
 /* ── VENTANA DE SEGUIMIENTO DEL CLIENTE (popup que abre el admin) ── */
 /* Se abre en window.open — no necesita CSS aquí, va embebida en el HTML generado */
+
+/* ══════════════════════════════════════════════
+   EDITOR DE MENÚ RESTAURANTE
+   ══════════════════════════════════════════════ */
+/* ══ BOTÓN QUE VA EN CONFIGURACIÓN ══ */
+.menu-editor-trigger-btn {
+  width: 100%;
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--blanco);
+  border: 1.5px solid var(--borde);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  font-family: 'Inter', sans-serif;
+  transition: background 0.15s, border-color 0.15s;
+}
+.menu-editor-trigger-btn:active { background: var(--fondo); }
+.menu-editor-trigger-left { display: flex; align-items: center; gap: 12px; }
+.menu-editor-trigger-icon {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: linear-gradient(135deg, #2d5a27, #4a8c3f);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px;
+}
+.menu-editor-trigger-title { font-size: 15px; font-weight: 700; }
+.menu-editor-trigger-sub { font-size: 11px; color: var(--gris); margin-top: 2px; }
+.menu-editor-trigger-arrow { font-size: 18px; color: var(--gris); }
+
+/* ══ OVERLAY / MODAL DEL EDITOR ══ */
+#menuEditorOverlay {
+  display: none;
+  position: fixed; inset: 0; z-index: 9000;
+  background: rgba(0,0,0,0.55);
+  align-items: flex-end;
+}
+#menuEditorOverlay.open { display: flex; }
+#menuEditorModal {
+  width: 100%; max-height: 96dvh;
+  background: var(--blanco);
+  border-radius: 22px 22px 0 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.32s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity:0; }
+  to   { transform: translateY(0);    opacity:1; }
+}
+/* ── Editor header ── */
+.me-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 18px 12px;
+  border-bottom: 1.5px solid var(--borde);
+  flex-shrink: 0;
+}
+.me-header-left { display: flex; align-items: center; gap: 10px; }
+.me-header-icon { font-size: 24px; }
+.me-header-title { font-size: 17px; font-weight: 800; }
+.me-header-sub { font-size: 11px; color: var(--gris); margin-top: 1px; }
+.me-close-btn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: var(--gris-cl); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; color: var(--gris);
+}
+/* ── Tab bar del editor ── */
+.me-tabs {
+  display: flex; background: var(--fondo);
+  border-bottom: 1.5px solid var(--borde); flex-shrink: 0;
+}
+.me-tab {
+  flex: 1; padding: 9px 4px 7px;
+  text-align: center; font-size: 10px; font-weight: 700;
+  color: var(--gris); cursor: pointer;
+  border-bottom: 3px solid transparent;
+  text-transform: uppercase; letter-spacing: 0.4px;
+  transition: all 0.2s;
+}
+.me-tab.active { color: var(--rappi); border-bottom-color: var(--rappi); }
+/* ── Scroll body ── */
+.me-body {
+  flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  padding: 16px 16px 20px;
+}
+.me-panel { display: none; }
+.me-panel.active { display: block; }
+/* ── Form elements ── */
+.me-label {
+  font-size: 11px; font-weight: 700; color: var(--gris);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 6px; display: block; margin-top: 14px;
+}
+.me-label:first-child { margin-top: 0; }
+.me-input {
+  width: 100%; padding: 11px 13px;
+  border: 1.5px solid var(--borde); border-radius: var(--r-sm);
+  font-family: 'Inter', sans-serif; font-size: 14px; color: var(--negro);
+  background: var(--blanco); outline: none;
+  transition: border-color 0.2s;
+}
+.me-input:focus { border-color: var(--rappi); }
+.me-color-row { display: flex; align-items: center; gap: 10px; }
+.me-color-swatch {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 2px solid var(--borde); cursor: pointer; flex-shrink: 0;
+  overflow: hidden; padding: 0;
+}
+.me-color-swatch input[type=color] {
+  width: 100%; height: 100%; border: none; cursor: pointer;
+  padding: 0; background: none; transform: scale(1.3);
+}
+/* ── Upload area ── */
+.me-upload {
+  border: 2px dashed var(--borde); border-radius: var(--r-sm);
+  padding: 16px; text-align: center; cursor: pointer;
+  transition: border-color 0.2s, background 0.2s; position: relative;
+  background: var(--fondo);
+}
+.me-upload:hover, .me-upload.drag { border-color: var(--rappi); background: var(--rappi-soft); }
+.me-upload input { position: absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.me-upload-icon { font-size: 28px; margin-bottom: 6px; }
+.me-upload-label { font-size: 12px; font-weight: 600; color: var(--gris); }
+.me-upload-sub { font-size: 11px; color: #aaa; margin-top: 3px; }
+/* ── Preview image ── */
+.me-img-preview {
+  width: 100%; max-height: 120px; object-fit: cover;
+  border-radius: var(--r-sm); border: 1.5px solid var(--borde);
+  margin-bottom: 8px; display: none;
+}
+.me-img-preview.show { display: block; }
+.me-remove-img {
+  background: none; border: 1.5px solid var(--borde);
+  border-radius: 20px; padding: 5px 12px;
+  font-size: 12px; font-weight: 600; color: #c0392b; cursor: pointer;
+  margin-bottom: 8px; display: none;
+}
+.me-remove-img.show { display: inline-flex; align-items: center; gap: 5px; }
+/* ── Categorías ordenables ── */
+.me-cat-list { list-style: none; }
+.me-cat-item {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--blanco); border: 1.5px solid var(--borde);
+  border-radius: var(--r-sm); padding: 11px 13px; margin-bottom: 8px;
+  cursor: grab; user-select: none;
+}
+.me-cat-item.dragging { opacity: 0.45; }
+.me-cat-drag { font-size: 16px; color: var(--gris); flex-shrink: 0; }
+.me-cat-name { flex: 1; font-size: 14px; font-weight: 600; }
+.me-cat-count { font-size: 11px; color: var(--gris); }
+/* ── Toggle ── */
+.me-toggle-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--gris-cl);
+}
+.me-toggle-row:last-child { border-bottom: none; }
+.me-toggle-label { font-size: 14px; font-weight: 600; }
+.me-toggle-sub { font-size: 12px; color: var(--gris); margin-top: 2px; }
+.me-toggle { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+.me-toggle input { opacity: 0; width: 0; height: 0; }
+.me-toggle-slider {
+  position: absolute; inset: 0; cursor: pointer;
+  background: #ccc; border-radius: 30px; transition: 0.25s;
+}
+.me-toggle-slider::before {
+  content: ''; position: absolute;
+  width: 20px; height: 20px; left: 3px; top: 3px;
+  background: white; border-radius: 50%; transition: 0.25s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.me-toggle input:checked + .me-toggle-slider { background: var(--rappi); }
+.me-toggle input:checked + .me-toggle-slider::before { transform: translateX(20px); }
+/* ── Section title ── */
+.me-section-title {
+  font-size: 13px; font-weight: 800; color: var(--negro);
+  padding: 12px 0 8px;
+  border-bottom: 1.5px solid var(--borde);
+  margin-bottom: 12px;
+  display: flex; align-items: center; gap: 8px;
+}
+/* ── Save button ── */
+.me-save-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #2d5a27, #4a8c3f);
+  color: white; border: none; border-radius: var(--r-sm);
+  padding: 15px; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 14px rgba(45,90,39,0.40);
+  margin-top: 20px;
+  transition: opacity 0.2s, transform 0.15s;
+}
+.me-save-btn:active { opacity: 0.88; transform: scale(0.98); }
+.me-save-btn:disabled { opacity: 0.6; }
+/* ── Preview link ── */
+.me-preview-btn {
+  width: 100%; margin-top: 10px;
+  background: var(--fondo); border: 1.5px solid var(--borde);
+  border-radius: var(--r-sm); padding: 12px;
+  font-size: 14px; font-weight: 600; color: var(--negro);
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+/* ── Mini live preview strip ── */
+.me-preview-strip {
+  background: linear-gradient(135deg, #2d5a27, #1a3a15);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  color: white; margin-bottom: 14px;
+  position: relative; overflow: hidden;
+}
+.me-preview-strip-bg {
+  position: absolute; inset: 0;
+  object-fit: cover; opacity: 0.25; width: 100%; height: 100%;
+  display: none;
+}
+.me-preview-nombre { font-size: 18px; font-weight: 800; position: relative; }
+.me-preview-eslogan {
+  font-size: 11px; opacity: 0.75; margin-top: 3px;
+  letter-spacing: 1px; text-transform: uppercase; position: relative;
+}
+/* ── Divider ── */
+.me-divider { height: 1px; background: var(--gris-cl); margin: 16px 0; }
+/* ── Info chip ── */
+.me-info-chip {
+  background: rgba(45,90,39,0.08); border: 1.5px solid rgba(45,90,39,0.2);
+  border-radius: 8px; padding: 10px 12px;
+  font-size: 12px; color: #2d5a27; font-weight: 600;
+  display: flex; gap: 8px; align-items: flex-start;
+  margin-bottom: 14px;
+}
+/* ── Vista previa del menú (iframe inline) ── */
+#mePreviewIframeWrap {
+  position: fixed; inset: 0; z-index: 9500;
+  background: rgba(0,0,0,0.72);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+}
+#mePreviewIframeWrap.open { display: flex; }
+#mePreviewIframeBox {
+  width: 100%; max-width: 480px;
+  height: 88dvh;
+  background: #fff;
+  border-radius: 22px 22px 0 0;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+}
+.me-iframe-topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 16px 10px;
+  border-bottom: 1.5px solid var(--borde);
+  background: var(--blanco);
+  flex-shrink: 0;
+}
+.me-iframe-topbar-title { font-size: 14px; font-weight: 800; }
+.me-iframe-topbar-sub { font-size: 11px; color: var(--gris); }
+.me-iframe-close {
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--gris-cl); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 17px; color: var(--gris);
+}
+#mePreviewIframe {
+  flex: 1; border: none; width: 100%;
+}
+.me-iframe-refresh {
+  padding: 10px 16px; border-top: 1.5px solid var(--borde);
+  display: flex; gap: 8px; background: var(--fondo); flex-shrink: 0;
+}
+.me-iframe-refresh button {
+  flex: 1; padding: 10px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--borde); background: var(--blanco);
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif;
+}
+.me-iframe-refresh button.primary {
+  background: linear-gradient(135deg,#2d5a27,#4a8c3f);
+  color: #fff; border-color: transparent;
+}
+/* ═══════════════════════════════════════════════════ */
 </style>
 
 <!-- HEADER -->
@@ -3843,6 +4123,20 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
     <div class="cfg-acc-body">
       <div class="cfg-acc-inner">
 
+        <!-- ══ EDITOR DE MENÚ ══ -->
+        <button class="menu-editor-trigger-btn" onclick="abrirMenuEditor()">
+          <div class="menu-editor-trigger-left">
+            <div class="menu-editor-trigger-icon">🌿</div>
+            <div>
+              <div class="menu-editor-trigger-title">Editor · Menú Restaurante</div>
+              <div class="menu-editor-trigger-sub">Nombre, colores, fotos, orden de categorías · Vista previa en tiempo real</div>
+            </div>
+          </div>
+          <span class="menu-editor-trigger-arrow">›</span>
+        </button>
+
+        <div style="height:1px;background:var(--borde);margin:4px 0;"></div>
+
         <!-- Imagen de fondo -->
         <div>
           <div class="form-label form-label-small" style="margin-bottom:8px;">🖼️ Imagen de fondo</div>
@@ -4136,7 +4430,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <div id="seccionLoginBranding">
         <div class="config-field">
           <label>🏠 Nombre en pantalla de inicio</label>
-          <input class="config-input" id="cfgLoginBrand" placeholder="Ej: Los Helechos">
+          <input class="config-input" id="cfgLoginBrand" placeholder="Ej: Mi Restaurante">
         </div>
         <div class="config-field">
           <label>📝 Subtítulo en pantalla de inicio</label>
@@ -4995,7 +5289,7 @@ let editColorSeleccionado = AVATAR_COLORS[0];
 
 function cargarUsuarios() {
   try {
-    const saved = localStorage.getItem('helechos_usuarios');
+    const saved = localStorage.getItem('pos_usuarios');
     if (saved) {
       usuarios = JSON.parse(saved);
     } else {
@@ -5027,7 +5321,7 @@ function cargarUsuarios() {
 }
 
 function guardarUsuarios(sincronizar = true) {
-  localStorage.setItem('helechos_usuarios', JSON.stringify(usuarios));
+  localStorage.setItem('pos_usuarios', JSON.stringify(usuarios));
   // BUG 4 fix: solo sincronizar con Firebase cuando se hace un cambio explícito,
   // no durante la carga inicial (donde window._FB puede no estar listo aún)
   if (sincronizar) fbSync('usuarios', usuarios);
@@ -5447,7 +5741,7 @@ async function cerrarSesion() {
   if (window._FB && window._FB.db && ordenesAlCerrar.length > 0) {
     try {
       const { db, ref, set } = window._FB;
-      await set(ref(db, 'helechos/ordenes'), ordenesAlCerrar);
+      await set(ref(db, 'restaurante/ordenes'), ordenesAlCerrar);
     } catch(e) { console.warn('cerrarSesion fbSync ordenes error:', e.message); }
   }
 
@@ -5702,7 +5996,7 @@ function toggleHabilitarUsuario(uid) {
 
 
 // ── PERSISTENCIA DE ÓRDENES ACTIVAS ──────────────────────────────────
-const ORDENES_KEY = 'helechos_ordenes_activas';
+const ORDENES_KEY = 'pos_ordenes_activas';
 
 // Guardar siempre antes de cerrar/recargar la página
 window.addEventListener('beforeunload', () => {
@@ -5868,7 +6162,7 @@ function init() {
 
 function cargarConfig() {
   try {
-    const saved = localStorage.getItem('helechos_config');
+    const saved = localStorage.getItem('pos_config');
     if (saved) config = { ...config, ...JSON.parse(saved) };
   } catch(e) {
     // config queda con valores por defecto
@@ -5876,7 +6170,7 @@ function cargarConfig() {
   // ── Si waTelDomicilio está vacío, intentar leerlo del menú ──
   if (!config.waTelDomicilio) {
     try {
-      const raw = localStorage.getItem('helechos_menu_settings_v1');
+      const raw = localStorage.getItem('pos_menu_settings_v1');
       if (raw) {
         const ms = JSON.parse(raw);
         if (ms.businessWhatsApp) {
@@ -5897,7 +6191,7 @@ function cargarConfig() {
   document.getElementById('cfgWaDomicilio').value = config.waTelDomicilio || '';
   document.getElementById('cfgWaMensaje').value = config.waMensaje || '';
   // Actualizar título de pestaña con el nombre guardado
-  const storedBrand = localStorage.getItem('helechos_login_brand');
+  const storedBrand = localStorage.getItem('pos_login_brand');
   const titleBrand = storedBrand || config.nombre || 'POS';
   document.title = titleBrand + ' · POS';
   try {
@@ -5907,21 +6201,21 @@ function cargarConfig() {
   renderHorarios();
   actualizarConsecDisplay();
   try {
-    const savedLogo = localStorage.getItem('helechos_logo');
+    const savedLogo = localStorage.getItem('pos_logo');
     if (savedLogo) { logoBase64 = savedLogo; mostrarLogoPreview(); }
     else {
       try {
-        const raw = localStorage.getItem('helechos_menu_settings_v1');
+        const raw = localStorage.getItem('pos_menu_settings_v1');
         const ms = raw ? JSON.parse(raw) : {};
         if (ms.businessLogo) {
           logoBase64 = ms.businessLogo;
-          localStorage.setItem('helechos_logo', logoBase64); // normalizar en clave del POS
+          localStorage.setItem('pos_logo', logoBase64); // normalizar en clave del POS
           mostrarLogoPreview();
         } else { actualizarManifestConLogo(null); }
       } catch(_) { actualizarManifestConLogo(null); }
     }
     // Cargar fondo y preview del login
-    const savedBg = localStorage.getItem('helechos_login_bg');
+    const savedBg = localStorage.getItem('pos_login_bg');
     if (savedBg) { loginBgBase64 = savedBg; aplicarLoginBg(); }
     mostrarLoginBgPreview();
   } catch(e) { actualizarManifestConLogo(null); }
@@ -5929,8 +6223,8 @@ function cargarConfig() {
 
 function cargarMenuPrecios() {
   try {
-    const raw = localStorage.getItem('helechos_menu')
-             || localStorage.getItem('helechos_menu_custom_v3');
+    const raw = localStorage.getItem('pos_menu')
+             || localStorage.getItem('pos_menu_custom_v3');
     if (raw) {
       const savedMenu = JSON.parse(raw);
       const tienenCategoria = savedMenu.every(s => s.categoria);
@@ -5968,7 +6262,7 @@ function cargarMenuPrecios() {
 
 function cargarHistorial() {
   try {
-    const saved = localStorage.getItem('helechos_historial');
+    const saved = localStorage.getItem('pos_historial');
     if (saved) historial = JSON.parse(saved);
   } catch(e) {
     historial = [];
@@ -6029,7 +6323,7 @@ function _programarReconexion(delay) {
 setInterval(() => { if (savedPrinterName && !btChar && !_btDesconectandoIntencional) conectarImpresora(false); }, 15000);
 
 function cargarImpresora() {
-  const nombre = localStorage.getItem('helechos_printer_name');
+  const nombre = localStorage.getItem('pos_printer_name');
   if (nombre) {
     savedPrinterName = nombre;
     renderSavedPrinter();
@@ -6582,7 +6876,7 @@ function saveConfig() {
     ? rawNum.slice(2)
     : rawNum;
   config.waMensaje = document.getElementById('cfgWaMensaje').value.trim();
-  localStorage.setItem('helechos_config', JSON.stringify(config));
+  localStorage.setItem('pos_config', JSON.stringify(config));
 
   try {
     const raw = localStorage.getItem(MENU_SETTINGS_KEY);
@@ -6613,19 +6907,19 @@ function saveConfig() {
   const loginSub   = (document.getElementById('cfgLoginSub')   || {}).value || '';
   const loginEmoji = (document.getElementById('cfgLoginEmoji') || {}).value || '🌿';
   if (loginBrand) {
-    localStorage.setItem('helechos_login_brand', loginBrand);
+    localStorage.setItem('pos_login_brand', loginBrand);
     const el = document.getElementById('loginBrandText'); if (el) el.textContent = loginBrand;
     config.loginBrand = loginBrand;
   }
   if (loginSub) {
-    localStorage.setItem('helechos_login_sub', loginSub);
+    localStorage.setItem('pos_login_sub', loginSub);
     const el = document.getElementById('loginSubText'); if (el) el.textContent = loginSub;
     config.loginSub = loginSub;
   }
   // Re-sincronizar config completo con loginBrand/loginSub incluidos
-  localStorage.setItem('helechos_config', JSON.stringify(config));
+  localStorage.setItem('pos_config', JSON.stringify(config));
   fbSync('config', config);
-  localStorage.setItem('helechos_login_emoji', loginEmoji);
+  localStorage.setItem('pos_login_emoji', loginEmoji);
   aplicarLoginIcon();
 
   // ── Actualizar título de la pestaña/PWA ──
@@ -6647,12 +6941,12 @@ function saveConfig() {
 function resetConsec() {
   confirmar({ icono:'🔢', titulo:'Reiniciar numeración', mensaje:'¿Reiniciar numeración de facturas a 000001?', textoOk:'Reiniciar', callback() {
     config.consecutivo = 1;
-    localStorage.setItem('helechos_config', JSON.stringify(config));
+    localStorage.setItem('pos_config', JSON.stringify(config));
     fbSync('config', config);
     // También resetear el contador atómico en Firebase
     if (window._FB) {
       const { db, ref, set } = window._FB;
-      set(ref(db, 'helechos/consecutivo'), 1).catch(() => {});
+      set(ref(db, 'restaurante/consecutivo'), 1).catch(() => {});
     }
     actualizarConsecDisplay();
     renderHeader();
@@ -6662,11 +6956,11 @@ function resetConsec() {
 function resetConsecFE() {
   confirmar({ icono:'🧾', titulo:'Reiniciar consecutivo F.E.', mensaje:'¿Reiniciar la numeración de Facturas Electrónicas a FE-000001?', textoOk:'Reiniciar', callback() {
     config.consecutivoFE = 1;
-    localStorage.setItem('helechos_config', JSON.stringify(config));
+    localStorage.setItem('pos_config', JSON.stringify(config));
     // También resetear el contador atómico FE en Firebase
     if (window._FB) {
       const { db, ref, set } = window._FB;
-      set(ref(db, 'helechos/consecutivoFE'), 1).catch(() => {});
+      set(ref(db, 'restaurante/consecutivoFE'), 1).catch(() => {});
     }
     actualizarConsecDisplay();
     showToast('✅ Consecutivo F.E. reiniciado');
@@ -6703,10 +6997,10 @@ function guardarConsec() {
   }
   confirmar({ icono:'🧾', titulo:'Cambiar consecutivo POS', mensaje:`¿Establecer el próximo recibo POS en ${String(nuevoVal).padStart(6,'0')}?`, textoOk:'Guardar', callback() {
     config.consecutivo = nuevoVal;
-    localStorage.setItem('helechos_config', JSON.stringify(config));
+    localStorage.setItem('pos_config', JSON.stringify(config));
     if (window._FB) {
       const { db, ref, set } = window._FB;
-      set(ref(db, 'helechos/consecutivo'), nuevoVal).catch(() => {});
+      set(ref(db, 'restaurante/consecutivo'), nuevoVal).catch(() => {});
     }
     actualizarConsecDisplay();
     volverDisplay();
@@ -6746,10 +7040,10 @@ function guardarConsecFE() {
   }
   confirmar({ icono:'🧾', titulo:'Cambiar consecutivo F.E.', mensaje:`¿Establecer el próximo consecutivo F.E. en ${prefijo}-${String(nuevoVal).padStart(6,'0')}?`, textoOk:'Guardar', callback() {
     config.consecutivoFE = nuevoVal;
-    localStorage.setItem('helechos_config', JSON.stringify(config));
+    localStorage.setItem('pos_config', JSON.stringify(config));
     if (window._FB) {
       const { db, ref, set } = window._FB;
-      set(ref(db, 'helechos/consecutivoFE'), nuevoVal).catch(() => {});
+      set(ref(db, 'restaurante/consecutivoFE'), nuevoVal).catch(() => {});
     }
     volverDisplay();
     showToast('✅ Consecutivo F.E. actualizado');
@@ -7857,8 +8151,8 @@ function guardarMenuLocalStorage() {
     iva: (i.iva !== undefined && i.iva !== null) ? i.iva : 8, // default 8% para restaurantes
     disponible: i.disponible !== false   // BUG 1 fix: preservar estado de disponibilidad
   }));
-  localStorage.setItem('helechos_menu', JSON.stringify(data));
-  try { localStorage.setItem('helechos_menu_custom_v3', JSON.stringify(data)); } catch(_) {}
+  localStorage.setItem('pos_menu', JSON.stringify(data));
+  try { localStorage.setItem('pos_menu_custom_v3', JSON.stringify(data)); } catch(_) {}
   fbSync('menu', data);
 }
 
@@ -8245,7 +8539,7 @@ function toggleServido(idx, unidad) {
 }
 
 // ── REGISTRO DE PEDIDOS ENTREGADOS ────────────────────────────────────
-const ENTREGADOS_KEY = 'helechos_pedidos_entregados';
+const ENTREGADOS_KEY = 'pos_pedidos_entregados';
 
 function getPedidosEntregados() {
   try {
@@ -8274,11 +8568,11 @@ function registrarPedidoEntregado(orden) {
     try {
       const { db, ref, set } = window._FB;
       const key = 'pedido_' + orden.id + '_' + Date.now();
-      set(ref(db, 'helechos/pedidosEntregados/' + key), registro);
+      set(ref(db, 'restaurante/pedidosEntregados/' + key), registro);
       // Quitar el flag listo de la orden en Firebase — buscar por índice numérico, no por id
       const fbIdx = ordenes.findIndex(o => o.id === orden.id);
       if (fbIdx !== -1) {
-        set(ref(db, 'helechos/ordenes/' + fbIdx + '/entregado'), true);
+        set(ref(db, 'restaurante/ordenes/' + fbIdx + '/entregado'), true);
       }
     } catch(_) {}
   }
@@ -9637,7 +9931,7 @@ function confirmarBorradoFinal() {
     async callback() {
       // 1. Limpiar en memoria y localStorage PRIMERO
       historial = [];
-      localStorage.setItem('helechos_historial', JSON.stringify([]));
+      localStorage.setItem('pos_historial', JSON.stringify([]));
       actualizarBadgeHistorial();
       renderHistorial();
 
@@ -9645,8 +9939,8 @@ function confirmarBorradoFinal() {
       if (window._FB && window._FB.db) {
         const { db, ref, set, remove } = window._FB;
         try {
-          await set(ref(db, 'helechos/historial'), []);
-          await remove(ref(db, 'helechos/historial_items'));
+          await set(ref(db, 'restaurante/historial'), []);
+          await remove(ref(db, 'restaurante/historial_items'));
         } catch(e) {
           console.warn('Error borrando historial en Firebase:', e.message);
         }
@@ -10093,7 +10387,7 @@ async function _btConectarParaImprimir() {
     btChar   = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
     btDevice = device;
     savedPrinterName = device.name || savedPrinterName || 'Impresora BT';
-    localStorage.setItem('helechos_printer_name', savedPrinterName);
+    localStorage.setItem('pos_printer_name', savedPrinterName);
     renderSavedPrinter();
     const stEl = document.getElementById('btStatus');
     if (stEl) stEl.textContent = '✅ Conectada: ' + savedPrinterName;
@@ -10164,7 +10458,7 @@ async function scanBluetooth() {
     const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
     btChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
     savedPrinterName = btDevice.name || 'Impresora BT';
-    localStorage.setItem('helechos_printer_name', savedPrinterName);
+    localStorage.setItem('pos_printer_name', savedPrinterName);
     renderSavedPrinter();
     document.getElementById('btStatus').textContent = '✅ Conectada: ' + savedPrinterName;
     showToast('✅ Impresora conectada');
@@ -10198,7 +10492,7 @@ async function reconectarImpresora() {
       const service = await server.getPrimaryService('000018f0-0000-1000-8000-00805f9b34fb');
       btChar = await service.getCharacteristic('00002af1-0000-1000-8000-00805f9b34fb');
       savedPrinterName = btDevice.name || savedPrinterName;
-      localStorage.setItem('helechos_printer_name', savedPrinterName);
+      localStorage.setItem('pos_printer_name', savedPrinterName);
       renderSavedPrinter();
       const stEl = document.getElementById('btStatus');
       if (stEl) stEl.textContent = '✅ Conectada: ' + savedPrinterName;
@@ -10213,7 +10507,7 @@ function olvidarImpresora() {
   confirmar({ icono:'🖨️', titulo:'Olvidar impresora', mensaje:'¿Olvidar la impresora guardada?', textoOk:'Olvidar', callback() {
     savedPrinterName = null;
     btDevice = null; btChar = null;
-    localStorage.removeItem('helechos_printer_name');
+    localStorage.removeItem('pos_printer_name');
     renderSavedPrinter();
     const stEl = document.getElementById('btStatus');
     if (stEl) { stEl.style.display = ''; stEl.textContent = 'Sin impresora conectada'; }
@@ -10573,7 +10867,7 @@ async function finalizarFactura() {
     if (window._FB && window._FB.db) {
       try {
         const { db, ref, runTransaction } = window._FB;
-        const consecRef = ref(db, 'helechos/consecutivoFE');
+        const consecRef = ref(db, 'restaurante/consecutivoFE');
         const result = await runTransaction(consecRef, (valorActual) => {
           const actual = (valorActual && valorActual > 0) ? valorActual : (config.consecutivoFE || 1);
           return actual + 1;
@@ -10581,7 +10875,7 @@ async function finalizarFactura() {
         if (result.committed) {
           numeroFactura = result.snapshot.val();
           config.consecutivoFE = numeroFactura;
-          localStorage.setItem('helechos_config', JSON.stringify(config));
+          localStorage.setItem('pos_config', JSON.stringify(config));
           actualizarConsecDisplay();
         } else {
           throw new Error('Transacción FE no confirmada');
@@ -10590,20 +10884,20 @@ async function finalizarFactura() {
         console.warn('fbTransaction FE error, usando local:', e.message);
         numeroFactura = config.consecutivoFE || 1;
         config.consecutivoFE = (config.consecutivoFE || 1) + 1;
-        localStorage.setItem('helechos_config', JSON.stringify(config));
+        localStorage.setItem('pos_config', JSON.stringify(config));
       }
     } else {
       // Sin Firebase: consecutivo FE local
       numeroFactura = config.consecutivoFE || 1;
       config.consecutivoFE = (config.consecutivoFE || 1) + 1;
-      localStorage.setItem('helechos_config', JSON.stringify(config));
+      localStorage.setItem('pos_config', JSON.stringify(config));
     }
   } else {
     // ── Consecutivo normal POS ────────────────────────────────────────
     if (window._FB && window._FB.db) {
       try {
         const { db, ref, runTransaction } = window._FB;
-        const consecRef = ref(db, 'helechos/consecutivo');
+        const consecRef = ref(db, 'restaurante/consecutivo');
         const result = await runTransaction(consecRef, (valorActual) => {
           const actual = (valorActual && valorActual > 0) ? valorActual : config.consecutivo;
           return actual + 1;
@@ -10611,7 +10905,7 @@ async function finalizarFactura() {
         if (result.committed) {
           numeroFactura = result.snapshot.val();
           config.consecutivo = numeroFactura;
-          localStorage.setItem('helechos_config', JSON.stringify(config));
+          localStorage.setItem('pos_config', JSON.stringify(config));
           actualizarConsecDisplay();
         } else {
           throw new Error('Transacción no confirmada');
@@ -10620,13 +10914,13 @@ async function finalizarFactura() {
         console.warn('fbTransaction error, usando local:', e.message);
         numeroFactura = config.consecutivo;
         config.consecutivo++;
-        localStorage.setItem('helechos_config', JSON.stringify(config));
+        localStorage.setItem('pos_config', JSON.stringify(config));
       }
     } else {
       // Sin Firebase: consecutivo local
       numeroFactura = config.consecutivo;
       config.consecutivo++;
-      localStorage.setItem('helechos_config', JSON.stringify(config));
+      localStorage.setItem('pos_config', JSON.stringify(config));
     }
   }
 
@@ -10696,7 +10990,7 @@ async function finalizarFactura() {
     feEstado: '',       // 'PENDIENTE' | 'ACEPTADA' | 'RECHAZADA'
   };
   historial.push(factura);
-  localStorage.setItem('helechos_historial', JSON.stringify(historial));
+  localStorage.setItem('pos_historial', JSON.stringify(historial));
   // fbSyncFactura se llama después de añadir totalRecibido/cambio/pagos al cobrar
   actualizarBadgeHistorial();
 
@@ -10866,12 +11160,12 @@ function cargarLogo(input) {
   const reader = new FileReader();
   reader.onload = (e) => {
     logoBase64 = e.target.result;
-    localStorage.setItem('helechos_logo', logoBase64);
+    localStorage.setItem('pos_logo', logoBase64);
     try {
-      const raw = localStorage.getItem('helechos_menu_settings_v1');
+      const raw = localStorage.getItem('pos_menu_settings_v1');
       const ms = raw ? JSON.parse(raw) : {};
       ms.businessLogo = logoBase64;
-      localStorage.setItem('helechos_menu_settings_v1', JSON.stringify(ms));
+      localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
     } catch(_) {}
     fbSync('logo', { data: logoBase64 }); // Corrección: el listener espera { data: string }
     fbSync('decorImages/businessLogo', logoBase64);
@@ -10888,8 +11182,8 @@ function actualizarIconosApp() {
     const lImg   = document.getElementById('loginLogoImg');
     const lEmoji = document.getElementById('loginLogoEmoji');
 
-    // Header: usa el logo del RESTAURANTE (helechos_logo)
-    const restLogo = logoBase64 || localStorage.getItem('helechos_logo');
+    // Header: usa el logo del RESTAURANTE (pos_logo)
+    const restLogo = logoBase64 || localStorage.getItem('pos_logo');
     if (restLogo) {
       if (hImg)   { hImg.src = restLogo; hImg.style.display = 'block'; }
       if (hEmoji) hEmoji.style.display = 'none';
@@ -10900,8 +11194,8 @@ function actualizarIconosApp() {
       if (hEmoji) hEmoji.style.display = '';
     }
 
-    // Login: usa el ícono/logo del SISTEMA (helechos_login_icon)
-    const loginIcon = localStorage.getItem('helechos_login_icon');
+    // Login: usa el ícono/logo del SISTEMA (pos_login_icon)
+    const loginIcon = localStorage.getItem('pos_login_icon');
     if (loginIcon) {
       if (lImg)   { lImg.src = loginIcon; lImg.style.display = 'block'; }
       if (lEmoji) lEmoji.style.display = 'none';
@@ -10915,7 +11209,7 @@ function actualizarIconosApp() {
 let _manifestBlobUrl = null;
 function actualizarManifestConLogo(logoSrc) {
   try {
-    const brand = localStorage.getItem('helechos_login_brand') || config.nombre || 'Mi Restaurante';
+    const brand = localStorage.getItem('pos_login_brand') || config.nombre || 'Mi Restaurante';
     const manifest = {
       name: brand + ' · POS',
       short_name: brand,
@@ -10962,12 +11256,12 @@ function mostrarLogoPreview() {
 function quitarLogo() {
   confirmar({ icono:'🖼️', titulo:'Quitar logo', mensaje:'¿Quitar el logo del recibo?', textoOk:'Quitar', callback() {
     logoBase64 = null;
-    localStorage.removeItem('helechos_logo');
+    localStorage.removeItem('pos_logo');
     try {
-      const raw = localStorage.getItem('helechos_menu_settings_v1');
+      const raw = localStorage.getItem('pos_menu_settings_v1');
       const ms = raw ? JSON.parse(raw) : {};
       ms.businessLogo = '';
-      localStorage.setItem('helechos_menu_settings_v1', JSON.stringify(ms));
+      localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
     } catch(_) {}
     fbSyncRemove('logo');
     fbSync('decorImages/businessLogo', '');
@@ -11306,7 +11600,7 @@ function eliminarProducto(idx) {
 // ── PWA: SERVICE WORKER ───────────────────────────────────────────────
 if ('serviceWorker' in navigator) {
   const swCode = `
-const CACHE = 'helechos-v7-5';
+const CACHE = 'pos-cache-v1';
 const FONTS  = 'https://fonts.googleapis.com';
 const ASSETS = ['./'];
 
@@ -11354,7 +11648,7 @@ let deferredPrompt = null;
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredPrompt = e;
-  const pwaShown = localStorage.getItem('helechos_pwa_dismissed');
+  const pwaShown = localStorage.getItem('pos_pwa_dismissed');
   if (!pwaShown) {
     setTimeout(() => document.getElementById('pwaBanner').classList.add('show'), 1500);
   }
@@ -11371,12 +11665,12 @@ document.getElementById('pwaBannerBtn').addEventListener('click', async () => {
   const { outcome } = await deferredPrompt.userChoice;
   deferredPrompt = null;
   document.getElementById('pwaBanner').classList.remove('show');
-  if (outcome === 'dismissed') localStorage.setItem('helechos_pwa_dismissed', '1');
+  if (outcome === 'dismissed') localStorage.setItem('pos_pwa_dismissed', '1');
 });
 
 function cerrarPwaBanner() {
   document.getElementById('pwaBanner').classList.remove('show');
-  localStorage.setItem('helechos_pwa_dismissed', '1');
+  localStorage.setItem('pos_pwa_dismissed', '1');
 }
 
 // ── OFFLINE DETECTION ─────────────────────────────────────────────────
@@ -11409,7 +11703,7 @@ function confirmar({ icono = '⚠️', titulo = 'Confirmar', mensaje, textoOk = 
 // ── BACKUP / RESTAURAR ────────────────────────────────────────────────
 function exportarBackup() {
   // Corrección Bug 17: advertir con modal (no solo confirm) que el backup incluye credenciales
-  const tieneFB = !!localStorage.getItem('helechos_fb_config');
+  const tieneFB = !!localStorage.getItem('pos_fb_config');
   const advertencia = tieneFB
     ? '⚠️ Este archivo contendrá las credenciales de Firebase y los PINs de todos los usuarios.\n\n¿Guardas el archivo en un lugar seguro y no lo compartes por WhatsApp o correo?'
     : '⚠️ Este archivo contendrá los PINs de todos los usuarios.\n\n¿Guardas el archivo en un lugar seguro?';
@@ -11424,22 +11718,22 @@ function exportarBackup() {
       const backup = {
         _version: 1,
         _fecha: new Date().toISOString(),
-        helechos_config:    localStorage.getItem('helechos_config'),
-        helechos_menu:      localStorage.getItem('helechos_menu'),
-        helechos_usuarios:  localStorage.getItem('helechos_usuarios'),
-        helechos_historial: localStorage.getItem('helechos_historial'),
-        helechos_logo:      localStorage.getItem('helechos_logo'),
-        helechos_printer_name: localStorage.getItem('helechos_printer_name'),
-        helechos_dark:      localStorage.getItem('helechos_dark'),
-        helechos_pwa_dismissed: localStorage.getItem('helechos_pwa_dismissed'),
-        helechos_fb_config: localStorage.getItem('helechos_fb_config'),
+        pos_config:    localStorage.getItem('pos_config'),
+        pos_menu:      localStorage.getItem('pos_menu'),
+        pos_usuarios:  localStorage.getItem('pos_usuarios'),
+        pos_historial: localStorage.getItem('pos_historial'),
+        pos_logo:      localStorage.getItem('pos_logo'),
+        pos_printer_name: localStorage.getItem('pos_printer_name'),
+        pos_dark:      localStorage.getItem('pos_dark'),
+        pos_pwa_dismissed: localStorage.getItem('pos_pwa_dismissed'),
+        pos_fb_config: localStorage.getItem('pos_fb_config'),
       };
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       const fecha = new Date().toLocaleDateString('es-CO').replace(/\//g,'-');
       a.href     = url;
-      a.download = `helechos_backup_${fecha}.json`;
+      a.download = `pos_backup_${fecha}.json`;
       a.click();
       URL.revokeObjectURL(url);
       showToast('✅ Backup descargado — guárdalo en un lugar seguro');
@@ -11471,10 +11765,10 @@ function importarBackup(input) {
         colorOk: 'var(--rappi)',
         callback() {
           const keys = [
-            'helechos_config','helechos_menu','helechos_usuarios',
-            'helechos_historial','helechos_logo',
-            'helechos_printer_name','helechos_dark','helechos_pwa_dismissed',
-            'helechos_fb_config'
+            'pos_config','pos_menu','pos_usuarios',
+            'pos_historial','pos_logo',
+            'pos_printer_name','pos_dark','pos_pwa_dismissed',
+            'pos_fb_config'
           ];
           keys.forEach(k => {
             if (data[k] !== null && data[k] !== undefined) {
@@ -11524,7 +11818,7 @@ function guardarConfigFirebase() {
   const cfg = { apiKey, databaseURL: dbUrl, projectId, appId,
                 authDomain: projectId + '.firebaseapp.com',
                 storageBucket: projectId + '.appspot.com' };
-  localStorage.setItem('helechos_fb_config', JSON.stringify(cfg));
+  localStorage.setItem('pos_fb_config', JSON.stringify(cfg));
   errEl.style.display = 'none';
   showToast('🔥 Configuración guardada — recargando...');
   setTimeout(() => location.reload(), 1000);
@@ -11536,7 +11830,7 @@ async function fbInit() {
   if (window._FB && window._FB.db) return true;
 
   // Intentar con config guardada en localStorage
-  const saved = localStorage.getItem('helechos_fb_config');
+  const saved = localStorage.getItem('pos_fb_config');
   if (!saved) return false;
 
   // Esperar máx 800 ms a que el módulo esté listo
@@ -11553,7 +11847,7 @@ async function fbSync(campo, valor) {
   if (!window._FB) return;
   const { db, ref, set } = window._FB;
   try {
-    await set(ref(db, 'helechos/' + campo), valor);
+    await set(ref(db, 'restaurante/' + campo), valor);
   } catch(e) {
     console.warn('fbSync error:', campo, e.message);
   }
@@ -11564,7 +11858,7 @@ async function fbSyncRemove(campo) {
   if (!window._FB) return;
   const { db, ref, remove } = window._FB;
   try {
-    await remove(ref(db, 'helechos/' + campo));
+    await remove(ref(db, 'restaurante/' + campo));
   } catch(e) {
     console.warn('fbSyncRemove error:', campo, e.message);
   }
@@ -11575,19 +11869,19 @@ window.fbSync       = fbSync;
 window.fbSyncRemove = fbSyncRemove;
 
 // fix #13: subir solo la factura nueva como nodo individual en vez de
-// re-subir el historial completo. Usa helechos/historial_items/<numero>
-// como destino granular; helechos/historial completo solo se usa para
+// re-subir el historial completo. Usa restaurante/historial_items/<numero>
+// como destino granular; restaurante/historial completo solo se usa para
 // sincronización inicial y borrado total.
 async function fbSyncFactura(factura) {
   if (!window._FB) return;
   const { db, ref, set } = window._FB;
   try {
     // La clave del nodo es el número de factura (ej. "000042")
-    await set(ref(db, 'helechos/historial_items/' + factura.numero), factura);
+    await set(ref(db, 'restaurante/historial_items/' + factura.numero), factura);
   } catch(e) {
     console.warn('fbSyncFactura error:', e.message);
     // Fallback: si falla la escritura granular, intentar con el array completo
-    try { await set(ref(db, 'helechos/historial'), historial); } catch(_) {}
+    try { await set(ref(db, 'restaurante/historial'), historial); } catch(_) {}
   }
 }
 
@@ -11596,7 +11890,7 @@ async function fbVerificarSesion(userId) {
   if (!window._FB) return false;
   const { db, ref, get } = window._FB;
   try {
-    const snap = await get(ref(db, 'helechos/sesiones/u' + userId));
+    const snap = await get(ref(db, 'restaurante/sesiones/u' + userId));
     if (!snap.exists()) return false;
     const sesion = snap.val();
     // Si es la misma pestaña, no bloquear (recarga de página)
@@ -11605,7 +11899,7 @@ async function fbVerificarSesion(userId) {
     const TIMEOUT_MS = 25 * 60 * 1000;
     if (sesion.ts && (Date.now() - sesion.ts) > TIMEOUT_MS) {
       // Limpiar nodo huérfano automáticamente
-      try { const { remove } = window._FB; await remove(ref(db, 'helechos/sesiones/u' + userId)); } catch(_) {}
+      try { const { remove } = window._FB; await remove(ref(db, 'restaurante/sesiones/u' + userId)); } catch(_) {}
       return false;
     }
     return true; // Sesión activa en otro dispositivo
@@ -11620,7 +11914,7 @@ async function fbRegistrarSesion(userId) {
   if (!window._FB) return;
   const { db, ref, set } = window._FB;
   try {
-    await set(ref(db, 'helechos/sesiones/u' + userId), {
+    await set(ref(db, 'restaurante/sesiones/u' + userId), {
       tabId: window._FB.SESSION_TAB_ID,
       ts: Date.now(),
       device: navigator.userAgent.substring(0, 80)
@@ -11634,7 +11928,7 @@ async function fbRegistrarSesion(userId) {
     if (!usuarioActivo || !window._FB) return;
     const { db, ref, set } = window._FB;
     try {
-      await set(ref(db, 'helechos/sesiones/u' + userId + '/ts'), Date.now());
+      await set(ref(db, 'restaurante/sesiones/u' + userId + '/ts'), Date.now());
     } catch(_) {}
   }, 10 * 60 * 1000);
 }
@@ -11645,7 +11939,7 @@ async function fbLiberarSesion(userId) {
   if (!window._FB) return;
   const { db, ref, remove } = window._FB;
   try {
-    await remove(ref(db, 'helechos/sesiones/u' + userId));
+    await remove(ref(db, 'restaurante/sesiones/u' + userId));
   } catch(e) {
     console.warn('fbLiberarSesion error:', e.message);
   }
@@ -11688,10 +11982,10 @@ function fbEscucharCambios() {
   const tabId = window._FB.SESSION_TAB_ID;
 
   const campos = [
-    { path: 'helechos/config',    handler: (val) => {
+    { path: 'restaurante/config',    handler: (val) => {
         if (!val) return;
         config = { ...config, ...val };
-        localStorage.setItem('helechos_config', JSON.stringify(config));
+        localStorage.setItem('pos_config', JSON.stringify(config));
         renderHeader();
         actualizarConsecDisplay();
         document.getElementById('cfgNombre').value = config.nombre || '';
@@ -11702,18 +11996,18 @@ function fbEscucharCambios() {
         document.getElementById('cfgWaDomicilio').value = config.waTelDomicilio || '';
         document.getElementById('cfgWaMensaje').value = config.waMensaje || '';
         try {
-          const raw2 = localStorage.getItem('helechos_menu_settings_v1');
+          const raw2 = localStorage.getItem('pos_menu_settings_v1');
           const ms2 = raw2 ? JSON.parse(raw2) : {};
           // BUG 6 fix: waTelDomicilio se guarda sin prefijo 57; el menú lo necesita con prefijo
           const num2 = (config.waTelDomicilio || '').replace(/\D/g, '');
           if (num2) {
             ms2.businessWhatsApp = '57' + (num2.startsWith('57') && num2.length > 10 ? num2.slice(2) : num2);
-            localStorage.setItem('helechos_menu_settings_v1', JSON.stringify(ms2));
+            localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms2));
           }
         } catch(e) {}
       }
     },
-    { path: 'helechos/menu', handler: (val) => {
+    { path: 'restaurante/menu', handler: (val) => {
         if (!Array.isArray(val)) return;
         // formato del POS (precio), para que los cálculos del carrito nunca sean $0.
         MENU = val.map(s => {
@@ -11730,8 +12024,8 @@ function fbEscucharCambios() {
             disponible: s.disponible !== false
           };
         });
-        localStorage.setItem('helechos_menu', JSON.stringify(MENU));
-        try { localStorage.setItem('helechos_menu_custom_v3', JSON.stringify(MENU)); } catch(_) {}
+        localStorage.setItem('pos_menu', JSON.stringify(MENU));
+        try { localStorage.setItem('pos_menu_custom_v3', JSON.stringify(MENU)); } catch(_) {}
         // Actualizar precios en carrito si cambiaron desde otro dispositivo
         carrito.forEach(ci => {
           const found = MENU.find(m => m.nombre === ci.nombre);
@@ -11741,7 +12035,7 @@ function fbEscucharCambios() {
         if (carrito.length > 0) renderCarrito();
       }
     },
-    { path: 'helechos/historial', handler: (val) => {
+    { path: 'restaurante/historial', handler: (val) => {
         if (!Array.isArray(val)) return;
         // BUG 8 fix: antes de reemplazar el historial completo, preservar facturas que
         // llegaron vía historial_items y que podrían no estar en el array de Firebase todavía
@@ -11757,12 +12051,12 @@ function fbEscucharCambios() {
           return na - nb;
         });
         historial = merged;
-        localStorage.setItem('helechos_historial', JSON.stringify(historial));
+        localStorage.setItem('pos_historial', JSON.stringify(historial));
         actualizarBadgeHistorial(); renderHistorial();
       }
     },
     // fix #13: escuchar facturas individuales publicadas por otros dispositivos
-    { path: 'helechos/historial_items', handler: (val) => {
+    { path: 'restaurante/historial_items', handler: (val) => {
         if (!val || typeof val !== 'object') return;
         // val es un objeto { "000042": {...factura}, "000043": {...factura}, ... }
         const nuevas = Object.values(val);
@@ -11782,12 +12076,12 @@ function fbEscucharCambios() {
             const nb = parseInt(String(b.numero).replace(/\D/g, '')) || 0;
             return na - nb;
           });
-          localStorage.setItem('helechos_historial', JSON.stringify(historial));
+          localStorage.setItem('pos_historial', JSON.stringify(historial));
           actualizarBadgeHistorial(); renderHistorial();
         }
       }
     },
-    { path: 'helechos/usuarios', handler: (val) => {
+    { path: 'restaurante/usuarios', handler: (val) => {
         if (!Array.isArray(val)) return;
         // Preservar siempre al usuario Master aunque venga de Firebase sin él
         const masterLocal = usuarios.find(u => u.rol === 'master');
@@ -11795,39 +12089,39 @@ function fbEscucharCambios() {
         if (!usuarios.find(u => u.rol === 'master') && masterLocal) {
           usuarios.unshift(masterLocal);
         }
-        localStorage.setItem('helechos_usuarios', JSON.stringify(usuarios));
+        localStorage.setItem('pos_usuarios', JSON.stringify(usuarios));
         renderUsuariosConfig();
         renderLoginUserList();
       }
     },
-    { path: 'helechos/logo', handler: (val) => {
+    { path: 'restaurante/logo', handler: (val) => {
         if (!val || !val.data) return;
         if (val.data === logoBase64) return; // Sin cambio
         logoBase64 = val.data;
-        localStorage.setItem('helechos_logo', logoBase64);
+        localStorage.setItem('pos_logo', logoBase64);
         mostrarLogoPreview();
         actualizarIconosApp();
       }
     },
-    { path: 'helechos/consecutivo', handler: (val) => {
+    { path: 'restaurante/consecutivo', handler: (val) => {
         if (!val || val <= config.consecutivo) return;
         // Otro dispositivo avanzó el consecutivo — actualizar localmente
         config.consecutivo = val;
-        localStorage.setItem('helechos_config', JSON.stringify(config));
+        localStorage.setItem('pos_config', JSON.stringify(config));
         actualizarConsecDisplay();
         renderHeader();
       }
     },
-    { path: 'helechos/consecutivoFE', handler: (val) => {
+    { path: 'restaurante/consecutivoFE', handler: (val) => {
         if (!val || val <= (config.consecutivoFE || 1)) return;
         // Otro dispositivo avanzó el consecutivo FE — actualizar localmente
         config.consecutivoFE = val;
-        localStorage.setItem('helechos_config', JSON.stringify(config));
+        localStorage.setItem('pos_config', JSON.stringify(config));
         actualizarConsecDisplay();
       }
     },
     // Órdenes activas en tiempo real — compartidas entre todos los dispositivos
-    { path: 'helechos/ordenes', handler: (val) => {
+    { path: 'restaurante/ordenes', handler: (val) => {
         // Ignorar si no hay sesión activa — evita condición de carrera al cerrar sesión
         if (!usuarioActivo) return;
         // Si Firebase devuelve null pero hay órdenes locales, conservarlas (logout race)
@@ -11900,7 +12194,7 @@ function fbEscucharCambios() {
       }
     },
     // Estado por ítem desde cocina — desbloquear checks individualmente
-    { path: 'helechos/listoItems', handler: (val) => {
+    { path: 'restaurante/listoItems', handler: (val) => {
         listoItems = (val && typeof val === 'object') ? val : {};
 
         // Detectar ítems recién marcados como listos por cocina
@@ -11963,7 +12257,7 @@ function fbEscucharCambios() {
 async function fbPrimerSync() {
   if (!window._FB) return;
   const { db, ref, get, set } = window._FB;
-  const checkPath = 'helechos/config';
+  const checkPath = 'restaurante/config';
   try {
     const snap = await get(ref(db, checkPath));
     if (!snap.exists()) {
@@ -11974,12 +12268,12 @@ async function fbPrimerSync() {
       await fbSync('usuarios',  usuarios);
       if (logoBase64) await fbSync('logo', { data: logoBase64 });
       // Inicializar consecutivo global en Firebase con el valor local
-      await set(ref(db, 'helechos/consecutivo'), config.consecutivo);
+      await set(ref(db, 'restaurante/consecutivo'), config.consecutivo);
       // FIX D: crear también los nodos granulares historial_items para que
       // dispositivos nuevos puedan recibir el historial existente.
       for (const factura of historial) {
         if (factura && factura.numero) {
-          await set(ref(db, 'helechos/historial_items/' + factura.numero), factura);
+          await set(ref(db, 'restaurante/historial_items/' + factura.numero), factura);
         }
       }
       showToast('🔥 Datos subidos a Firebase');
@@ -11992,7 +12286,7 @@ async function fbPrimerSync() {
 // ── Mostrar/ocultar modal de configuración de Firebase ────────────────
 function abrirConfigFirebase() {
   if (usuarioActivo?.rol !== 'master') { showToast('⛔ Solo el usuario Master puede configurar Firebase'); return; }
-  const saved = localStorage.getItem('helechos_fb_config');
+  const saved = localStorage.getItem('pos_fb_config');
   if (saved) {
     try {
       const c = JSON.parse(saved);
@@ -12009,7 +12303,7 @@ function abrirConfigFirebase() {
 function renderEstadoFirebase() {
   const el  = document.getElementById('fbStatusText');
   const dot = document.getElementById('fbStatusDot');
-  const saved = localStorage.getItem('helechos_fb_config');
+  const saved = localStorage.getItem('pos_fb_config');
 
   if (!saved) {
     if (el)  el.innerHTML = '⚫ Sin configurar &nbsp;<button onclick="abrirConfigFirebase()" style="background:var(--rappi);color:#111;border:none;border-radius:6px;padding:4px 10px;font-size:11px;font-weight:700;cursor:pointer;">Configurar</button>';
@@ -12048,7 +12342,7 @@ window.addEventListener('beforeunload', () => {
     const { db, ref, remove } = window._FB;
     try {
       // Usar sendBeacon no está disponible para Firebase; usamos remove síncrono como mejor esfuerzo
-      remove(ref(db, 'helechos/sesiones/u' + usuarioActivo.id));
+      remove(ref(db, 'restaurante/sesiones/u' + usuarioActivo.id));
     } catch(_) {}
   }
 });
@@ -12065,7 +12359,7 @@ window.addEventListener('firebase-ready', () => {
   try {
     const cfg = JSON.parse(db.app.options ? JSON.stringify(db.app.options) : '{}');
     if ((cfg.databaseURL || '').includes('TU_PROYECTO')) {
-      const saved = localStorage.getItem('helechos_fb_config');
+      const saved = localStorage.getItem('pos_fb_config');
       if (!saved) {
         setTimeout(() => {
           document.getElementById('modalFirebaseSetup').style.display = 'flex';
@@ -12457,13 +12751,13 @@ function descargarExcelMes(yyyymm) {
 
 function toggleDarkMode() {
   const isDark = document.body.classList.toggle('dark');
-  localStorage.setItem('helechos_dark', isDark ? '1' : '0');
+  localStorage.setItem('pos_dark', isDark ? '1' : '0');
   const btn = document.getElementById('darkToggleBtn');
   if (btn) btn.textContent = isDark ? '☀️' : '🌙';
 }
 
 function initDarkMode() {
-  const saved = localStorage.getItem('helechos_dark');
+  const saved = localStorage.getItem('pos_dark');
   // Si el usuario guardó preferencia explícita, respetarla.
   // Si no hay preferencia guardada, usar preferencia del sistema operativo.
   let isDark;
@@ -12489,8 +12783,8 @@ initLogin();
      CONFIG AVANZADA DEL MENÚ: pagos, categorías, fotos, QR
 ═══════════════════════════════════════════════════════ -->
 <script>
-// ── Clave de settings del menú (compartida con menu_helechos) ──
-const MENU_SETTINGS_KEY = 'helechos_menu_settings_v1';
+// ── Clave de settings del menú (compartida con menu_pos) ──
+const MENU_SETTINGS_KEY = 'pos_menu_settings_v1';
 
 function loadMenuSettings() {
   try { const r = localStorage.getItem(MENU_SETTINGS_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
@@ -12547,7 +12841,7 @@ function onCfgAccOpen(id) {
 // SISTEMA DE PERMISOS — MASTER
 // ══════════════════════════════════════
 
-const MASTER_PERMS_KEY = 'helechos_master_perms';
+const MASTER_PERMS_KEY = 'pos_master_perms';
 
 // Secciones controlables: clave → id del accordion
 const PERM_SECTIONS = {
@@ -13024,7 +13318,7 @@ function cfgAddCategory() {
 // FOTOS DE CATEGORÍAS
 // Clave separada para no saturar menuSettings con base64 pesado
 // ══════════════════════════════════════
-const CAT_IMAGES_KEY = 'helechos_cat_images';
+const CAT_IMAGES_KEY = 'pos_cat_images';
 
 function cfgGetCatImages() {
   try {
@@ -13137,8 +13431,8 @@ function cfgRenderCatImages() {
 // MÓDULO FACTURA ELECTRÓNICA — CLIENTE
 // ══════════════════════════════════════════════════════════════════════
 
-const FE_CONFIG_KEY = 'helechos_fe_config';
-const FE_COLA_KEY   = 'helechos_fe_cola';
+const FE_CONFIG_KEY = 'pos_fe_config';
+const FE_COLA_KEY   = 'pos_fe_cola';
 
 function feGetConfig() { try { const r = localStorage.getItem(FE_CONFIG_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; } }
 function feGuardarConfig(cfg) { localStorage.setItem(FE_CONFIG_KEY, JSON.stringify(cfg)); }
@@ -13286,7 +13580,7 @@ async function emitirNotaCredito(numeroFactura) {
         if (idx >= 0) {
           historial[idx].feNotaCredito = data.cufe;
           historial[idx].feEstado = 'ANULADA';
-          localStorage.setItem('helechos_historial', JSON.stringify(historial));
+          localStorage.setItem('pos_historial', JSON.stringify(historial));
           try { if (window.fbSync) {
             window.fbSync('facturas/' + numeroFactura + '/feNotaCredito', data.cufe);
             window.fbSync('facturas/' + numeroFactura + '/feEstado', 'ANULADA');
@@ -13396,7 +13690,7 @@ async function confirmarNotaDebito(numeroFactura) {
     if (idx >= 0) {
       historial[idx].feNotaDebito      = data.cufe;
       historial[idx].feNotaDebitoValor = valorRaw;
-      localStorage.setItem('helechos_historial', JSON.stringify(historial));
+      localStorage.setItem('pos_historial', JSON.stringify(historial));
       try { if (window.fbSync) {
         window.fbSync('facturas/'+numeroFactura+'/feNotaDebito',      data.cufe);
         window.fbSync('facturas/'+numeroFactura+'/feNotaDebitoValor', valorRaw);
@@ -13414,13 +13708,13 @@ function feActualizarFactura(numero, cufe, estado) {
   const f = historial.find(x=>x.numero===numero);
   if (!f) return;
   f.feCufe = cufe; f.feEstado = estado||'ACEPTADA';
-  localStorage.setItem('helechos_historial', JSON.stringify(historial));
+  localStorage.setItem('pos_historial', JSON.stringify(historial));
   try { if (window.fbSync) { window.fbSync('facturas/'+numero+'/feCufe', cufe); window.fbSync('facturas/'+numero+'/feEstado', estado||'ACEPTADA'); } } catch(_) {}
 }
 
 async function _feEnviarConReintentos(factura) {
   const url = feGetBackendUrl();
-  const marcarPendiente = () => { factura.feEstado='PENDIENTE'; const i=historial.findIndex(x=>x.numero===factura.numero); if(i>=0) historial[i].feEstado='PENDIENTE'; localStorage.setItem('helechos_historial',JSON.stringify(historial)); };
+  const marcarPendiente = () => { factura.feEstado='PENDIENTE'; const i=historial.findIndex(x=>x.numero===factura.numero); if(i>=0) historial[i].feEstado='PENDIENTE'; localStorage.setItem('pos_historial',JSON.stringify(historial)); };
   if (!url) { marcarPendiente(); feAgregarACola(factura.numero, feConstruirPayload(factura)); showToast('⚠️ FE en cola — configura el backend en Ajustes', 4000); return; }
   marcarPendiente();
   let err = '';
@@ -13606,7 +13900,7 @@ async function feEnviarSetPruebas() {
 // MÓDULO CAJERO — COBROS, PAGOS COMBINADOS, RECIBOS PENDIENTES
 // ══════════════════════════════════════════════════════════════════════
 
-const COBROS_PENDIENTES_KEY = 'helechos_cobros_pendientes';
+const COBROS_PENDIENTES_KEY = 'pos_cobros_pendientes';
 
 function getCobros() {
   try { const r = localStorage.getItem(COBROS_PENDIENTES_KEY); return r ? JSON.parse(r) : []; } catch(e) { return []; }
@@ -13645,7 +13939,7 @@ function enviarAlCajero() {
   if (window._FB && window._FB.db) {
     try {
       const { db, ref, set } = window._FB;
-      set(ref(db, 'helechos/cobros/' + recibo.id), recibo);
+      set(ref(db, 'restaurante/cobros/' + recibo.id), recibo);
     } catch(_) {}
   }
 
@@ -14157,7 +14451,7 @@ async function ejecutarCobro(total) {
     if (window._FB && window._FB.db) {
       try {
         const { db, ref, runTransaction } = window._FB;
-        const estadoRef = ref(db, 'helechos/cobros/' + reciboIdCheck + '/estado');
+        const estadoRef = ref(db, 'restaurante/cobros/' + reciboIdCheck + '/estado');
         const resultado = await runTransaction(estadoRef, (estadoActual) => {
           if (estadoActual === 'cobrado' || estadoActual === 'procesando') {
             return; // abortar transacción
@@ -14226,7 +14520,7 @@ async function ejecutarCobro(total) {
       // Actualizar en historial
       const idx = historial.findIndex(x => x.numero === factura.numero);
       if (idx >= 0) historial[idx] = factura;
-      localStorage.setItem('helechos_historial', JSON.stringify(historial));
+      localStorage.setItem('pos_historial', JSON.stringify(historial));
       fbSyncFactura(factura); // sincronizar con pago completo
     }
 
@@ -14236,7 +14530,7 @@ async function ejecutarCobro(total) {
     if (ci >= 0) cobros[ci].estado = 'cobrado';
     setCobros(cobros);
     if (window._FB && window._FB.db) {
-      try { const {db,ref,set} = window._FB; set(ref(db,'helechos/cobros/'+reciboId+'/estado'), 'cobrado'); } catch(_) {}
+      try { const {db,ref,set} = window._FB; set(ref(db,'restaurante/cobros/'+reciboId+'/estado'), 'cobrado'); } catch(_) {}
     }
     actualizarBadgeCajero();
 
@@ -14273,7 +14567,7 @@ async function ejecutarCobro(total) {
       factura.pago = pagoLabel;
       const idx = historial.findIndex(x => x.numero === factura.numero);
       if (idx >= 0) historial[idx] = factura;
-      localStorage.setItem('helechos_historial', JSON.stringify(historial));
+      localStorage.setItem('pos_historial', JSON.stringify(historial));
       fbSyncFactura(factura); // sincronizar con pago completo
     }
     mostrarResumenCobro(factura, pagosEntries, totalPagado, cambio);
@@ -14334,7 +14628,7 @@ function fbSyncCobros() {
   // Cancelar listener anterior si existe
   if (_fbUnsubCobros) { _fbUnsubCobros(); _fbUnsubCobros = null; }
   const { db, ref, onValue } = window._FB;
-  _fbUnsubCobros = onValue(ref(db, 'helechos/cobros'), (snap) => {
+  _fbUnsubCobros = onValue(ref(db, 'restaurante/cobros'), (snap) => {
     const data = snap.val();
     if (!data) return;
     const lista = Object.values(data);
@@ -14365,9 +14659,9 @@ function cargarLoginIcon(input) {
   if (error) { showToast(error, 4000); input.value = ''; return; }
   const reader = new FileReader();
   reader.onload = e => {
-    localStorage.setItem('helechos_login_icon', e.target.result);
-    // FIX: sincronizar con helechos_logo también
-    localStorage.setItem('helechos_logo', e.target.result);
+    localStorage.setItem('pos_login_icon', e.target.result);
+    // FIX: sincronizar con pos_logo también
+    localStorage.setItem('pos_logo', e.target.result);
     aplicarLoginIcon();
     mostrarLoginIconPreview();
     showToast('✅ Ícono guardado');
@@ -14377,14 +14671,14 @@ function cargarLoginIcon(input) {
 }
 
 function quitarLoginIcon() {
-  localStorage.removeItem('helechos_login_icon');
+  localStorage.removeItem('pos_login_icon');
   aplicarLoginIcon();
   mostrarLoginIconPreview();
   showToast('🗑️ Imagen quitada');
 }
 
 function aplicarLoginIcon() {
-  const iconData = localStorage.getItem('helechos_login_icon');
+  const iconData = localStorage.getItem('pos_login_icon');
   const cfgEmoji = (document.getElementById('cfgLoginEmoji') || {}).value || '';
   const img  = document.getElementById('loginLogoImg');
   const span = document.getElementById('loginLogoEmoji');
@@ -14395,14 +14689,14 @@ function aplicarLoginIcon() {
     if (prev) prev.innerHTML = `<img src="${iconData}" style="width:100%;height:100%;object-fit:cover;border-radius:16px;">`;
   } else {
     if (img)  { img.src = ''; img.style.display = 'none'; }
-    const emoji = cfgEmoji || localStorage.getItem('helechos_login_emoji') || '🌿';
+    const emoji = cfgEmoji || localStorage.getItem('pos_login_emoji') || '🌿';
     if (span) { span.textContent = emoji; span.style.display = ''; }
     if (prev) prev.textContent = emoji;
   }
 }
 
 function mostrarLoginIconPreview() {
-  const iconData = localStorage.getItem('helechos_login_icon');
+  const iconData = localStorage.getItem('pos_login_icon');
   const btn = document.getElementById('loginIconQuitarBtn');
   const txt = document.getElementById('loginIconUploadTxt');
   if (!btn) return;
@@ -14418,7 +14712,7 @@ function cargarLoginBg(input) {
   const reader = new FileReader();
   reader.onload = e => {
     loginBgBase64 = e.target.result;
-    localStorage.setItem('helechos_login_bg', loginBgBase64);
+    localStorage.setItem('pos_login_bg', loginBgBase64);
     aplicarLoginBg();
     mostrarLoginBgPreview();
     showToast('✅ Fondo de inicio guardado');
@@ -14429,7 +14723,7 @@ function cargarLoginBg(input) {
 
 function quitarLoginBg() {
   loginBgBase64 = null;
-  localStorage.removeItem('helechos_login_bg');
+  localStorage.removeItem('pos_login_bg');
   aplicarLoginBg();
   mostrarLoginBgPreview();
   showToast('🗑️ Fondo quitado');
@@ -14470,7 +14764,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const emojiInput = document.getElementById('cfgLoginEmoji');
   if (emojiInput) {
     emojiInput.addEventListener('input', () => {
-      const iconData = localStorage.getItem('helechos_login_icon');
+      const iconData = localStorage.getItem('pos_login_icon');
       if (!iconData) {
         const prev = document.getElementById('loginIconPreview');
         if (prev) prev.textContent = emojiInput.value || '🌿';
@@ -14482,10 +14776,10 @@ document.addEventListener('DOMContentLoaded', () => {
 // Cargar textos, ícono y fondo al iniciar
 // FIX: era IIFE que corría ANTES de que el DOM existiera — ahora se llama desde DOMContentLoaded
 function cargarLoginPersonalizacion() {
-  const brand   = localStorage.getItem('helechos_login_brand');
-  const sub     = localStorage.getItem('helechos_login_sub');
-  const bg      = localStorage.getItem('helechos_login_bg');
-  const emoji   = localStorage.getItem('helechos_login_emoji');
+  const brand   = localStorage.getItem('pos_login_brand');
+  const sub     = localStorage.getItem('pos_login_sub');
+  const bg      = localStorage.getItem('pos_login_bg');
+  const emoji   = localStorage.getItem('pos_login_emoji');
   if (brand) { const el = document.getElementById('loginBrandText'); if (el) el.textContent = brand; }
   if (sub)   { const el = document.getElementById('loginSubText');   if (el) el.textContent = sub; }
   if (bg)    { loginBgBase64 = bg; aplicarLoginBg(); }
@@ -14507,7 +14801,7 @@ function cargarLoginPersonalizacion() {
   // Mostrar banner de primer uso si el nombre aún no fue personalizado
   const firstRunBanner = document.getElementById('firstRunBanner');
   if (firstRunBanner) {
-    const yaPersonalizado = !!localStorage.getItem('helechos_login_brand') ||
+    const yaPersonalizado = !!localStorage.getItem('pos_login_brand') ||
       (config.nombre && config.nombre !== 'Mi Restaurante');
     firstRunBanner.style.display = yaPersonalizado ? 'none' : 'block';
   }
@@ -14587,7 +14881,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
     if (kdsUnsub) kdsUnsub();
     const screen = document.getElementById('kdsScreen');
     if (screen) { screen.classList.add('kds-online'); screen.classList.remove('kds-offline'); }
-    const ordenesRef = ref(db, 'helechos/ordenes');
+    const ordenesRef = ref(db, 'restaurante/ordenes');
     kdsUnsub = onValue(ordenesRef, (snap) => {
       if (screen) { screen.classList.add('kds-online'); screen.classList.remove('kds-offline'); }
       const val = snap.val();
@@ -14747,7 +15041,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
       try {
         const { ref, update } = window._FB;
         const fbKey = 'k' + key.replace(/[.#$\[\]]/g, '_');
-        update(ref(kdsDb, 'helechos/listoItems/'+id), { [fbKey]: !!kdsItemStatus[id][key] });
+        update(ref(kdsDb, 'restaurante/listoItems/'+id), { [fbKey]: !!kdsItemStatus[id][key] });
       } catch(e) {}
     }
   };
@@ -14776,11 +15070,11 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
         const { ref, update } = window._FB;
         const li = {};
         items.forEach((it, i) => { const c = it.cantidad || 1; for (let u = 0; u < c; u++) li['k'+i+'_'+u] = true; });
-        update(ref(kdsDb, 'helechos/listoItems/'+id), li);
+        update(ref(kdsDb, 'restaurante/listoItems/'+id), li);
         const om = kdsOrdenes.find(o => String(o.id) === id);
         if (om) {
           const fi = om._fbIndex != null ? om._fbIndex : kdsOrdenes.findIndex(x => String(x.id) === id);
-          update(ref(kdsDb, 'helechos/ordenes/'+fi), { listo: true, listoTs: Date.now(), tiempoPreparacion: elapsed });
+          update(ref(kdsDb, 'restaurante/ordenes/'+fi), { listo: true, listoTs: Date.now(), tiempoPreparacion: elapsed });
         }
       } catch(e) {}
     }
@@ -14804,11 +15098,11 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
     if (kdsDb && window._FB) {
       try {
         const { ref, update } = window._FB;
-        update(ref(kdsDb, 'helechos/listoItems/'+id), { _reset: Date.now() });
+        update(ref(kdsDb, 'restaurante/listoItems/'+id), { _reset: Date.now() });
         const om = kdsOrdenes.find(o => String(o.id) === id);
         if (om) {
           const fi = om._fbIndex != null ? om._fbIndex : kdsOrdenes.findIndex(x => String(x.id) === id);
-          update(ref(kdsDb, 'helechos/ordenes/'+fi), { listo: false, listoTs: null });
+          update(ref(kdsDb, 'restaurante/ordenes/'+fi), { listo: false, listoTs: null });
         }
       } catch(e) {}
     }
@@ -14913,12 +15207,12 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // 🛵 SISTEMA DE DOMICILIOS — módulo completo
-// Ruta Firebase: helechos/domicilios/{sessionId}
+// Ruta Firebase: restaurante/domicilios/{sessionId}
 // Estados: pendiente → verificando → cambio → confirmado → pago → cocina → listo → despachado → entregado | cancelado
 // ═══════════════════════════════════════════════════════════════════════════
 (function initDomicilios() {
 
-  const DOM_PATH = 'helechos/domicilios';
+  const DOM_PATH = 'restaurante/domicilios';
   let _domUnsub = null;
   let _domPedidos = []; // snapshot local
   let _domPedidoActual = null; // id del pedido en modal actual
@@ -15433,7 +15727,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
     domSetEstado(sessionId, 'cocina', { notifCliente: { tipo: 'cocina', ts: Date.now() } });
 
     if (window._FB && window._FB.db) {
-      window._FB.get(window._FB.ref(window._FB.db, 'helechos/ordenes')).then(snap => {
+      window._FB.get(window._FB.ref(window._FB.db, 'restaurante/ordenes')).then(snap => {
         const existentes = snap.val();
         let arr = Array.isArray(existentes) ? existentes.filter(Boolean) : [];
         const nuevaOrden = {
@@ -15456,7 +15750,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
           feCorreo: p.feCorreo || '', feTipoDoc: p.feTipoDoc || 'CC',
         };
         arr.push(nuevaOrden);
-        window._FB.set(window._FB.ref(window._FB.db, 'helechos/ordenes'), arr).catch(e => console.warn('domCocina set error:', e));
+        window._FB.set(window._FB.ref(window._FB.db, 'restaurante/ordenes'), arr).catch(e => console.warn('domCocina set error:', e));
       });
     }
     window.showToast('🍳 Pedido enviado a cocina');
@@ -15466,7 +15760,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
   // KDS marca la orden como lista → este listener actualiza el domicilio
   function domEscucharListoKDS() {
     if (!window._FB || !window._FB.db) return;
-    window._FB.onValue(window._FB.ref(window._FB.db, 'helechos/ordenes'), snap => {
+    window._FB.onValue(window._FB.ref(window._FB.db, 'restaurante/ordenes'), snap => {
       const val = snap.val();
       if (!val) return;
       const arr = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
@@ -15590,7 +15884,7 @@ document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
 
   // ── Abrir ventana de seguimiento al cliente ──────────────────────────────
   window.domAbrirVentanaSeguimiento = function(sessionId) {
-    const fbCfg = (() => { try { return JSON.parse(localStorage.getItem('helechos_fb_config') || '{}'); } catch(e) { return {}; } })();
+    const fbCfg = (() => { try { return JSON.parse(localStorage.getItem('pos_fb_config') || '{}'); } catch(e) { return {}; } })();
     const fbCfgStr = encodeURIComponent(JSON.stringify(fbCfg));
     const url = `data:text/html;charset=utf-8,${encodeURIComponent(domGenerarHTMLSeguimiento(sessionId, fbCfg))}`;
     const win = window.open('', '_blank', 'width=420,height=700,scrollbars=yes,resizable=yes');
@@ -15680,7 +15974,7 @@ const app = getApps().length ? getApps()[0] : initializeApp(cfg);
 const db  = getDatabase(app);
 
 const sessionId = '${sessionId}';
-const domRef = ref(db, 'helechos/domicilios/' + sessionId);
+const domRef = ref(db, 'restaurante/domicilios/' + sessionId);
 const ESTADOS = {
   pendiente:  {label:'🕐 Pendiente', color:'#FF9800'},
   verificando:{label:'🔍 Verificando disponibilidad', color:'#1565C0'},
@@ -15791,7 +16085,7 @@ function renderPedido(p) {
   window.enviarCambio = function() {
     const checks = document.querySelectorAll('#changeForm input[type=checkbox]:checked');
     const reemplazos = [...checks].map(c => c.value);
-    update(ref(db, 'helechos/domicilios/'+sessionId), {
+    update(ref(db, 'restaurante/domicilios/'+sessionId), {
       reemplazos,
       estado: 'verificando',
       sinStock: [],
@@ -15803,7 +16097,7 @@ function renderPedido(p) {
   };
   window.cancelarPedido = function() {
     if (!confirm('¿Seguro que quieres cancelar tu pedido?')) return;
-    update(ref(db, 'helechos/domicilios/'+sessionId), {
+    update(ref(db, 'restaurante/domicilios/'+sessionId), {
       estado: 'cancelado',
       notifAdmin: { tipo: 'cliente_cancela', ts: Date.now() }
     });
@@ -15923,6 +16217,462 @@ function renderPedido(p) {
 
 </div>
 <!-- fin KDS inline -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     EDITOR DE MENÚ RESTAURANTE — Overlay
+     ═══════════════════════════════════════════════════════════ -->
+<div id="menuEditorOverlay" onclick="if(event.target===this)cerrarMenuEditor()">
+<div id="menuEditorModal">
+
+  <div class="me-header">
+    <div class="me-header-left">
+      <span class="me-header-icon">🌿</span>
+      <div>
+        <div class="me-header-title">Editor · Menú Restaurante</div>
+        <div class="me-header-sub">Los cambios se reflejan en el menú digital</div>
+      </div>
+    </div>
+    <button class="me-close-btn" onclick="cerrarMenuEditor()">✕</button>
+  </div>
+
+  <div class="me-tabs">
+    <div class="me-tab active" onclick="meTab('diseno', this)">🎨 Diseño</div>
+    <div class="me-tab" onclick="meTab('fotos', this)">📸 Fotos</div>
+    <div class="me-tab" onclick="meTab('categorias', this)">🗂️ Cats.</div>
+    <div class="me-tab" onclick="meTab('estilo', this)">✨ Estilo</div>
+  </div>
+
+  <div class="me-body">
+
+    <!-- ══ PANEL DISEÑO ══ -->
+    <div class="me-panel active" id="me-panel-diseno">
+
+      <div class="me-preview-strip" id="mePreviewStrip">
+        <img class="me-preview-strip-bg" id="mePreviewBg" src="" alt="">
+        <div class="me-preview-nombre" id="mePreviewNombre">Restaurante</div>
+        <div class="me-preview-eslogan" id="mePreviewEslogan">Sabor · Naturaleza · Tradición</div>
+      </div>
+
+      <div class="me-section-title">🏪 Información del encabezado</div>
+
+      <label class="me-label">Nombre del restaurante</label>
+      <input class="me-input" id="meNombre" type="text" placeholder="Ej: Restaurante Campestre Los Helechos"
+        oninput="document.getElementById('mePreviewNombre').textContent=this.value||'Restaurante'">
+
+      <label class="me-label">Eslogan / Sede / Sucursal</label>
+      <input class="me-input" id="meEslogan" type="text" placeholder="Ej: La Tupia · Sede Norte"
+        oninput="document.getElementById('mePreviewEslogan').textContent=this.value||'Sabor · Naturaleza · Tradición'">
+
+      <label class="me-label">Texto de cierre (pie de página)</label>
+      <input class="me-input" id="meCierre" type="text" placeholder="Ej: ¡Gracias por preferirnos!">
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">🖼️ Membrete (encabezado personalizado)</div>
+
+      <div class="me-info-chip">💡 Sube una imagen de tu membrete para reemplazar el encabezado automático.</div>
+
+      <img class="me-img-preview" id="meLogoPreview" src="" alt="Membrete">
+      <button class="me-remove-img" id="meLogoRemove" onclick="meRemoveImg('logo')">✕ Quitar membrete</button>
+      <div class="me-upload" id="meLogoUpload">
+        <input type="file" accept="image/*" onchange="meLoadImg(event,'logo')">
+        <div class="me-upload-icon">📸</div>
+        <div class="me-upload-label">Subir membrete / logo</div>
+        <div class="me-upload-sub">PNG, JPG · recomendado 800×200 px</div>
+      </div>
+
+    </div><!-- /diseno -->
+
+    <!-- ══ PANEL FOTOS ══ -->
+    <div class="me-panel" id="me-panel-fotos">
+
+      <div class="me-section-title">🌅 Fondo del encabezado</div>
+      <img class="me-img-preview" id="meHeaderBgPreview" src="" alt="">
+      <button class="me-remove-img" id="meHeaderBgRemove" onclick="meRemoveImg('headerBg')">✕ Quitar fondo</button>
+      <div class="me-upload">
+        <input type="file" accept="image/*" onchange="meLoadImg(event,'headerBg')">
+        <div class="me-upload-icon">🌄</div>
+        <div class="me-upload-label">Fondo del encabezado</div>
+        <div class="me-upload-sub">Foto de ambiente · se mostrará semitransparente</div>
+      </div>
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">🌿 Fondo del pie de página</div>
+      <img class="me-img-preview" id="meFooterBgPreview" src="" alt="">
+      <button class="me-remove-img" id="meFooterBgRemove" onclick="meRemoveImg('footerBg')">✕ Quitar fondo</button>
+      <div class="me-upload">
+        <input type="file" accept="image/*" onchange="meLoadImg(event,'footerBg')">
+        <div class="me-upload-icon">🌿</div>
+        <div class="me-upload-label">Fondo del pie de página</div>
+        <div class="me-upload-sub">Foto de ambiente o textura</div>
+      </div>
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">🏷️ Logo en el pie de página</div>
+      <img class="me-img-preview" id="meFooterLogoPreview" src="" alt="">
+      <button class="me-remove-img" id="meFooterLogoRemove" onclick="meRemoveImg('footerLogo')">✕ Quitar logo</button>
+      <div class="me-upload">
+        <input type="file" accept="image/*" onchange="meLoadImg(event,'footerLogo')">
+        <div class="me-upload-icon">🏷️</div>
+        <div class="me-upload-label">Logo en el pie de página</div>
+        <div class="me-upload-sub">PNG transparente recomendado</div>
+      </div>
+
+    </div><!-- /fotos -->
+
+    <!-- ══ PANEL CATEGORÍAS ══ -->
+    <div class="me-panel" id="me-panel-categorias">
+      <div class="me-section-title">🗂️ Orden de categorías</div>
+      <div class="me-info-chip">💡 Arrastra para reordenar las categorías en el menú. El orden que pongas aquí aparecerá en el menú digital y en el PDF.</div>
+      <ul class="me-cat-list" id="meCatList">
+        <li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Cargando categorías...</li>
+      </ul>
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">👁️ Visibilidad</div>
+      <div class="me-toggle-row">
+        <div>
+          <div class="me-toggle-label">Mostrar precio a domicilio</div>
+          <div class="me-toggle-sub">Si el ítem tiene precio de domicilio diferente, mostrarlo en el menú</div>
+        </div>
+        <label class="me-toggle"><input type="checkbox" id="meToggleDom"><span class="me-toggle-slider"></span></label>
+      </div>
+      <div class="me-toggle-row">
+        <div>
+          <div class="me-toggle-label">Mostrar descripción de los platos</div>
+          <div class="me-toggle-sub">Si los ítems tienen descripción, mostrarla bajo el nombre</div>
+        </div>
+        <label class="me-toggle"><input type="checkbox" id="meToggleDesc" checked><span class="me-toggle-slider"></span></label>
+      </div>
+      <div class="me-toggle-row">
+        <div>
+          <div class="me-toggle-label">Mostrar fotos de los platos</div>
+          <div class="me-toggle-sub">Mostrar la imagen de cada plato si está disponible</div>
+        </div>
+        <label class="me-toggle"><input type="checkbox" id="meToggleFotos" checked><span class="me-toggle-slider"></span></label>
+      </div>
+    </div><!-- /categorias -->
+
+    <!-- ══ PANEL ESTILO ══ -->
+    <div class="me-panel" id="me-panel-estilo">
+      <div class="me-section-title">🎨 Colores del menú</div>
+
+      <label class="me-label">Color primario (categorías y bordes)</label>
+      <div class="me-color-row">
+        <div class="me-color-swatch"><input type="color" id="meColorPrimario" value="#2d5a27" oninput="mePreviewColor()"></div>
+        <input class="me-input" id="meColorPrimarioHex" value="#2d5a27" maxlength="7"
+          oninput="meColorFromHex('meColorPrimario','meColorPrimarioHex')">
+      </div>
+
+      <label class="me-label">Color de acento (precios y detalles)</label>
+      <div class="me-color-row">
+        <div class="me-color-swatch"><input type="color" id="meColorAccent" value="#e07b39" oninput="mePreviewColor()"></div>
+        <input class="me-input" id="meColorAccentHex" value="#e07b39" maxlength="7"
+          oninput="meColorFromHex('meColorAccent','meColorAccentHex')">
+      </div>
+
+      <div class="me-divider"></div>
+      <div class="me-info-chip">💡 Estos colores se aplican en el menú digital web y en el PDF generado.</div>
+
+      <div class="me-section-title">📄 Archivo del menú</div>
+      <div class="me-info-chip" style="background:rgba(255,68,26,0.06);border-color:rgba(255,68,26,0.2);color:#c0392b;">
+        🔗 El menú digital es el archivo <strong>menu restaurante.html</strong> · Debe estar en la misma carpeta que index.html.
+      </div>
+
+    </div><!-- /estilo -->
+
+    <!-- Botones guardar -->
+    <button class="me-save-btn" id="meSaveBtn" onclick="meGuardar()">
+      💾 Guardar cambios
+    </button>
+    <button class="me-preview-btn" onclick="abrirMenuPreview()">
+      👁️ Vista previa del menú
+    </button>
+
+  </div><!-- /me-body -->
+</div><!-- /menuEditorModal -->
+</div><!-- /menuEditorOverlay -->
+
+<!-- ═══════════════════════════════════════════════════════════
+     VISTA PREVIA DEL MENÚ (iframe)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="mePreviewIframeWrap" onclick="if(event.target===this)cerrarMenuPreview()">
+  <div id="mePreviewIframeBox">
+    <div class="me-iframe-topbar">
+      <div>
+        <div class="me-iframe-topbar-title">👁️ Vista previa del menú</div>
+        <div class="me-iframe-topbar-sub">Así verán el menú tus clientes</div>
+      </div>
+      <button class="me-iframe-close" onclick="cerrarMenuPreview()">✕</button>
+    </div>
+    <iframe id="mePreviewIframe" src="" title="Vista previa menú"></iframe>
+    <div class="me-iframe-refresh">
+      <button onclick="recargarMenuPreview()">🔄 Recargar</button>
+      <button class="primary" onclick="window.open('menu restaurante.html?admin=1','_blank')">↗ Abrir en nueva pestaña</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// MENU EDITOR LOGIC
+// ════════════════════════════════════════════════════════════
+const ME_KEY = 'menu_editor_settings_v1';
+let _meSettings = {};
+let _meCatOrder = [];
+let _meDragItem = null;
+
+function meTab(id, el) {
+  document.querySelectorAll('.me-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.me-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('me-panel-' + id).classList.add('active');
+}
+
+function abrirMenuEditor() {
+  document.getElementById('menuEditorOverlay').classList.add('open');
+  meCargarSettings();
+  meCargarCategorias();
+}
+
+function cerrarMenuEditor() {
+  document.getElementById('menuEditorOverlay').classList.remove('open');
+}
+
+function meCargarSettings() {
+  try {
+    const raw = localStorage.getItem(ME_KEY);
+    _meSettings = raw ? JSON.parse(raw) : {};
+  } catch(e) { _meSettings = {}; }
+
+  const s = _meSettings;
+  document.getElementById('meNombre').value  = s.restaurantNombre || (window.config && window.config.nombre) || '';
+  document.getElementById('meEslogan').value = s.eslogan || '';
+  document.getElementById('meCierre').value  = s.textoCierre || '¡Gracias por preferirnos!';
+  document.getElementById('meColorPrimario').value    = s.colorPrimario || '#2d5a27';
+  document.getElementById('meColorPrimarioHex').value = s.colorPrimario || '#2d5a27';
+  document.getElementById('meColorAccent').value      = s.colorAccent   || '#e07b39';
+  document.getElementById('meColorAccentHex').value   = s.colorAccent   || '#e07b39';
+  document.getElementById('meToggleDom').checked  = s.mostrarPrecioDomicilio || false;
+  document.getElementById('meToggleDesc').checked = s.mostrarDescripcion !== false;
+  document.getElementById('meToggleFotos').checked= s.mostrarFotos !== false;
+
+  document.getElementById('mePreviewNombre').textContent  = s.restaurantNombre || (window.config && window.config.nombre) || 'Restaurante';
+  document.getElementById('mePreviewEslogan').textContent = s.eslogan || 'Sabor · Naturaleza · Tradición';
+
+  meRestoreImg('logo',      s.headerLogo,   'meLogoPreview',      'meLogoRemove',      'meLogoUpload');
+  meRestoreImg('headerBg',  s.headerBg,     'meHeaderBgPreview',  'meHeaderBgRemove',  null);
+  meRestoreImg('footerBg',  s.footerBg,     'meFooterBgPreview',  'meFooterBgRemove',  null);
+  meRestoreImg('footerLogo',s.footerLogo,   'meFooterLogoPreview','meFooterLogoRemove',null);
+
+  if (s.headerBg) {
+    const bg = document.getElementById('mePreviewBg');
+    bg.src = s.headerBg; bg.style.display = 'block';
+  }
+  mePreviewColor();
+}
+
+function meRestoreImg(key, src, previewId, removeId, uploadId) {
+  const preview = document.getElementById(previewId);
+  const remove  = document.getElementById(removeId);
+  if (!preview) return;
+  if (src) {
+    preview.src = src; preview.classList.add('show');
+    if (remove) remove.classList.add('show');
+    if (uploadId) document.getElementById(uploadId).style.display = 'none';
+  } else {
+    preview.classList.remove('show');
+    if (remove) remove.classList.remove('show');
+    if (uploadId) document.getElementById(uploadId).style.display = '';
+  }
+}
+
+function meCargarCategorias() {
+  const menu = (window.MENU || []);
+  const catOrder = _meSettings.catOrder || [];
+  const allCats  = [...new Set(menu.map(i => i.categoria).filter(Boolean))];
+  _meCatOrder = [...catOrder.filter(c => allCats.includes(c)), ...allCats.filter(c => !catOrder.includes(c))];
+  renderMeCatList();
+}
+
+function renderMeCatList() {
+  const menu = window.MENU || [];
+  const list = document.getElementById('meCatList');
+  if (!_meCatOrder.length) {
+    list.innerHTML = '<li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Sin categorías en el menú actual.</li>';
+    return;
+  }
+  list.innerHTML = _meCatOrder.map((cat, i) => {
+    const count = menu.filter(item => item.categoria === cat).length;
+    return `<li class="me-cat-item" draggable="true" data-idx="${i}"
+      ondragstart="meDragStart(event,${i})"
+      ondragover="meDragOver(event,${i})"
+      ondrop="meDrop(event,${i})"
+      ondragend="meDragEnd()">
+      <span class="me-cat-drag">⠿</span>
+      <span class="me-cat-name">${cat}</span>
+      <span class="me-cat-count">${count} platos</span>
+    </li>`;
+  }).join('');
+}
+
+function meDragStart(e, idx) {
+  _meDragItem = idx;
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+function meDragOver(e, idx) {
+  e.preventDefault();
+  if (_meDragItem === null || _meDragItem === idx) return;
+  const moved = _meCatOrder.splice(_meDragItem, 1)[0];
+  _meCatOrder.splice(idx, 0, moved);
+  _meDragItem = idx;
+  renderMeCatList();
+}
+function meDrop(e) { e.preventDefault(); }
+function meDragEnd() { _meDragItem = null; }
+
+function meLoadImg(e, key) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const b64 = ev.target.result;
+    _meSettings[{logo:'headerLogo',headerBg:'headerBg',footerBg:'footerBg',footerLogo:'footerLogo'}[key]] = b64;
+    if (key === 'logo') {
+      meRestoreImg('logo', b64, 'meLogoPreview', 'meLogoRemove', 'meLogoUpload');
+    } else if (key === 'headerBg') {
+      meRestoreImg('headerBg', b64, 'meHeaderBgPreview', 'meHeaderBgRemove', null);
+      const bg = document.getElementById('mePreviewBg');
+      bg.src = b64; bg.style.display = 'block';
+    } else if (key === 'footerBg') {
+      meRestoreImg('footerBg', b64, 'meFooterBgPreview', 'meFooterBgRemove', null);
+    } else if (key === 'footerLogo') {
+      meRestoreImg('footerLogo', b64, 'meFooterLogoPreview', 'meFooterLogoRemove', null);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+function meRemoveImg(key) {
+  const keyMap = {logo:'headerLogo', headerBg:'headerBg', footerBg:'footerBg', footerLogo:'footerLogo'};
+  delete _meSettings[keyMap[key]];
+  const uiMap = {
+    logo:      ['meLogoPreview',      'meLogoRemove',      'meLogoUpload'],
+    headerBg:  ['meHeaderBgPreview',  'meHeaderBgRemove',  null],
+    footerBg:  ['meFooterBgPreview',  'meFooterBgRemove',  null],
+    footerLogo:['meFooterLogoPreview','meFooterLogoRemove',null],
+  };
+  const [pId, rId, uId] = uiMap[key];
+  const preview = document.getElementById(pId);
+  const remove  = document.getElementById(rId);
+  if (preview) { preview.src = ''; preview.classList.remove('show'); }
+  if (remove)  remove.classList.remove('show');
+  if (uId) document.getElementById(uId).style.display = '';
+  if (key === 'headerBg') {
+    const bg = document.getElementById('mePreviewBg');
+    bg.src = ''; bg.style.display = 'none';
+  }
+}
+
+function mePreviewColor() {
+  const prim = document.getElementById('meColorPrimario').value;
+  document.getElementById('meColorPrimarioHex').value = prim;
+  document.getElementById('mePreviewStrip').style.background =
+    `linear-gradient(135deg, ${prim}, ${prim}cc)`;
+}
+
+function meColorFromHex(colorId, hexId) {
+  const val = document.getElementById(hexId).value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(val)) {
+    document.getElementById(colorId).value = val;
+    mePreviewColor();
+  }
+}
+
+function meGuardar() {
+  const btn = document.getElementById('meSaveBtn');
+  btn.disabled = true; btn.textContent = '💾 Guardando...';
+
+  const settings = {
+    ..._meSettings,
+    restaurantNombre:       document.getElementById('meNombre').value.trim(),
+    eslogan:                document.getElementById('meEslogan').value.trim(),
+    textoCierre:            document.getElementById('meCierre').value.trim(),
+    colorPrimario:          document.getElementById('meColorPrimario').value,
+    colorAccent:            document.getElementById('meColorAccent').value,
+    mostrarPrecioDomicilio: document.getElementById('meToggleDom').checked,
+    mostrarDescripcion:     document.getElementById('meToggleDesc').checked,
+    mostrarFotos:           document.getElementById('meToggleFotos').checked,
+    catOrder:               _meCatOrder,
+  };
+
+  try {
+    localStorage.setItem(ME_KEY, JSON.stringify(settings));
+    _meSettings = settings;
+  } catch(e) {
+    if (e.name === 'QuotaExceededError') {
+      if (typeof showToast === 'function') showToast('⚠️ Sin espacio. Considera usar imágenes más pequeñas.');
+    }
+  }
+
+  const forFirebase = { ...settings };
+  delete forFirebase.headerLogo;
+  delete forFirebase.headerBg;
+  delete forFirebase.footerBg;
+  delete forFirebase.footerLogo;
+
+  if (window._FB && window._FB.db) {
+    const { db, ref, set } = window._FB;
+    set(ref(db, 'restaurante/menuSettings'), forFirebase)
+      .then(() => {
+        if (typeof showToast === 'function') showToast('✅ Menú guardado');
+      })
+      .catch(e => console.warn('menuSettings sync:', e));
+  } else {
+    if (typeof showToast === 'function') showToast('✅ Menú guardado localmente');
+  }
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '💾 Guardar cambios';
+  }, 600);
+}
+
+// ── Vista previa iframe ──────────────────────────────────────
+function abrirMenuPreview() {
+  const wrap = document.getElementById('mePreviewIframeWrap');
+  const iframe = document.getElementById('mePreviewIframe');
+  iframe.src = 'menu restaurante.html?admin=1&t=' + Date.now();
+  wrap.classList.add('open');
+}
+
+function cerrarMenuPreview() {
+  document.getElementById('mePreviewIframeWrap').classList.remove('open');
+  document.getElementById('mePreviewIframe').src = '';
+}
+
+function recargarMenuPreview() {
+  const iframe = document.getElementById('mePreviewIframe');
+  iframe.src = 'menu restaurante.html?admin=1&t=' + Date.now();
+}
+
+// Exponer globalmente
+window.abrirMenuEditor  = abrirMenuEditor;
+window.cerrarMenuEditor = cerrarMenuEditor;
+window.meTab            = meTab;
+window.meLoadImg        = meLoadImg;
+window.meRemoveImg      = meRemoveImg;
+window.mePreviewColor   = mePreviewColor;
+window.meColorFromHex   = meColorFromHex;
+window.meGuardar        = meGuardar;
+window.meDragStart      = meDragStart;
+window.meDragOver       = meDragOver;
+window.meDrop           = meDrop;
+window.meDragEnd        = meDragEnd;
+window.abrirMenuPreview  = abrirMenuPreview;
+window.cerrarMenuPreview = cerrarMenuPreview;
+window.recargarMenuPreview = recargarMenuPreview;
+</script>
 
 </body>
 </html>
