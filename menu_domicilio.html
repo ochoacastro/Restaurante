@@ -2948,7 +2948,7 @@ function renderPaymentOptions(){
     const iconHtml = m.img
       ? `<img src="${m.img}" style="width:26px;height:26px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
       : `<span>${escapeHtml(m.emoji || '💳')}</span>`;
-    const infoHtml = m.info
+    const infoHtml = (m.needsInfo && m.info)
       ? `<div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:400;margin-top:2px;letter-spacing:0;">${escapeHtml(m.info)}</div>`
       : '';
     return `
@@ -3004,7 +3004,12 @@ function renderPaymentEditor(){
       </div>
       <div class="pay-name-info-col">
         <input class="field pay-label" placeholder="Nombre" value="${escapeHtml(m.label || '')}">
-        <input class="field pay-info-input-dom pay-info" placeholder="Nro. cuenta / teléfono / alias" value="${escapeHtml(m.info || '')}">
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gris);cursor:pointer;user-select:none;">
+          <input type="checkbox" class="pay-needsinfo" ${m.needsInfo ? 'checked' : ''} style="width:14px;height:14px;cursor:pointer;">
+          Pide número / cuenta
+        </label>
+        <input class="field pay-info-input-dom pay-info" placeholder="Nro. cuenta / teléfono / alias" value="${escapeHtml(m.info || '')}"
+          style="${m.needsInfo ? '' : 'display:none'}">
       </div>
       <button type="button" class="btn-danger pay-del">✕</button>
     </div>`;
@@ -3067,6 +3072,13 @@ function renderPaymentEditor(){
       arr[idx].info = e.target.value;
       commit();
     });
+    row.querySelector('.pay-needsinfo').addEventListener('change', (e) => {
+      const idx = getIdx(); if(idx === -1) return;
+      arr[idx].needsInfo = e.target.checked;
+      const infoInput = row.querySelector('.pay-info');
+      if (infoInput) infoInput.style.display = e.target.checked ? '' : 'none';
+      commit();
+    });
     row.querySelector('.pay-del').addEventListener('click', () => {
       const idx = getIdx(); if(idx === -1) return;
       arr.splice(idx, 1);
@@ -3078,7 +3090,7 @@ function renderPaymentEditor(){
 
 function addPaymentMethod(modeKey){
   ensurePaymentMethods();
-  settings.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', visible: true, visibleRest: true, visibleDom: true });
+  settings.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', needsInfo: false, visible: true, visibleRest: true, visibleDom: true });
   saveSettings();
   renderPaymentEditor();
   renderCart();
