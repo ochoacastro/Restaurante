@@ -14031,7 +14031,12 @@ function cfgRenderPayments() {
       </div>
       <div class="pay-name-info-col">
         <input class="pay-label-input" value="${esc(m.label||'')}" placeholder="Nombre" data-pay-label="${i}">
-        <input class="pay-info-input" value="${esc(m.info||'')}" placeholder="Nro. cuenta / teléfono / alias" data-pay-info="${i}">
+        <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--gris);cursor:pointer;user-select:none;">
+          <input type="checkbox" data-pay-needsinfo="${i}" ${m.needsInfo ? 'checked' : ''} style="width:14px;height:14px;accent-color:var(--rappi);cursor:pointer;">
+          Pide número / cuenta
+        </label>
+        <input class="pay-info-input" value="${esc(m.info||'')}" placeholder="Nro. cuenta / teléfono / alias" data-pay-info="${i}"
+          style="${m.needsInfo ? '' : 'display:none'}">
       </div>
       <button class="pay-del-btn" data-pay-del="${i}">✕</button>
     </div>`;
@@ -14070,6 +14075,14 @@ function cfgRenderPayments() {
   list.querySelectorAll('[data-pay-info]').forEach(inp => {
     inp.addEventListener('input', () => cfgSavePaymentField(Number(inp.dataset.payInfo), 'info', inp.value));
   });
+  list.querySelectorAll('[data-pay-needsinfo]').forEach(chk => {
+    chk.addEventListener('change', () => {
+      const i = Number(chk.dataset.payNeedsinfo);
+      cfgSavePaymentField(i, 'needsInfo', chk.checked);
+      const infoInput = list.querySelector(`[data-pay-info="${i}"]`);
+      if (infoInput) infoInput.style.display = chk.checked ? '' : 'none';
+    });
+  });
   list.querySelectorAll('[id^="pr_"]').forEach(chk => {
     chk.addEventListener('change', () => {
       const i = Number(chk.id.replace('pr_',''));
@@ -14094,7 +14107,7 @@ function cfgSavePaymentField(idx, field, value) {
 function cfgAddPayment() {
   const s = loadMenuSettings();
   if (!Array.isArray(s.paymentMethods)) s.paymentMethods = [];
-  s.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', visibleRest: true, visibleDom: true });
+  s.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', needsInfo: false, visibleRest: true, visibleDom: true });
   saveMenuSettings(s);
   cfgRenderPayments();
 }
