@@ -11338,6 +11338,63 @@ function imprimirCierreDiaDirecto() {
 }
 
 // ── Validación reutilizable para subida de imágenes ──────────────────
+function redimensionarImagen(src, maxW, maxH, callback) {
+  const img = new Image();
+  img.onload = () => {
+    let w = img.width, h = img.height;
+    // Escalar manteniendo proporciones
+    if (w > maxW || h > maxH) {
+      const ratio = Math.min(maxW / w, maxH / h);
+      w = Math.round(w * ratio);
+      h = Math.round(h * ratio);
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+    callback(canvas.toDataURL('image/png'));
+  };
+  img.onerror = () => callback(src); // si falla, usar original
+  img.src = src;
+}
+
+function mostrarErrorSubida(msg) {
+  const existing = document.getElementById('_errorSubidaBox');
+  if (existing) existing.remove();
+
+  const box = document.createElement('div');
+  box.id = '_errorSubidaBox';
+  box.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:99999;max-width:340px;width:90%;background:#fff3f3;border:2px solid #e53935;border-radius:12px;padding:14px 16px;box-shadow:0 6px 24px rgba(229,57,53,0.25);display:flex;align-items:flex-start;gap:10px;';
+
+  const icon = document.createElement('div');
+  icon.style.cssText = 'font-size:22px;line-height:1;';
+  icon.textContent = '⚠️';
+
+  const body = document.createElement('div');
+  body.style.flex = '1';
+
+  const title = document.createElement('div');
+  title.style.cssText = 'font-weight:800;font-size:14px;color:#c62828;margin-bottom:4px;';
+  title.textContent = 'No se pudo subir la imagen';
+
+  const detail = document.createElement('div');
+  detail.style.cssText = 'font-size:13px;color:#b71c1c;line-height:1.4;';
+  detail.textContent = msg.replace('❌ ', '');
+
+  const close = document.createElement('button');
+  close.style.cssText = 'background:none;border:none;font-size:18px;color:#e53935;cursor:pointer;line-height:1;padding:0;margin-left:4px;';
+  close.textContent = '✕';
+  close.onclick = function() { box.remove(); };
+
+  body.appendChild(title);
+  body.appendChild(detail);
+  box.appendChild(icon);
+  box.appendChild(body);
+  box.appendChild(close);
+  document.body.appendChild(box);
+  setTimeout(function() { if (box.parentElement) box.remove(); }, 6000);
+}
+
+
 function validarImagenSubida(file, maxKB) {
   if (!file) return '❌ No se seleccionó ningún archivo';
   const ext = file.name.split('.').pop().toLowerCase();
@@ -11362,22 +11419,28 @@ function validarImagenSubida(file, maxKB) {
 function cargarLogo(input) {
   const file = input.files[0];
   if (!file) return;
-  const error = validarImagenSubida(file, 500);
-  if (error) { showToast(error, 4000); input.value = ''; return; }
+  // Solo validar que sea imagen — sin límite de tamaño, se redimensiona automáticamente
+  if (!file.type.startsWith('image/')) {
+    const msg = '❌ El archivo no es una imagen válida';
+    showToast(msg, 5000); mostrarErrorSubida(msg); input.value = ''; return;
+  }
   const reader = new FileReader();
   reader.onload = (e) => {
-    logoBase64 = e.target.result;
-    localStorage.setItem('pos_logo', logoBase64);
-    try {
-      const raw = localStorage.getItem('pos_menu_settings_v1');
-      const ms = raw ? JSON.parse(raw) : {};
-      ms.businessLogo = logoBase64;
-      localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
-    } catch(_) {}
-    fbSync('logo', { data: logoBase64 }); // Corrección: el listener espera { data: string }
-    fbSync('decorImages/businessLogo', logoBase64);
-    mostrarLogoPreview();
-    showToast('✅ Logo guardado');
+    // Redimensionar a máx 400×400 px manteniendo proporciones
+    redimensionarImagen(e.target.result, 400, 400, (b64) => {
+      logoBase64 = b64;
+      localStorage.setItem('pos_logo', logoBase64);
+      try {
+        const raw = localStorage.getItem('pos_menu_settings_v1');
+        const ms = raw ? JSON.parse(raw) : {};
+        ms.businessLogo = logoBase64;
+        localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
+      } catch(_) {}
+      fbSync('logo', { data: logoBase64 });
+      fbSync('decorImages/businessLogo', logoBase64);
+      mostrarLogoPreview();
+      showToast('✅ Logo guardado');
+    });  // fin redimensionarImagen
   };
   reader.readAsDataURL(file);
 }
@@ -14864,16 +14927,19 @@ function fbSyncCobros() {
 function cargarLoginIcon(input) {
   const file = input.files[0];
   if (!file) return;
-  const error = validarImagenSubida(file, 500);
-  if (error) { showToast(error, 4000); input.value = ''; return; }
+  if (!file.type.startsWith('image/')) {
+    const msg = '❌ El archivo no es una imagen válida';
+    showToast(msg, 5000); mostrarErrorSubida(msg); input.value = ''; return;
+  }
   const reader = new FileReader();
   reader.onload = e => {
-    localStorage.setItem('pos_login_icon', e.target.result);
-    // FIX: sincronizar con pos_logo también
-    localStorage.setItem('pos_logo', e.target.result);
-    aplicarLoginIcon();
-    mostrarLoginIconPreview();
-    showToast('✅ Ícono guardado');
+    redimensionarImagen(e.target.result, 400, 400, (b64) => {
+      localStorage.setItem('pos_login_icon', b64);
+      localStorage.setItem('pos_logo', b64);
+      aplicarLoginIcon();
+      mostrarLoginIconPreview();
+      showToast('✅ Ícono guardado');
+    });
   };
   reader.readAsDataURL(file);
   input.value = '';
