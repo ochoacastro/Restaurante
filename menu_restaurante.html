@@ -594,7 +594,15 @@ function renderMenu(menu, settings) {
     const numCols = parseInt(settings.columnas) || 2;
     const cols = [];
     for (let i = 0; i < numCols; i++) cols.push([]);
-    cats.forEach((cat, i) => cols[i % numCols].push(cat));
+
+    // Si catsEnCol1 está definido y hay 2 columnas, cortar en ese índice
+    const catsEnCol1 = parseInt(settings.catsEnCol1);
+    if (numCols === 2 && !isNaN(catsEnCol1) && catsEnCol1 > 0 && catsEnCol1 < cats.length) {
+      cols[0] = cats.slice(0, catsEnCol1);
+      cols[1] = cats.slice(catsEnCol1);
+    } else {
+      cats.forEach((cat, i) => cols[i % numCols].push(cat));
+    }
 
     const renderCatSections = (catList) => catList.map(cat => {
       const items = disponibles.filter(i => i.categoria === cat);
