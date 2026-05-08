@@ -145,109 +145,135 @@
     background: #f5efe0;
   }
   body.estilo-lista #menuBody {
-    max-width: 700px;
-    padding: 8px 10px 100px;
+    max-width: 100%;
+    width: 100%;
+    padding: 8px 0 100px;
+    box-sizing: border-box;
+    overflow-x: hidden;
   }
   body.estilo-lista .menu-lista-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0 12px;
+    gap: 0 0;
     align-items: start;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0 8px;
+  }
+  body.estilo-lista .menu-lista-grid > div {
+    min-width: 0;
+    overflow: hidden;
   }
   body.estilo-lista .cat-section {
-    margin-top: 10px;
-    padding: 0;
+    margin-top: 8px;
+    padding: 0 4px;
     break-inside: avoid;
   }
   body.estilo-lista .cat-title {
     background: var(--primary);
     color: #fff;
-    font-family: 'Lato', sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1.5px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
-    padding: 6px 10px;
-    border-radius: 4px;
-    margin-bottom: 4px;
+    padding: 5px 8px;
+    border-radius: 3px;
+    margin-bottom: 2px;
     scroll-margin-top: 50px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   body.estilo-lista .items-grid { display: block; }
   body.estilo-lista .item-card {
     display: flex;
     align-items: baseline;
-    justify-content: space-between;
     gap: 0;
-    padding: 5px 2px;
+    padding: 4px 0;
     background: transparent;
     border: none;
     border-radius: 0;
     box-shadow: none;
     margin-bottom: 0;
-    overflow: visible;
+    overflow: hidden;
     border-bottom: 1px dotted #b8a98a;
+    width: 100%;
+    box-sizing: border-box;
   }
   body.estilo-lista .item-card:last-child { border-bottom: none; }
-  /* Ocultar imagen en lista clásica */
   body.estilo-lista .item-img-wrap { display: none !important; }
   body.estilo-lista .item-info {
     display: flex;
     flex-direction: row;
     align-items: baseline;
-    justify-content: space-between;
     flex: 1;
     padding: 0;
-    gap: 4px;
+    gap: 0;
+    min-width: 0;
+    overflow: hidden;
+    width: 100%;
   }
   body.estilo-lista .item-nombre-wrap {
     display: flex;
     align-items: baseline;
-    gap: 0;
     flex: 1;
     min-width: 0;
+    overflow: hidden;
   }
   body.estilo-lista .item-nombre {
-    font-family: 'Lato', sans-serif;
-    font-size: 13px; font-weight: 400;
+    font-size: 12px;
+    font-weight: 400;
     color: var(--text);
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: clip;
+    text-overflow: ellipsis;
     flex-shrink: 1;
+    max-width: calc(100% - 8px);
   }
   body.estilo-lista .item-dots {
     flex: 1;
     border-bottom: 1.5px dotted #b8a98a;
-    margin: 0 4px 2px;
-    min-width: 8px;
+    margin: 0 3px 2px;
+    min-width: 4px;
+    flex-shrink: 1;
   }
   body.estilo-lista .item-desc { display: none; }
   body.estilo-lista .item-precio {
-    font-family: 'Lato', sans-serif;
-    font-size: 13px; font-weight: 900;
+    font-size: 12px;
+    font-weight: 900;
     color: var(--text);
     white-space: nowrap;
     flex-shrink: 0;
   }
   body.estilo-lista .item-precio-dom { display: none; }
 
-  /* Icono hoja decorativo */
   body.estilo-lista .item-leaf {
-    font-size: 11px; margin-right: 4px; flex-shrink: 0;
-    opacity: 0.7; color: var(--primary);
+    font-size: 10px;
+    margin-right: 3px;
+    flex-shrink: 0;
+    opacity: 0.7;
+    color: var(--primary);
   }
 
-  /* ── TAMAÑO letra ── */
-  body.tamano-small  { font-size: 13px; }
+  /* ── TAMAÑO letra — tarjetas ── */
   body.tamano-small:not(.estilo-lista)  .item-nombre { font-size: 13px; }
   body.tamano-small:not(.estilo-lista)  .item-precio { font-size: 13px; }
   body.tamano-small:not(.estilo-lista)  .cat-title   { font-size: 18px; }
-  body.tamano-medium { font-size: 15px; }
-  body.tamano-large  { font-size: 17px; }
   body.tamano-large:not(.estilo-lista)  .item-nombre { font-size: 17px; }
   body.tamano-large:not(.estilo-lista)  .item-precio { font-size: 17px; }
   body.tamano-large:not(.estilo-lista)  .cat-title   { font-size: 26px; }
+
+  /* ── TAMAÑO letra — lista clásica ── */
+  body.tamano-small.estilo-lista  .item-nombre { font-size: 11px; }
+  body.tamano-small.estilo-lista  .item-precio { font-size: 11px; }
+  body.tamano-small.estilo-lista  .cat-title   { font-size: 10px; }
+  body.tamano-medium.estilo-lista .item-nombre { font-size: 12px; }
+  body.tamano-medium.estilo-lista .item-precio { font-size: 12px; }
+  body.tamano-medium.estilo-lista .cat-title   { font-size: 11px; }
+  body.tamano-large.estilo-lista  .item-nombre { font-size: 14px; }
+  body.tamano-large.estilo-lista  .item-precio { font-size: 14px; }
+  body.tamano-large.estilo-lista  .cat-title   { font-size: 12px; }
 
   /* ── FOOTER ── */
   #menuFooter {
@@ -422,7 +448,7 @@ function aplicarSettings(cfg, settings) {
     document.documentElement.style.setProperty('--accent', settings.colorAccent);
   }
 
-  // Fuente
+  // Fuente — la aplicamos a los elementos dinámicos después del render
   const fuente = settings.fuente || 'Playfair Display';
   const fuenteUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fuente) + ':wght@400;700;900&display=swap';
   if (!document.querySelector('link[data-mefuente]')) {
@@ -433,10 +459,8 @@ function aplicarSettings(cfg, settings) {
     document.querySelector('link[data-mefuente]').href = fuenteUrl;
   }
   document.documentElement.style.setProperty('--font-display', "'" + fuente + "', serif");
-  // Aplicar fuente a títulos que la usan
-  document.querySelectorAll('#headerTitle, .cat-title, .item-nombre').forEach(el => {
-    el.style.fontFamily = "'" + fuente + "', serif";
-  });
+  // Aplicar a header (ya existe en DOM)
+  document.getElementById('headerTitle').style.fontFamily = "'" + fuente + "', serif";
 
   // Columnas
   const body = document.body;
@@ -553,6 +577,12 @@ function renderMenu(menu, settings) {
         </div>`;
     }).join('');
   }
+
+  // Aplicar fuente a elementos dinámicos recién creados
+  const fuente = settings.fuente || 'Playfair Display';
+  document.querySelectorAll('.cat-title, .item-nombre').forEach(el => {
+    el.style.fontFamily = "'" + fuente + "', serif";
+  });
 }
 
 function itemCard(item, settings) {
@@ -601,16 +631,13 @@ window.generarImagen = async function() {
   btn.textContent = '⏳ Generando...';
   btn.disabled = true;
 
-  // Ocultar botón durante la captura
   btn.style.display = 'none';
-  // Ocultar nav sticky para que no aparezca en la imagen
   const nav = document.getElementById('catNav');
   const navOrig = nav ? nav.style.cssText : '';
   if (nav) nav.style.display = 'none';
 
   try {
-    const target = document.body;
-    const canvas = await html2canvas(target, {
+    const canvas = await html2canvas(document.body, {
       scale: 2,
       useCORS: true,
       allowTaint: false,
