@@ -17173,6 +17173,44 @@ function renderPedido(p) {
       <input type="hidden" id="meTamano" value="medium">
 
       <div class="me-divider"></div>
+      <div class="me-section-title">🪟 Estilo visual del menú</div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <label class="me-col-opt" id="meEstiloTarjetas" onclick="meSelEstilo('tarjetas')" style="flex:1;text-align:center;">
+          <div class="me-col-preview" style="display:flex;flex-direction:column;gap:3px;align-items:center;">
+            <div style="width:100%;height:14px;background:var(--gris-cl);border-radius:4px;display:flex;gap:2px;padding:2px;">
+              <div style="flex:1;background:#bbb;border-radius:2px;"></div>
+              <div style="flex:1;background:#bbb;border-radius:2px;"></div>
+            </div>
+            <div style="width:100%;height:14px;background:var(--gris-cl);border-radius:4px;display:flex;gap:2px;padding:2px;">
+              <div style="flex:1;background:#bbb;border-radius:2px;"></div>
+              <div style="flex:1;background:#bbb;border-radius:2px;"></div>
+            </div>
+          </div>
+          <div class="me-col-label">Tarjetas</div>
+        </label>
+        <label class="me-col-opt" id="meEstiloLista" onclick="meSelEstilo('lista')" style="flex:1;text-align:center;">
+          <div class="me-col-preview" style="display:flex;flex-direction:column;gap:2px;">
+            <div style="width:100%;height:5px;background:#2d5a27;border-radius:2px;"></div>
+            <div style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 2px;">
+              <div style="width:55%;height:3px;background:#bbb;border-radius:1px;"></div>
+              <div style="width:25%;height:3px;background:#e07b39;border-radius:1px;"></div>
+            </div>
+            <div style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 2px;">
+              <div style="width:45%;height:3px;background:#bbb;border-radius:1px;"></div>
+              <div style="width:25%;height:3px;background:#e07b39;border-radius:1px;"></div>
+            </div>
+            <div style="width:100%;height:5px;background:#2d5a27;border-radius:2px;margin-top:1px;"></div>
+            <div style="width:100%;display:flex;justify-content:space-between;align-items:center;padding:0 2px;">
+              <div style="width:60%;height:3px;background:#bbb;border-radius:1px;"></div>
+              <div style="width:25%;height:3px;background:#e07b39;border-radius:1px;"></div>
+            </div>
+          </div>
+          <div class="me-col-label">Lista clásica</div>
+        </label>
+      </div>
+      <input type="hidden" id="meEstiloVisual" value="tarjetas">
+
+      <div class="me-divider"></div>
       <div class="me-section-title">📄 Archivo del menú</div>
       <div class="me-info-chip" style="background:rgba(255,68,26,0.06);border-color:rgba(255,68,26,0.2);color:#c0392b;">
         🔗 El menú digital es el archivo <strong>menu restaurante.html</strong> · Debe estar en la misma carpeta que index.html.
@@ -17421,6 +17459,7 @@ function meGuardar() {
     columnas:               parseInt(document.getElementById('meColumnas').value) || 1,
     fuente:                 document.getElementById('meFuente').value || 'Playfair Display',
     tamano:                 document.getElementById('meTamano').value || 'medium',
+    estiloVisual:           document.getElementById('meEstiloVisual').value || 'tarjetas',
   };
 
   try {
@@ -17590,7 +17629,16 @@ function meCargarEstiloExtra(s) {
   meRenderFuentes();
   // Tamaño
   meSelTamano(s.tamano || 'medium');
+  // Estilo visual
+  meSelEstilo(s.estiloVisual || 'tarjetas');
 }
+
+function meSelEstilo(val) {
+  document.getElementById('meEstiloVisual').value = val;
+  document.getElementById('meEstiloTarjetas').classList.toggle('active', val === 'tarjetas');
+  document.getElementById('meEstiloLista').classList.toggle('active', val === 'lista');
+}
+window.meSelEstilo = meSelEstilo;
 
 // Exponer globalmente
 window.abrirMenuEditor  = abrirMenuEditor;
