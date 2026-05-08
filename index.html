@@ -11355,8 +11355,21 @@ function redimensionarImagen(src, maxW, maxH, callback) {
     ctx.clearRect(0, 0, w, h);
     ctx.drawImage(img, 0, 0, w, h);
     // Si la fuente es PNG exportar como PNG para conservar transparencia
+    // WebP también soporta alpha — usar PNG para preservarlo
     const esPNG = src.startsWith('data:image/png') || src.startsWith('data:image/webp');
-    callback(canvas.toDataURL(esPNG ? 'image/png' : 'image/jpeg', 0.92));
+    // Para logos pequeños PNG pesa poco; para fondos grandes usar JPEG
+    const maxDim = Math.max(w, h);
+    let formato, calidad;
+    if (esPNG && maxDim <= 300) {
+      formato = 'image/png'; calidad = 1; // PNG lossless para logos pequeños
+    } else if (esPNG) {
+      formato = 'image/webp'; calidad = 0.85; // WebP con alpha para imágenes grandes
+    } else {
+      formato = 'image/jpeg'; calidad = 0.88;
+    }
+    // Fallback: si webp no está soportado usar PNG
+    const result = canvas.toDataURL(formato, calidad);
+    callback(result.startsWith('data:' + formato) ? result : canvas.toDataURL('image/png'));
   };
   img.onerror = () => callback(src); // si falla, usar original
   img.src = src;
@@ -11433,10 +11446,13 @@ function cargarLogo(input) {
   reader.onerror = () => mostrarErrorSubida('No se pudo leer el archivo. Intenta con otra imagen.');
   reader.onload = (e) => {
     // Redimensionar a máx 400×400 px manteniendo proporciones
-    redimensionarImagen(e.target.result, 400, 400, (b64) => {
+    redimensionarImagen(e.target.result, 200, 200, (b64) => {
       try {
         logoBase64 = b64;
-        localStorage.setItem('pos_logo', logoBase64);
+        // Intentar guardar en localStorage, si falla por cuota solo usar Firebase
+        try { localStorage.setItem('pos_logo', logoBase64); } catch(eq) {
+          console.warn('localStorage lleno, logo solo en Firebase');
+        }
         try {
           const raw = localStorage.getItem('pos_menu_settings_v1');
           const ms = raw ? JSON.parse(raw) : {};
