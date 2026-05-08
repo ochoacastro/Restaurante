@@ -17204,6 +17204,20 @@ function renderPedido(p) {
       </div>
       <input type="hidden" id="meColumnas" value="1">
 
+      <!-- Control distribución categorías por columna (solo visible en 2 cols) -->
+      <div id="meCatsCol1Wrap" style="display:none;margin-top:12px;background:var(--fondo);border:1px solid var(--borde);border-radius:12px;padding:12px 14px;">
+        <div style="font-size:12px;font-weight:700;color:var(--gris);margin-bottom:8px;">📊 Categorías en columna 1</div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" onclick="meCatsCol1Step(-1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--borde);background:var(--blanco);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--negro);">−</button>
+          <div style="flex:1;text-align:center;">
+            <span id="meCatsCol1Display" style="font-size:22px;font-weight:800;color:var(--rappi);font-family:var(--font-num);">—</span>
+            <div style="font-size:10px;color:var(--gris);margin-top:1px;">El resto va a col. 2</div>
+          </div>
+          <button type="button" onclick="meCatsCol1Step(1)" style="width:32px;height:32px;border-radius:8px;border:1px solid var(--borde);background:var(--blanco);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--negro);">+</button>
+        </div>
+        <input type="hidden" id="meCatsCol1" value="">
+      </div>
+
       <div class="me-divider"></div>
       <div class="me-section-title">🔤 Tipografía</div>
       <div id="meFuenteGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;"></div>
@@ -17569,6 +17583,7 @@ function meGuardar() {
     catOrder:               _meCatOrder,
     catFotos:               (_meSettings.catFotos || {}),
     columnas:               parseInt(document.getElementById('meColumnas').value) || 1,
+    catsEnCol1:             parseInt(document.getElementById('meCatsCol1').value) || null,
     fuente:                 document.getElementById('meFuente').value || 'Playfair Display',
     tamano:                 document.getElementById('meTamano').value || 'medium',
     estiloVisual:           document.getElementById('meEstiloVisual').value || 'tarjetas',
@@ -17725,7 +17740,29 @@ function meSelCol(n) {
   document.getElementById('meColumnas').value = n;
   document.getElementById('meColOpt1').classList.toggle('active', n === 1);
   document.getElementById('meColOpt2').classList.toggle('active', n === 2);
+  const wrap = document.getElementById('meCatsCol1Wrap');
+  if (wrap) wrap.style.display = n === 2 ? 'block' : 'none';
+  if (n === 1) document.getElementById('meCatsCol1').value = '';
+  _meActualizarCatsCol1Display();
 }
+
+function _meActualizarCatsCol1Display() {
+  const disp = document.getElementById('meCatsCol1Display');
+  if (!disp) return;
+  const val = parseInt(document.getElementById('meCatsCol1').value);
+  disp.textContent = isNaN(val) || val <= 0 ? '—' : val;
+}
+
+function meCatsCol1Step(delta) {
+  const input = document.getElementById('meCatsCol1');
+  // Contar categorías actuales
+  const totalCats = (_meCatOrder && _meCatOrder.length) || 0;
+  let current = parseInt(input.value) || 0;
+  current = Math.max(1, Math.min(totalCats - 1, current + delta));
+  input.value = current;
+  _meActualizarCatsCol1Display();
+}
+window.meCatsCol1Step = meCatsCol1Step;
 
 function meSelTamano(val) {
   document.getElementById('meTamano').value = val;
@@ -17739,6 +17776,11 @@ function meCargarEstiloExtra(s) {
   // Columnas
   const col = parseInt(s.columnas) || 1;
   meSelCol(col);
+  // Distribución por columna
+  if (s.catsEnCol1) {
+    document.getElementById('meCatsCol1').value = s.catsEnCol1;
+    _meActualizarCatsCol1Display();
+  }
   // Fuente
   if (s.fuente) document.getElementById('meFuente').value = s.fuente;
   meRenderFuentes();
