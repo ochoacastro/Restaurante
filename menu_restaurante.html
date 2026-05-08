@@ -141,8 +141,8 @@
   /* ═══════════════════════════════════════
      ESTILO LISTA CLÁSICA
   ═══════════════════════════════════════ */
-  body.estilo-lista {
-    background: #f5efe0;
+  body.estilo-lista #catNav {
+    display: none;
   }
   body.estilo-lista #menuBody {
     max-width: 100%;
@@ -154,7 +154,7 @@
   body.estilo-lista .menu-lista-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0 0;
+    gap: 0;
     align-items: start;
     width: 100%;
     box-sizing: border-box;
@@ -229,7 +229,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     flex-shrink: 1;
-    max-width: calc(100% - 8px);
   }
   body.estilo-lista .item-dots {
     flex: 1;
@@ -247,7 +246,6 @@
     flex-shrink: 0;
   }
   body.estilo-lista .item-precio-dom { display: none; }
-
   body.estilo-lista .item-leaf {
     font-size: 10px;
     margin-right: 3px;
@@ -257,9 +255,12 @@
   }
 
   /* ── TAMAÑO letra — tarjetas ── */
+  body.tamano-small  { font-size: 13px; }
   body.tamano-small:not(.estilo-lista)  .item-nombre { font-size: 13px; }
   body.tamano-small:not(.estilo-lista)  .item-precio { font-size: 13px; }
   body.tamano-small:not(.estilo-lista)  .cat-title   { font-size: 18px; }
+  body.tamano-medium { font-size: 15px; }
+  body.tamano-large  { font-size: 17px; }
   body.tamano-large:not(.estilo-lista)  .item-nombre { font-size: 17px; }
   body.tamano-large:not(.estilo-lista)  .item-precio { font-size: 17px; }
   body.tamano-large:not(.estilo-lista)  .cat-title   { font-size: 26px; }
@@ -448,7 +449,7 @@ function aplicarSettings(cfg, settings) {
     document.documentElement.style.setProperty('--accent', settings.colorAccent);
   }
 
-  // Fuente — la aplicamos a los elementos dinámicos después del render
+  // Fuente — solo aplica al header que ya existe; los elementos dinámicos se aplican en renderMenu
   const fuente = settings.fuente || 'Playfair Display';
   const fuenteUrl = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(fuente) + ':wght@400;700;900&display=swap';
   if (!document.querySelector('link[data-mefuente]')) {
@@ -459,7 +460,6 @@ function aplicarSettings(cfg, settings) {
     document.querySelector('link[data-mefuente]').href = fuenteUrl;
   }
   document.documentElement.style.setProperty('--font-display', "'" + fuente + "', serif");
-  // Aplicar a header (ya existe en DOM)
   document.getElementById('headerTitle').style.fontFamily = "'" + fuente + "', serif";
 
   // Columnas
@@ -633,7 +633,7 @@ window.generarImagen = async function() {
 
   btn.style.display = 'none';
   const nav = document.getElementById('catNav');
-  const navOrig = nav ? nav.style.cssText : '';
+  const navDisplay = nav ? nav.style.display : '';
   if (nav) nav.style.display = 'none';
 
   try {
@@ -662,7 +662,7 @@ window.generarImagen = async function() {
     alert('Error al generar imagen: ' + e.message);
   }
 
-  if (nav) nav.style.cssText = navOrig;
+  if (nav) nav.style.display = navDisplay;
   btn.style.display = '';
   btn.innerHTML = '🖼️ Descargar imagen JPG';
   btn.disabled = false;
