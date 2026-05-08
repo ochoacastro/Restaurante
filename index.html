@@ -13685,20 +13685,36 @@ function saveMenuSettings(s) {
   delete clean.categoryImages;
   try {
     posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(clean));
+    // SYNC FIX: el evento 'storage' nativo solo se dispara en otras pestañas/ventanas.
+    // Disparar también un evento custom para que menu_domicilio cargado en la misma
+    // pestaña (iframe o ventana compartida) pueda reaccionar inmediatamente.
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: MENU_SETTINGS_KEY,
+      newValue: JSON.stringify(clean),
+      storageArea: localStorage,
+    }));
   } catch(e) {
     if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
       showToast('⚠️ Sin espacio de almacenamiento. Considera eliminar fotos antiguas.');
     }
     console.warn('saveMenuSettings error:', e);
   }
-  // Sincronizar con Firebase sin imágenes base64 pesadas
+  // Sincronizar con Firebase sin imágenes base64 pesadas en menuSettings
   if (window.fbSync) {
     try {
       const forFb = { ...clean };
       if (Array.isArray(forFb.paymentMethods)) {
+        // SYNC FIX: guardar imágenes de métodos de pago en un nodo separado de Firebase
+        // (paymentImages) para no saturar menuSettings, y que menu_domicilio pueda
+        // recuperarlas en otros dispositivos aunque no compartan localStorage.
+        const payImgs = {};
         forFb.paymentMethods = forFb.paymentMethods.map(m => {
+          if (m.img) payImgs[m.id] = m.img;
           const { img, ...rest } = m; return rest;
         });
+        if (Object.keys(payImgs).length) {
+          window.fbSync('paymentImages', payImgs);
+        }
       }
       window.fbSync('menuSettings', forFb);
     } catch(e){}
