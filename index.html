@@ -3592,6 +3592,63 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 .me-upload-icon { font-size: 28px; margin-bottom: 6px; }
 .me-upload-label { font-size: 12px; font-weight: 600; color: var(--gris); }
 .me-upload-sub { font-size: 11px; color: #aaa; margin-top: 3px; }
+/* ── Selector columnas ── */
+.me-col-opt {
+  flex: 1; border: 2px solid var(--borde); border-radius: 12px;
+  padding: 12px 8px; text-align: center; cursor: pointer;
+  background: var(--fondo); transition: all 0.2s;
+}
+.me-col-opt.active {
+  border-color: var(--rappi); background: var(--rappi-soft);
+}
+.me-col-preview {
+  height: 38px; display: flex; flex-direction: column;
+  justify-content: center; gap: 4px; padding: 0 6px;
+}
+.me-col-line {
+  height: 5px; border-radius: 3px;
+  background: var(--gris-cl);
+}
+.me-col-opt.active .me-col-line { background: var(--rappi); opacity: 0.5; }
+.me-col-label {
+  font-size: 11px; font-weight: 700; margin-top: 6px;
+  color: var(--gris);
+}
+.me-col-opt.active .me-col-label { color: var(--rappi); }
+
+/* ── Selector tamaño ── */
+.me-sz-opt {
+  flex: 1; border: 2px solid var(--borde); border-radius: 12px;
+  padding: 10px 6px; text-align: center; cursor: pointer;
+  background: var(--fondo); transition: all 0.2s;
+  display: flex; flex-direction: column; align-items: center;
+}
+.me-sz-opt.active {
+  border-color: var(--rappi); background: var(--rappi-soft);
+}
+.me-sz-opt span { color: var(--negro); }
+.me-sz-opt.active span { color: var(--rappi); }
+.me-sz-opt div { color: var(--gris); }
+.me-sz-opt.active div { color: var(--rappi); }
+
+/* ── Selector fuente ── */
+.me-fuente-opt {
+  border: 2px solid var(--borde); border-radius: 12px;
+  padding: 10px 8px; text-align: center; cursor: pointer;
+  background: var(--fondo); transition: all 0.2s;
+}
+.me-fuente-opt.active {
+  border-color: var(--rappi); background: var(--rappi-soft);
+}
+.me-fuente-nombre {
+  font-size: 16px; font-weight: 700; color: var(--negro); line-height: 1.2;
+}
+.me-fuente-opt.active .me-fuente-nombre { color: var(--rappi); }
+.me-fuente-etiqueta {
+  font-size: 9px; color: var(--gris); margin-top: 3px;
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
 /* ── Preview image ── */
 .me-img-preview {
   width: 100%; max-height: 120px; object-fit: cover;
@@ -16506,6 +16563,7 @@ function renderPedido(p) {
 
     <!-- ══ PANEL ESTILO ══ -->
     <div class="me-panel" id="me-panel-estilo">
+
       <div class="me-section-title">🎨 Colores del menú</div>
 
       <label class="me-label">Color primario (categorías y bordes)</label>
@@ -16525,6 +16583,51 @@ function renderPedido(p) {
       <div class="me-divider"></div>
       <div class="me-info-chip">💡 Estos colores se aplican en el menú digital web y en el PDF generado.</div>
 
+      <div class="me-section-title">📐 Columnas</div>
+      <div style="display:flex;gap:10px;margin-top:4px;">
+        <label class="me-col-opt" id="meColOpt1" onclick="meSelCol(1)">
+          <div class="me-col-preview">
+            <div class="me-col-line"></div>
+            <div class="me-col-line"></div>
+            <div class="me-col-line"></div>
+          </div>
+          <div class="me-col-label">1 columna</div>
+        </label>
+        <label class="me-col-opt" id="meColOpt2" onclick="meSelCol(2)">
+          <div class="me-col-preview" style="display:grid;grid-template-columns:1fr 1fr;gap:3px;">
+            <div class="me-col-line"></div><div class="me-col-line"></div>
+            <div class="me-col-line"></div><div class="me-col-line"></div>
+            <div class="me-col-line"></div><div class="me-col-line"></div>
+          </div>
+          <div class="me-col-label">2 columnas</div>
+        </label>
+      </div>
+      <input type="hidden" id="meColumnas" value="1">
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">🔤 Tipografía</div>
+      <div id="meFuenteGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px;"></div>
+      <input type="hidden" id="meFuente" value="Playfair Display">
+
+      <div class="me-divider"></div>
+      <div class="me-section-title">🔡 Tamaño de letra</div>
+      <div style="display:flex;gap:8px;margin-top:4px;">
+        <label class="me-sz-opt" id="meSzSmall" onclick="meSelTamano('small')">
+          <span style="font-size:11px;font-weight:700;">A</span>
+          <div style="font-size:10px;margin-top:3px;">Pequeña</div>
+        </label>
+        <label class="me-sz-opt" id="meSzMedium" onclick="meSelTamano('medium')">
+          <span style="font-size:16px;font-weight:700;">A</span>
+          <div style="font-size:10px;margin-top:3px;">Normal</div>
+        </label>
+        <label class="me-sz-opt" id="meSzLarge" onclick="meSelTamano('large')">
+          <span style="font-size:22px;font-weight:700;">A</span>
+          <div style="font-size:10px;margin-top:3px;">Grande</div>
+        </label>
+      </div>
+      <input type="hidden" id="meTamano" value="medium">
+
+      <div class="me-divider"></div>
       <div class="me-section-title">📄 Archivo del menú</div>
       <div class="me-info-chip" style="background:rgba(255,68,26,0.06);border-color:rgba(255,68,26,0.2);color:#c0392b;">
         🔗 El menú digital es el archivo <strong>menu restaurante.html</strong> · Debe estar en la misma carpeta que index.html.
@@ -16610,6 +16713,9 @@ function meCargarSettings() {
 
   document.getElementById('mePreviewNombre').textContent  = s.restaurantNombre || (window.config && window.config.nombre) || 'Restaurante';
   document.getElementById('mePreviewEslogan').textContent = s.eslogan || 'Sabor · Naturaleza · Tradición';
+
+  // Controles de diseño extra
+  meCargarEstiloExtra(s);
 
   meRestoreImg('logo',      s.headerLogo,   'meLogoPreview',      'meLogoRemove',      'meLogoUpload');
   meRestoreImg('headerBg',  s.headerBg,     'meHeaderBgPreview',  'meHeaderBgRemove',  null);
@@ -16756,6 +16862,9 @@ function meGuardar() {
     mostrarDescripcion:     document.getElementById('meToggleDesc').checked,
     mostrarFotos:           document.getElementById('meToggleFotos').checked,
     catOrder:               _meCatOrder,
+    columnas:               parseInt(document.getElementById('meColumnas').value) || 1,
+    fuente:                 document.getElementById('meFuente').value || 'Playfair Display',
+    tamano:                 document.getElementById('meTamano').value || 'medium',
   };
 
   try {
@@ -16820,6 +16929,72 @@ function recargarMenuPreview() {
   const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
   const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
   iframe.src = base + '?admin=1&t=' + Date.now();
+}
+
+
+// ── Fuentes disponibles ──────────────────────────────────────
+const ME_FUENTES = [
+  { valor: 'Playfair Display', etiqueta: 'Clásica',    muestra: 'Menú'     },
+  { valor: 'Lato',             etiqueta: 'Moderna',    muestra: 'Menú'     },
+  { valor: 'Merriweather',     etiqueta: 'Editorial',  muestra: 'Menú'     },
+  { valor: 'Oswald',           etiqueta: 'Fuerte',     muestra: 'Menú'     },
+  { valor: 'Dancing Script',   etiqueta: 'Cursiva',    muestra: 'Menú'     },
+  { valor: 'Montserrat',       etiqueta: 'Geométrica', muestra: 'Menú'     },
+];
+
+function meRenderFuentes() {
+  const grid = document.getElementById('meFuenteGrid');
+  if (!grid) return;
+  const actual = document.getElementById('meFuente').value || 'Playfair Display';
+  grid.innerHTML = ME_FUENTES.map(f => `
+    <div class="me-fuente-opt${f.valor === actual ? ' active' : ''}"
+         onclick="meSelFuente('${f.valor}', this)"
+         style="font-family:'${f.valor}',serif;">
+      <div class="me-fuente-nombre">${f.muestra}</div>
+      <div class="me-fuente-etiqueta">${f.etiqueta}</div>
+    </div>
+  `).join('');
+  // Cargar Google Fonts si no están
+  ME_FUENTES.forEach(f => {
+    const id = 'gfont-' + f.valor.replace(/\s/g,'-');
+    if (!document.getElementById(id)) {
+      const link = document.createElement('link');
+      link.id   = id; link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=' + encodeURIComponent(f.valor) + ':wght@400;700&display=swap';
+      document.head.appendChild(link);
+    }
+  });
+}
+
+function meSelFuente(valor, el) {
+  document.getElementById('meFuente').value = valor;
+  document.querySelectorAll('.me-fuente-opt').forEach(o => o.classList.remove('active'));
+  el.classList.add('active');
+}
+
+function meSelCol(n) {
+  document.getElementById('meColumnas').value = n;
+  document.getElementById('meColOpt1').classList.toggle('active', n === 1);
+  document.getElementById('meColOpt2').classList.toggle('active', n === 2);
+}
+
+function meSelTamano(val) {
+  document.getElementById('meTamano').value = val;
+  ['small','medium','large'].forEach(v => {
+    document.getElementById('meSz' + v.charAt(0).toUpperCase() + v.slice(1))
+      .classList.toggle('active', v === val);
+  });
+}
+
+function meCargarEstiloExtra(s) {
+  // Columnas
+  const col = parseInt(s.columnas) || 1;
+  meSelCol(col);
+  // Fuente
+  if (s.fuente) document.getElementById('meFuente').value = s.fuente;
+  meRenderFuentes();
+  // Tamaño
+  meSelTamano(s.tamano || 'medium');
 }
 
 // Exponer globalmente
