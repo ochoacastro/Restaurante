@@ -4539,12 +4539,12 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 
 
         <div class="config-field">
-          <label>Logo para el recibo</label>
+          <label>Logo del restaurante</label>
           <div id="logoPreviewWrap" style="display:none;margin-bottom:8px;text-align:center;">
             <img id="logoPreview" style="max-width:160px;max-height:160px;border-radius:50%;border:3px solid #FFD5CC;object-fit:contain;background:#f9f9f9;">
           </div>
           <label id="logoUploadBtn" class="logo-upload-btn">
-            🖼️ <span id="logoUploadTxt">Subir imagen de logo</span>
+            🖼️ <span id="logoUploadTxt">Subir logo del restaurante</span>
             <input type="file" id="logoFileInput" accept="image/*" style="display:none" onchange="cargarLogo(this)">
           </label>
           <button id="logoQuitarBtn" style="display:none;width:100%;margin-top:6px;padding:9px;background:white;border:1.5px solid rgba(192,57,43,0.35);color:var(--rojo);border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="quitarLogo()">🗑️ Quitar logo</button>
@@ -11518,7 +11518,7 @@ function mostrarLogoPreview() {
   } else {
     wrap.style.display = 'none';
     btn.style.display  = 'none';
-    txt.textContent    = 'Subir imagen de logo';
+    txt.textContent    = 'Subir logo del restaurante';
   }
   actualizarIconosApp();
 }
