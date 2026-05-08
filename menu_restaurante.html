@@ -273,7 +273,6 @@
     align-self: flex-start;
     margin-top: 1px;
   }
-  }
 
   /* ── TAMAÑO letra — tarjetas ── */
   body.tamano-small  { font-size: 13px; }
@@ -602,10 +601,17 @@ function renderMenu(menu, settings) {
     : allCats;
 
   // Category nav
+  // BUG 3 fix: usar data-cat + addEventListener en lugar de onclick inline
+  // para evitar inyección HTML con nombres de categoría que tengan comillas dobles
   const catNav = document.getElementById('catNav');
   catNav.innerHTML = cats.map(c =>
-    `<span class="cat-pill" onclick="scrollToCat('${c.replace(/'/g,"\\'")}', this)">${c}</span>`
+    `<span class="cat-pill" data-cat="${c.replace(/"/g,'&quot;')}">${c}</span>`
   ).join('');
+  catNav.querySelectorAll('.cat-pill').forEach(pill => {
+    pill.addEventListener('click', function() {
+      scrollToCat(this.dataset.cat, this);
+    });
+  });
 
   const body = document.getElementById('menuBody');
   const esLista = settings.estiloVisual === 'lista';
@@ -714,6 +720,8 @@ window.generarImagen = async function() {
   btn.textContent = '⏳ Generando imagen...';
   btn.disabled = true;
 
+  // BUG 2 fix: guardar el display actual ANTES de ocultar el botón
+  const btnDisplay = btn.style.display || 'flex';
   btn.style.display = 'none';
   const nav = document.getElementById('catNav');
   const navDisplay = nav ? nav.style.display : '';
@@ -761,7 +769,8 @@ window.generarImagen = async function() {
   }
 
   if (nav) nav.style.display = navDisplay;
-  btn.style.display = '';
+  // BUG 2 fix: restaurar con el valor guardado, no con '' vacío
+  btn.style.display = btnDisplay;
   btn.innerHTML = '📄 Descargar PDF';
   btn.disabled = false;
 };
