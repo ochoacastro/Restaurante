@@ -547,14 +547,15 @@ function fmt(n) {
 function renderMenu(menu, settings) {
   document.getElementById('loadingState').remove();
 
-  const disponibles = menu.filter(i => i.disponible !== false);
+  const hiddenCats = Array.isArray(settings.hiddenCategories) ? settings.hiddenCategories : [];
+  const disponibles = menu.filter(i => i.disponible !== false && !hiddenCats.includes(i.categoria));
   if (!disponibles.length) {
     document.getElementById('menuBody').innerHTML =
       '<p style="text-align:center;padding:40px;color:#888;">El menú está vacío.</p>';
     return;
   }
 
-  // Orden de categorías
+  // Orden de categorías (excluyendo las ocultas)
   const catOrder = settings.catOrder ? settings.catOrder : [];
   const allCats  = [...new Set(disponibles.map(i => i.categoria).filter(Boolean))];
   const cats = catOrder.length
