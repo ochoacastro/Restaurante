@@ -230,7 +230,7 @@
   }
   body.estilo-lista .item-nombre-wrap {
     display: flex;
-    align-items: flex-end;
+    align-items: flex-start;
     flex: 1;
     min-width: 0;
     overflow: visible;
@@ -269,6 +269,9 @@
     flex-shrink: 0;
     opacity: 0.7;
     color: var(--primary);
+    align-self: flex-start;
+    margin-top: 1px;
+  }
   }
 
   /* ── TAMAÑO letra — tarjetas ── */
@@ -594,15 +597,7 @@ function renderMenu(menu, settings) {
     const numCols = parseInt(settings.columnas) || 2;
     const cols = [];
     for (let i = 0; i < numCols; i++) cols.push([]);
-
-    // Si catsEnCol1 está definido y hay 2 columnas, cortar en ese índice
-    const catsEnCol1 = parseInt(settings.catsEnCol1);
-    if (numCols === 2 && !isNaN(catsEnCol1) && catsEnCol1 > 0 && catsEnCol1 < cats.length) {
-      cols[0] = cats.slice(0, catsEnCol1);
-      cols[1] = cats.slice(catsEnCol1);
-    } else {
-      cats.forEach((cat, i) => cols[i % numCols].push(cat));
-    }
+    cats.forEach((cat, i) => cols[i % numCols].push(cat));
 
     const renderCatSections = (catList) => catList.map(cat => {
       const items = disponibles.filter(i => i.categoria === cat);
@@ -651,11 +646,14 @@ function itemCard(item, settings) {
   const showDom = settings.mostrarPrecioDomicilio && item.precioDomicilio && item.precioDomicilio !== item.precio;
 
   if (esLista) {
+    const leafHtml = settings.menuIcono
+      ? `<img class="item-leaf" src="${settings.menuIcono}" style="width:10px;height:10px;object-fit:contain;opacity:0.85;margin-top:2px;" alt="">`
+      : `<span class="item-leaf">🌿</span>`;
     return `
       <div class="item-card">
         <div class="item-info">
           <div class="item-nombre-wrap">
-            <span class="item-leaf">🌿</span>
+            ${leafHtml}
             <span class="item-nombre">${item.nombre}</span>
             <span class="item-dots"></span>
           </div>
