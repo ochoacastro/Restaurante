@@ -6636,7 +6636,7 @@ function cargarConfig() {
   actualizarConsecDisplay();
   try {
     const savedLogo = posStore.getItem('pos_logo');
-    if (savedLogo) { window.logoBase64 = savedLogo; mostrarLogoPreview(); }
+    if (savedLogo) { window.logoBase64 = savedLogo; mostrarLogoPreview(); aplicarLoginIcon(); }
     else {
       try {
         const raw = posStore.getItem('pos_menu_settings_v1');
@@ -6644,7 +6644,7 @@ function cargarConfig() {
         if (ms.businessLogo) {
           window.logoBase64 = ms.businessLogo;
           posStore.setItem('pos_logo', window.logoBase64); // normalizar en clave del POS
-          mostrarLogoPreview();
+          mostrarLogoPreview(); aplicarLoginIcon();
         } else { actualizarManifestConLogo(null); }
       } catch(_) { actualizarManifestConLogo(null); }
     }
@@ -11718,8 +11718,8 @@ function actualizarIconosApp() {
       if (hEmoji) hEmoji.style.display = '';
     }
 
-    // Login: usa el ícono/logo del SISTEMA (pos_login_icon)
-    const loginIcon = localStorage.getItem('pos_login_icon');
+    // Login: usa el ícono del sistema si existe, si no, el logo del restaurante
+    const loginIcon = localStorage.getItem('pos_login_icon') || window.logoBase64 || posStore.getItem('pos_logo');
     if (loginIcon) {
       if (lImg)   { lImg.src = loginIcon; lImg.style.display = 'block'; }
       if (lEmoji) lEmoji.style.display = 'none';
@@ -15423,7 +15423,9 @@ function quitarLoginIcon() {
 }
 
 function aplicarLoginIcon() {
-  const iconData = localStorage.getItem('pos_login_icon');
+  const iconData = localStorage.getItem('pos_login_icon')
+                || window.logoBase64
+                || posStore.getItem('pos_logo');
   const cfgEmoji = (document.getElementById('cfgLoginEmoji') || {}).value || '';
   const img  = document.getElementById('loginLogoImg');
   const span = document.getElementById('loginLogoEmoji');
@@ -15547,7 +15549,8 @@ function cargarLoginPersonalizacion() {
   const firstRunBanner = document.getElementById('firstRunBanner');
   if (firstRunBanner) {
     const yaPersonalizado = !!localStorage.getItem('pos_login_brand') ||
-      (config.nombre && config.nombre !== 'Mi Restaurante');
+      (config.nombre && config.nombre !== 'Mi Restaurante') ||
+      !!window.logoBase64 || !!posStore.getItem('pos_logo');
     firstRunBanner.style.display = yaPersonalizado ? 'none' : 'block';
   }
 }
@@ -17210,7 +17213,7 @@ function renderPedido(p) {
     <iframe id="mePreviewIframe" src="" title="Vista previa menú"></iframe>
     <div class="me-iframe-refresh">
       <button onclick="recargarMenuPreview()">🔄 Recargar</button>
-      <button class="primary" onclick="window.open(meGetPreviewUrl(),'_blank')">↗ Abrir en nueva pestaña</button>
+      <button class="primary" onclick="window.open('menu restaurante.html?admin=1','_blank')">↗ Abrir en nueva pestaña</button>
     </div>
   </div>
 </div>
