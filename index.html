@@ -4808,6 +4808,30 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   <span id="seccionFirebase" style="display:none;"></span>
   <span id="seccionBackup" style="display:none;"></span>
 
+  <!-- ADMINISTRADOR DE ALMACENAMIENTO — solo master -->
+  <div class="cfg-acc" id="cfgacc-storage" data-admin-only="1">
+    <div class="cfg-acc-header" data-cfgacc="cfgacc-storage">
+      <div class="cfg-acc-left">
+        <span class="cfg-acc-icon">🗄️</span>
+        <div>
+          <div class="cfg-acc-title">Almacenamiento</div>
+          <div class="cfg-acc-sub" id="storageAdminSub">Gestionar datos guardados</div>
+        </div>
+      </div>
+      <span class="cfg-acc-arrow">▼</span>
+    </div>
+    <div class="cfg-acc-body">
+      <div class="cfg-acc-inner" style="padding:0;">
+        <div id="storageAdminList" style="display:flex;flex-direction:column;gap:0;"></div>
+        <div style="padding:12px 14px 4px;display:flex;gap:8px;flex-wrap:wrap;">
+          <button onclick="storageAdminLoad()" style="flex:1;min-width:120px;padding:9px;background:var(--gris-cl);border:1.5px solid var(--borde);border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:var(--texto);">🔄 Actualizar</button>
+          <button onclick="storageAdminClearAll()" style="flex:1;min-width:120px;padding:9px;background:linear-gradient(135deg,#c0392b,#e74c3c);border:none;border-radius:10px;font-size:12px;font-weight:700;cursor:pointer;color:#fff;">🗑️ Borrar todo</button>
+        </div>
+        <p style="font-size:11px;color:var(--gris);padding:0 14px 12px;margin:0;line-height:1.4;">Las claves con 🗃️ están en IndexedDB (sin límite). Las de 📦 están en localStorage (~5 MB).</p>
+      </div>
+    </div>
+  </div>
+
   <!-- FACTURA ELECTRÓNICA — solo master ve el toggle, admin/cajero ven el contenido si está habilitada -->
   <div class="cfg-acc" id="cfgAccFE" data-fe-managed="1">
     <div class="cfg-acc-header" id="feAccHeader" onclick="toggleCfgAccFE(event)">
@@ -13217,6 +13241,221 @@ function initDarkMode() {
 }
 initDarkMode();
 
+// ── ADMINISTRADOR DE ALMACENAMIENTO ───────────────────────────────────
+const _STORAGE_ADMIN_IDB_KEYS = [
+  'pos_historial','pos_menu','pos_menu_custom_v3',
+  'pos_menu_settings_v1','pos_cat_images','pos_logo','pos_login_bg'
+];
+
+async function storageAdminLoad() {
+  const list = document.getElementById('storageAdminList');
+  const sub  = document.getElementById('storageAdminSub');
+  if (!list) return;
+  list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--gris);font-size:12px;">Cargando…</div>';
+
+  // Reunir todas las claves: IDB + localStorage
+  const entries = [];
+
+  // 1. Claves IDB desde caché
+  for (const key of _STORAGE_ADMIN_IDB_KEYS) {
+    const val = posStore.getItem(key);
+    entries.push({ key, val, idb: true });
+  }
+
+  // 2. Claves localStorage (excluir las que ya están en IDB)
+  const idbSet = new Set(_STORAGE_ADMIN_IDB_KEYS);
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (!key || idbSet.has(key)) continue;
+    const val = localStorage.getItem(key);
+    entries.push({ key, val, idb: false });
+  }
+
+  // Ordenar: IDB primero, luego por tamaño desc
+  entries.sort((a,b) => {
+    if (a.idb !== b.idb) return a.idb ? -1 : 1;
+    return (b.val||'').length - (a.val||'').length;
+  });
+
+  // Calcular total
+  const totalBytes = entries.reduce((s,e)=> s+(e.val||'').length, 0);
+  const lsBytes   = entries.filter(e=>!e.idb).reduce((s,e)=> s+(e.val||'').length, 0);
+  sub.textContent = `LS: ${_fmtBytes(lsBytes)} · IDB+LS: ${_fmtBytes(totalBytes)}`;
+
+  // Renderizar
+  list.innerHTML = '';
+
+  for (const {key, val, idb} of entries) {
+    const bytes = (val||'').length;
+    if (bytes === 0 && val === null) continue; // clave no existe
+
+    // Detectar imagen base64
+    const isImg = val && (
+      val.startsWith('data:image/') ||
+      (val.length > 200 && /^[A-Za-z0-9+/=]{100,}/.test(val.trim()))
+    );
+    // Detectar JSON con imágenes
+    const hasImgInJSON = !isImg && val && val.includes('data:image/');
+
+    const row = document.createElement('div');
+    row.id = 'sarow-' + key.replace(/[^a-z0-9]/gi,'_');
+    row.style.cssText = 'border-bottom:1px solid var(--borde);padding:10px 14px;';
+
+    // Cabecera de fila
+    const head = document.createElement('div');
+    head.style.cssText = 'display:flex;align-items:center;gap:8px;';
+
+    const icon = document.createElement('span');
+    icon.textContent = idb ? '🗃️' : '📦';
+    icon.style.cssText = 'font-size:14px;flex-shrink:0;';
+
+    const info = document.createElement('div');
+    info.style.cssText = 'flex:1;min-width:0;';
+    info.innerHTML = `
+      <div style="font-size:12px;font-weight:700;color:var(--texto);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${key}</div>
+      <div style="font-size:11px;color:var(--gris);margin-top:1px;">${_fmtBytes(bytes)}${isImg?' · imagen directa':hasImgInJSON?' · contiene imagen(es)':''}</div>
+    `;
+
+    const btnDel = document.createElement('button');
+    btnDel.textContent = '🗑️';
+    btnDel.title = 'Eliminar esta clave';
+    btnDel.style.cssText = 'flex-shrink:0;padding:6px 10px;background:rgba(231,76,60,0.15);border:1.5px solid rgba(231,76,60,0.4);border-radius:8px;cursor:pointer;font-size:14px;color:#c0392b;transition:all .15s;';
+    btnDel.onclick = () => _storageAdminDelete(key, idb, row);
+
+    head.append(icon, info, btnDel);
+    row.append(head);
+
+    // Vista previa de imagen
+    if (isImg) {
+      const preview = document.createElement('div');
+      preview.style.cssText = 'margin-top:8px;';
+      const img = document.createElement('img');
+      img.src = val;
+      img.style.cssText = 'max-width:100%;max-height:160px;object-fit:contain;border-radius:8px;border:1.5px solid var(--borde);background:#f5f5f5;';
+      img.onerror = () => { preview.style.display='none'; };
+      preview.append(img);
+      row.append(preview);
+    } else if (hasImgInJSON) {
+      // Extraer imágenes del JSON y mostrarlas
+      try {
+        const parsed = JSON.parse(val);
+        const imgs = _extractImagesFromObj(parsed);
+        if (imgs.length > 0) {
+          const preview = document.createElement('div');
+          preview.style.cssText = 'margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;';
+          imgs.slice(0,8).forEach(({src, label}) => {
+            const wrap = document.createElement('div');
+            wrap.style.cssText = 'display:flex;flex-direction:column;align-items:center;gap:3px;';
+            const img = document.createElement('img');
+            img.src = src;
+            img.title = label || '';
+            img.style.cssText = 'width:56px;height:56px;object-fit:cover;border-radius:6px;border:1.5px solid var(--borde);background:#f5f5f5;cursor:pointer;';
+            img.onclick = () => _storageAdminPreviewImg(src, label);
+            img.onerror = () => { wrap.style.display='none'; };
+            const lbl = document.createElement('div');
+            lbl.textContent = (label||'').slice(0,12);
+            lbl.style.cssText = 'font-size:9px;color:var(--gris);text-align:center;max-width:56px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;';
+            wrap.append(img, lbl);
+            preview.append(wrap);
+          });
+          if (imgs.length > 8) {
+            const more = document.createElement('div');
+            more.style.cssText = 'font-size:11px;color:var(--gris);display:flex;align-items:center;padding:4px;';
+            more.textContent = `+${imgs.length-8} más`;
+            preview.append(more);
+          }
+          row.append(preview);
+        }
+      } catch(_) {}
+    }
+
+    list.append(row);
+  }
+
+  if (entries.filter(e=>e.val!==null).length === 0) {
+    list.innerHTML = '<div style="padding:16px;text-align:center;color:var(--gris);font-size:12px;">Sin datos guardados</div>';
+  }
+}
+
+function _fmtBytes(n) {
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/1024/1024).toFixed(2) + ' MB';
+}
+
+function _extractImagesFromObj(obj, label, results=[]) {
+  if (!obj || typeof obj !== 'object') return results;
+  if (Array.isArray(obj)) {
+    obj.forEach((item,i) => _extractImagesFromObj(item, label||String(i), results));
+  } else {
+    for (const k of Object.keys(obj)) {
+      const v = obj[k];
+      if (typeof v === 'string' && v.startsWith('data:image/')) {
+        // Intentar usar nombre del producto si existe
+        const name = obj.nombre || obj.name || label || k;
+        results.push({src:v, label:name});
+      } else if (v && typeof v === 'object') {
+        _extractImagesFromObj(v, obj.nombre||obj.name||label||k, results);
+      }
+    }
+  }
+  return results;
+}
+
+function _storageAdminDelete(key, isIdb, rowEl) {
+  confirmar({
+    icono: '🗑️',
+    titulo: 'Eliminar clave',
+    mensaje: `¿Eliminar "<strong>${key}</strong>" del almacenamiento? Esta acción no se puede deshacer.`,
+    textoOk: 'Eliminar',
+    colorOk: 'var(--rojo,#e74c3c)',
+    callback() {
+      posStore.removeItem(key);
+      rowEl.style.opacity = '0.4';
+      rowEl.style.pointerEvents = 'none';
+      setTimeout(() => {
+        rowEl.remove();
+        storageAdminLoad();
+        showToast(`🗑️ "${key}" eliminado`);
+      }, 350);
+    }
+  });
+}
+
+function _storageAdminPreviewImg(src, label) {
+  const overlay = document.createElement('div');
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;';
+  overlay.onclick = () => overlay.remove();
+  const img = document.createElement('img');
+  img.src = src;
+  img.style.cssText = 'max-width:90vw;max-height:80vh;object-fit:contain;border-radius:12px;box-shadow:0 8px 40px rgba(0,0,0,0.6);';
+  const cap = document.createElement('div');
+  cap.textContent = label || '';
+  cap.style.cssText = 'color:#fff;font-size:14px;font-weight:600;text-shadow:0 1px 4px rgba(0,0,0,0.5);';
+  overlay.append(img, cap);
+  document.body.append(overlay);
+}
+
+async function storageAdminClearAll() {
+  confirmar({
+    icono: '⚠️',
+    titulo: 'Borrar todo el almacenamiento',
+    mensaje: 'Esto eliminará <strong>todos</strong> los datos guardados (menú, historial, configuración, logos, usuarios). El sistema volverá a valores de fábrica. ¿Seguro?',
+    textoOk: '🗑️ Sí, borrar todo',
+    colorOk: 'var(--rojo,#e74c3c)',
+    callback() {
+      // Borrar IDB
+      for (const key of _STORAGE_ADMIN_IDB_KEYS) posStore.removeItem(key);
+      // Borrar localStorage completo
+      localStorage.clear();
+      showToast('🗑️ Almacenamiento limpiado. Recargando…');
+      setTimeout(() => location.reload(), 1500);
+    }
+  });
+}
+
+// Cargar al abrir el acordeón storage — manejado por onCfgAccOpen('cfgacc-storage')
+
 initLogin();
 </script>
 
@@ -13273,6 +13512,7 @@ function onCfgAccOpen(id) {
   if (id === 'cfgacc-publicidad') { renderAdBannerPreview(); }
   if (id === 'cfgacc-restaurante') { renderHorarios(); renderFestivos(); }
   if (id === 'cfgacc-qr')      { qr2Init(); }
+  if (id === 'cfgacc-storage') { storageAdminLoad(); }
 
   if (id === 'cfgAccFE') {
     // Handled by toggleCfgAccFE()
