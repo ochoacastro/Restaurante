@@ -5380,6 +5380,150 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 </div>
 
 <script>
+// ── posDB: IndexedDB wrapper para claves grandes ────────────────────────
+// Reemplaza localStorage para claves con imágenes/historial que superan el límite de ~5MB.
+// API síncrona (lee desde caché en memoria); escrituras asíncronas a IDB.
+(function() {
+  const DB_NAME    = 'pos_store';
+  const STORE_NAME = 'kv';
+  const DB_VERSION = 1;
+  // Claves que se almacenan en IDB en lugar de localStorage
+  const IDB_KEYS = new Set([
+    'pos_historial',
+    'pos_menu',
+    'pos_menu_custom_v3',
+    'pos_menu_settings_v1',
+    'pos_cat_images',
+    'pos_logo',
+    'pos_login_bg',
+  ]);
+
+  // Caché en memoria — se popula sincrónicamente antes de init()
+  const _cache = {};
+  let _db = null;
+  let _ready = false;
+  const _queue = []; // escrituras pendientes hasta que IDB esté lista
+
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, DB_VERSION);
+      req.onupgradeneeded = e => {
+        const db = e.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          db.createObjectStore(STORE_NAME);
+        }
+      };
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  function idbGet(db, key) {
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(STORE_NAME, 'readonly');
+      const req = tx.objectStore(STORE_NAME).get(key);
+      req.onsuccess = e => resolve(e.target.result);
+      req.onerror   = e => reject(e.target.error);
+    });
+  }
+
+  function idbSet(db, key, value) {
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(STORE_NAME, 'readwrite');
+      const req = tx.objectStore(STORE_NAME).put(value, key);
+      req.onsuccess = () => resolve();
+      req.onerror   = e  => reject(e.target.error);
+    });
+  }
+
+  function idbDel(db, key) {
+    return new Promise((resolve, reject) => {
+      const tx  = db.transaction(STORE_NAME, 'readwrite');
+      const req = tx.objectStore(STORE_NAME).delete(key);
+      req.onsuccess = () => resolve();
+      req.onerror   = e  => reject(e.target.error);
+    });
+  }
+
+  // Inicialización: precarga todas las claves IDB en _cache de forma síncrona-aparente
+  // (usa una promesa que se resuelve antes de DOMContentLoaded si el browser lo permite,
+  //  o al menos antes de que init() sea llamado por el login)
+  window._posDBReady = openDB().then(async db => {
+    _db = db;
+    // Cargar todas las claves IDB en caché
+    await Promise.all([...IDB_KEYS].map(async key => {
+      try {
+        const val = await idbGet(db, key);
+        if (val !== undefined && val !== null) {
+          _cache[key] = val;
+        } else {
+          // Migrar desde localStorage si existe
+          const ls = localStorage.getItem(key);
+          if (ls !== null) {
+            _cache[key] = ls;
+            // Escribir a IDB y borrar de localStorage
+            await idbSet(db, key, ls);
+            localStorage.removeItem(key);
+          }
+        }
+      } catch(e) {
+        console.warn('[posDB] error cargando', key, e);
+      }
+    }));
+    _ready = true;
+    // Procesar escrituras encoladas
+    for (const {op, key, value} of _queue) {
+      try {
+        if (op === 'set')    await idbSet(db, key, value);
+        else if (op === 'del') await idbDel(db, key);
+      } catch(e) { console.warn('[posDB] queue flush error', e); }
+    }
+    _queue.length = 0;
+  }).catch(e => {
+    console.warn('[posDB] IDB no disponible, usando localStorage:', e);
+    _ready = true; // seguimos con localStorage
+  });
+
+  // API pública que reemplaza localStorage para claves IDB
+  window.posStore = {
+    getItem(key) {
+      if (!IDB_KEYS.has(key)) return localStorage.getItem(key);
+      return (_cache[key] !== undefined) ? _cache[key] : null;
+    },
+    setItem(key, value) {
+      if (!IDB_KEYS.has(key)) { localStorage.setItem(key, value); return; }
+      _cache[key] = value;
+      if (_db) {
+        idbSet(_db, key, value).catch(e => {
+          console.warn('[posDB] setItem IDB falló, fallback localStorage:', key, e);
+          try { localStorage.setItem(key, value); } catch(_) {}
+        });
+      } else if (!_ready) {
+        _queue.push({op:'set', key, value});
+      } else {
+        // IDB falló completamente, usar localStorage
+        try { localStorage.setItem(key, value); } catch(_) {}
+      }
+    },
+    removeItem(key) {
+      if (!IDB_KEYS.has(key)) { localStorage.removeItem(key); return; }
+      delete _cache[key];
+      if (_db) {
+        idbDel(_db, key).catch(e => console.warn('[posDB] removeItem IDB falló:', key, e));
+      } else if (!_ready) {
+        _queue.push({op:'del', key});
+      }
+      localStorage.removeItem(key);
+    },
+    // Exponer para backup/restore
+    isIDBKey(key) { return IDB_KEYS.has(key); },
+    getAllCache() { return {..._cache}; },
+  };
+
+})();
+</script>
+
+<script>
 // ── DATOS ──────────────────────────────────────────────────────────────
 const MENU_DEFAULT = [
   { nombre: "Almuerzo ejecutivo",            categoria: "Almuerzo",  precio: 15000 },
@@ -5802,7 +5946,7 @@ async function pinEnter() {
     document.getElementById('loginScreen').style.display = 'none';
     aplicarRolUI();
     actualizarHeaderUsuario();
-    init();
+    (window._posDBReady || Promise.resolve()).then(() => init());
     // Firebase en segundo plano: verificar sesión y registrar sin bloquear la UI
     fbVerificarSesion(loginTargetUser.id).then(sesionOcupada => {
       if (sesionOcupada) {
@@ -6377,7 +6521,7 @@ function cargarConfig() {
   // ── Si waTelDomicilio está vacío, intentar leerlo del menú ──
   if (!config.waTelDomicilio) {
     try {
-      const raw = localStorage.getItem('pos_menu_settings_v1');
+      const raw = posStore.getItem('pos_menu_settings_v1');
       if (raw) {
         const ms = JSON.parse(raw);
         if (ms.businessWhatsApp) {
@@ -6408,21 +6552,21 @@ function cargarConfig() {
   renderHorarios();
   actualizarConsecDisplay();
   try {
-    const savedLogo = localStorage.getItem('pos_logo');
+    const savedLogo = posStore.getItem('pos_logo');
     if (savedLogo) { logoBase64 = savedLogo; mostrarLogoPreview(); }
     else {
       try {
-        const raw = localStorage.getItem('pos_menu_settings_v1');
+        const raw = posStore.getItem('pos_menu_settings_v1');
         const ms = raw ? JSON.parse(raw) : {};
         if (ms.businessLogo) {
           logoBase64 = ms.businessLogo;
-          localStorage.setItem('pos_logo', logoBase64); // normalizar en clave del POS
+          posStore.setItem('pos_logo', logoBase64); // normalizar en clave del POS
           mostrarLogoPreview();
         } else { actualizarManifestConLogo(null); }
       } catch(_) { actualizarManifestConLogo(null); }
     }
     // Cargar fondo y preview del login
-    const savedBg = localStorage.getItem('pos_login_bg');
+    const savedBg = posStore.getItem('pos_login_bg');
     if (savedBg) { loginBgBase64 = savedBg; aplicarLoginBg(); }
     mostrarLoginBgPreview();
   } catch(e) { actualizarManifestConLogo(null); }
@@ -6430,8 +6574,8 @@ function cargarConfig() {
 
 function cargarMenuPrecios() {
   try {
-    const raw = localStorage.getItem('pos_menu')
-             || localStorage.getItem('pos_menu_custom_v3');
+    const raw = posStore.getItem('pos_menu')
+             || posStore.getItem('pos_menu_custom_v3');
     if (raw) {
       const savedMenu = JSON.parse(raw);
       const tienenCategoria = savedMenu.every(s => s.categoria);
@@ -6469,7 +6613,7 @@ function cargarMenuPrecios() {
 
 function cargarHistorial() {
   try {
-    const saved = localStorage.getItem('pos_historial');
+    const saved = posStore.getItem('pos_historial');
     if (saved) historial = JSON.parse(saved);
   } catch(e) {
     historial = [];
@@ -6591,7 +6735,7 @@ const HORARIOS_DEFAULT = DIAS_SEMANA.map((dia, i) => ({
 
 function cargarHorariosConfig() {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     if (raw) {
       const ms = JSON.parse(raw);
       if (Array.isArray(ms.horarios) && ms.horarios.length === 7) return ms.horarios;
@@ -6684,17 +6828,17 @@ function leerHorariosDelForm() {
 
 function guardarHorariosLocal(horarios) {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms = raw ? JSON.parse(raw) : {};
     ms.horarios = horarios;
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
   } catch(e) {}
 }
 
 // ── FESTIVOS ────────────────────────────────────────────────────────
 function cargarFestivos() {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     if (raw) {
       const ms = JSON.parse(raw);
       if (Array.isArray(ms.festivos)) return ms.festivos;
@@ -6705,10 +6849,10 @@ function cargarFestivos() {
 
 function guardarFestivosLocal(festivos) {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms = raw ? JSON.parse(raw) : {};
     ms.festivos = festivos;
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
   } catch(e) {}
 }
 
@@ -6754,7 +6898,7 @@ function eliminarFestivo(idx) {
 // ── IMAGEN DE FONDO AVISO CERRADO ────────────────────────────────────
 function cargarClosedBg() {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     if (raw) {
       const ms = JSON.parse(raw);
       return ms.closedBgImage || '';
@@ -6818,10 +6962,10 @@ function subirClosedBg(input) {
       canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
       const compressed = canvas.toDataURL('image/jpeg', 0.78);
       try {
-        const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+        const raw = posStore.getItem(MENU_SETTINGS_KEY);
         const ms = raw ? JSON.parse(raw) : {};
         ms.closedBgImage = compressed;
-        localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+        posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
         if (window.fbSync) fbSync('menuSettings/closedBgImage', compressed);
       } catch(err) { showToast('⚠️ No se pudo guardar la imagen'); }
       renderClosedBgPreview();
@@ -6835,10 +6979,10 @@ function subirClosedBg(input) {
 
 function quitarClosedBg() {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms = raw ? JSON.parse(raw) : {};
     ms.closedBgImage = '';
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
     if (window.fbSync) fbSync('menuSettings/closedBgImage', '');
   } catch(e) {}
   renderClosedBgPreview();
@@ -6853,7 +6997,7 @@ function quitarClosedBg() {
 
 function getAdBanners() {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     if (!raw) return {};
     const ms = JSON.parse(raw);
     // migración: si adBanners[skin] es string (viejo), convertir a array
@@ -6865,7 +7009,7 @@ function getAdBanners() {
 
 function getAdBannerSpeed(skinKey) {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     if (!raw) return 4;
     const ms = JSON.parse(raw);
     return (ms.adBannerSpeed && ms.adBannerSpeed[skinKey]) || 4;
@@ -6874,23 +7018,23 @@ function getAdBannerSpeed(skinKey) {
 
 function saveAdBannerSpeed(skinKey, secs) {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms = raw ? JSON.parse(raw) : {};
     if (!ms.adBannerSpeed) ms.adBannerSpeed = {};
     ms.adBannerSpeed[skinKey] = secs;
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
     if (window.fbSync) fbSync('menuSettings/adBannerSpeed/' + skinKey, secs);
   } catch(e) {}
 }
 
 function saveAdBannersArr(skinKey, arr) {
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms = raw ? JSON.parse(raw) : {};
     if (!ms.adBanners) ms.adBanners = {};
     if (arr && arr.length) ms.adBanners[skinKey] = arr;
     else delete ms.adBanners[skinKey];
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
     if (window.fbSync) fbSync('menuSettings/adBanners/' + skinKey, arr && arr.length ? arr : null);
   } catch(e) { showToast('⚠️ No se pudo guardar el banner'); }
 }
@@ -7086,7 +7230,7 @@ function saveConfig() {
   localStorage.setItem('pos_config', JSON.stringify(config));
 
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const menuSettings = raw ? JSON.parse(raw) : {};
     menuSettings.businessWhatsApp = config.waTelDomicilio
       ? '57' + config.waTelDomicilio
@@ -7094,7 +7238,7 @@ function saveConfig() {
     // Guardar horarios leídos del formulario
     const horariosActuales = leerHorariosDelForm();
     menuSettings.horarios = horariosActuales;
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(menuSettings));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(menuSettings));
     // Sincronizar horarios a Firebase
     if (window.fbSync) fbSync('menuSettings/horarios', horariosActuales);
     // Guardar festivos
@@ -8358,8 +8502,8 @@ function guardarMenuLocalStorage() {
     iva: (i.iva !== undefined && i.iva !== null) ? i.iva : 8, // default 8% para restaurantes
     disponible: i.disponible !== false   // BUG 1 fix: preservar estado de disponibilidad
   }));
-  localStorage.setItem('pos_menu', JSON.stringify(data));
-  try { localStorage.setItem('pos_menu_custom_v3', JSON.stringify(data)); } catch(_) {}
+  posStore.setItem('pos_menu', JSON.stringify(data));
+  try { posStore.setItem('pos_menu_custom_v3', JSON.stringify(data)); } catch(_) {}
   fbSync('menu', data);
 }
 
@@ -10138,7 +10282,7 @@ function confirmarBorradoFinal() {
     async callback() {
       // 1. Limpiar en memoria y localStorage PRIMERO
       historial = [];
-      localStorage.setItem('pos_historial', JSON.stringify([]));
+      posStore.setItem('pos_historial', JSON.stringify([]));
       actualizarBadgeHistorial();
       renderHistorial();
 
@@ -11197,7 +11341,7 @@ async function finalizarFactura() {
     feEstado: '',       // 'PENDIENTE' | 'ACEPTADA' | 'RECHAZADA'
   };
   historial.push(factura);
-  localStorage.setItem('pos_historial', JSON.stringify(historial));
+  posStore.setItem('pos_historial', JSON.stringify(historial));
   // fbSyncFactura se llama después de añadir totalRecibido/cambio/pagos al cobrar
   actualizarBadgeHistorial();
 
@@ -11450,14 +11594,14 @@ function cargarLogo(input) {
       try {
         logoBase64 = b64;
         // Intentar guardar en localStorage, si falla por cuota solo usar Firebase
-        try { localStorage.setItem('pos_logo', logoBase64); } catch(eq) {
+        try { posStore.setItem('pos_logo', logoBase64); } catch(eq) {
           console.warn('localStorage lleno, logo solo en Firebase');
         }
         try {
-          const raw = localStorage.getItem('pos_menu_settings_v1');
+          const raw = posStore.getItem('pos_menu_settings_v1');
           const ms = raw ? JSON.parse(raw) : {};
           ms.businessLogo = logoBase64;
-          localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
+          posStore.setItem('pos_menu_settings_v1', JSON.stringify(ms));
         } catch(_) {}
         try { fbSync('logo', { data: logoBase64 }); } catch(_) {}
         try { fbSync('decorImages/businessLogo', logoBase64); } catch(_) {}
@@ -11480,7 +11624,7 @@ function actualizarIconosApp() {
     const lEmoji = document.getElementById('loginLogoEmoji');
 
     // Header: usa el logo del RESTAURANTE (pos_logo)
-    const restLogo = logoBase64 || localStorage.getItem('pos_logo');
+    const restLogo = logoBase64 || posStore.getItem('pos_logo');
     if (restLogo) {
       if (hImg)   { hImg.src = restLogo; hImg.style.display = 'block'; }
       if (hEmoji) hEmoji.style.display = 'none';
@@ -11553,12 +11697,12 @@ function mostrarLogoPreview() {
 function quitarLogo() {
   confirmar({ icono:'🖼️', titulo:'Quitar logo', mensaje:'¿Quitar el logo del recibo?', textoOk:'Quitar', callback() {
     logoBase64 = null;
-    localStorage.removeItem('pos_logo');
+    posStore.removeItem('pos_logo');
     try {
-      const raw = localStorage.getItem('pos_menu_settings_v1');
+      const raw = posStore.getItem('pos_menu_settings_v1');
       const ms = raw ? JSON.parse(raw) : {};
       ms.businessLogo = '';
-      localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms));
+      posStore.setItem('pos_menu_settings_v1', JSON.stringify(ms));
     } catch(_) {}
     fbSyncRemove('logo');
     fbSync('decorImages/businessLogo', '');
@@ -12016,10 +12160,10 @@ function exportarBackup() {
         _version: 1,
         _fecha: new Date().toISOString(),
         pos_config:    localStorage.getItem('pos_config'),
-        pos_menu:      localStorage.getItem('pos_menu'),
+        pos_menu:      posStore.getItem('pos_menu'),
         pos_usuarios:  localStorage.getItem('pos_usuarios'),
-        pos_historial: localStorage.getItem('pos_historial'),
-        pos_logo:      localStorage.getItem('pos_logo'),
+        pos_historial: posStore.getItem('pos_historial'),
+        pos_logo:      posStore.getItem('pos_logo'),
         pos_printer_name: localStorage.getItem('pos_printer_name'),
         pos_dark:      localStorage.getItem('pos_dark'),
         pos_pwa_dismissed: localStorage.getItem('pos_pwa_dismissed'),
@@ -12069,9 +12213,9 @@ function importarBackup(input) {
           ];
           keys.forEach(k => {
             if (data[k] !== null && data[k] !== undefined) {
-              localStorage.setItem(k, data[k]);
+              posStore.setItem(k, data[k]);
             } else {
-              localStorage.removeItem(k);
+              posStore.removeItem(k);
             }
           });
           showToast('✅ Configuración restaurada. Recargando...');
@@ -12257,7 +12401,7 @@ async function forzarAccesoSesion() {
   document.getElementById('loginScreen').style.display = 'none';
   aplicarRolUI();
   actualizarHeaderUsuario();
-  init();
+  (window._posDBReady || Promise.resolve()).then(() => init());
   // Firebase en segundo plano
   fbLiberarSesion(loginTargetUser.id).then(() => fbRegistrarSesion(loginTargetUser.id));
 }
@@ -12293,13 +12437,13 @@ function fbEscucharCambios() {
         document.getElementById('cfgWaDomicilio').value = config.waTelDomicilio || '';
         document.getElementById('cfgWaMensaje').value = config.waMensaje || '';
         try {
-          const raw2 = localStorage.getItem('pos_menu_settings_v1');
+          const raw2 = posStore.getItem('pos_menu_settings_v1');
           const ms2 = raw2 ? JSON.parse(raw2) : {};
           // BUG 6 fix: waTelDomicilio se guarda sin prefijo 57; el menú lo necesita con prefijo
           const num2 = (config.waTelDomicilio || '').replace(/\D/g, '');
           if (num2) {
             ms2.businessWhatsApp = '57' + (num2.startsWith('57') && num2.length > 10 ? num2.slice(2) : num2);
-            localStorage.setItem('pos_menu_settings_v1', JSON.stringify(ms2));
+            posStore.setItem('pos_menu_settings_v1', JSON.stringify(ms2));
           }
         } catch(e) {}
       }
@@ -12321,8 +12465,8 @@ function fbEscucharCambios() {
             disponible: s.disponible !== false
           };
         });
-        localStorage.setItem('pos_menu', JSON.stringify(MENU));
-        try { localStorage.setItem('pos_menu_custom_v3', JSON.stringify(MENU)); } catch(_) {}
+        posStore.setItem('pos_menu', JSON.stringify(MENU));
+        try { posStore.setItem('pos_menu_custom_v3', JSON.stringify(MENU)); } catch(_) {}
         // Actualizar precios en carrito si cambiaron desde otro dispositivo
         carrito.forEach(ci => {
           const found = MENU.find(m => m.nombre === ci.nombre);
@@ -12348,7 +12492,7 @@ function fbEscucharCambios() {
           return na - nb;
         });
         historial = merged;
-        localStorage.setItem('pos_historial', JSON.stringify(historial));
+        posStore.setItem('pos_historial', JSON.stringify(historial));
         actualizarBadgeHistorial(); renderHistorial();
       }
     },
@@ -12373,7 +12517,7 @@ function fbEscucharCambios() {
             const nb = parseInt(String(b.numero).replace(/\D/g, '')) || 0;
             return na - nb;
           });
-          localStorage.setItem('pos_historial', JSON.stringify(historial));
+          posStore.setItem('pos_historial', JSON.stringify(historial));
           actualizarBadgeHistorial(); renderHistorial();
         }
       }
@@ -12395,7 +12539,7 @@ function fbEscucharCambios() {
         if (!val || !val.data) return;
         if (val.data === logoBase64) return; // Sin cambio
         logoBase64 = val.data;
-        localStorage.setItem('pos_logo', logoBase64);
+        posStore.setItem('pos_logo', logoBase64);
         mostrarLogoPreview();
         actualizarIconosApp();
       }
@@ -13084,14 +13228,14 @@ initLogin();
 const MENU_SETTINGS_KEY = 'pos_menu_settings_v1';
 
 function loadMenuSettings() {
-  try { const r = localStorage.getItem(MENU_SETTINGS_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
+  try { const r = posStore.getItem(MENU_SETTINGS_KEY); return r ? JSON.parse(r) : {}; } catch(e) { return {}; }
 }
 function saveMenuSettings(s) {
   // No guardar categoryImages dentro de menuSettings — tienen su propia clave
   const clean = { ...s };
   delete clean.categoryImages;
   try {
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(clean));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(clean));
   } catch(e) {
     if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
       showToast('⚠️ Sin espacio de almacenamiento. Considera eliminar fotos antiguas.');
@@ -13324,10 +13468,10 @@ function cfgRenderHeroAlignBtns(align) {
 function cfgSetHeroAlign(align) {
   cfgRenderHeroAlignBtns(align);
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms  = raw ? JSON.parse(raw) : {};
     ms.heroAlign = align;
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
     if (window.fbSync) fbSync('menuSettings/heroAlign', align);
   } catch(e) {}
   cfgUpdateHeroPreview();
@@ -13351,7 +13495,7 @@ function cfgUpdateHeroPreview() {
   const cIn   = document.getElementById('cfgHeroBgColorInput');
   if (!box) return;
   const align = (() => {
-    try { const r = localStorage.getItem(MENU_SETTINGS_KEY); return r ? (JSON.parse(r).heroAlign||'left') : 'left'; } catch(e){return 'left';}
+    try { const r = posStore.getItem(MENU_SETTINGS_KEY); return r ? (JSON.parse(r).heroAlign||'left') : 'left'; } catch(e){return 'left';}
   })();
   const color = cIn ? cIn.value : '#1A1108';
   box.style.background  = color;
@@ -13367,12 +13511,12 @@ function cfgSaveHeroText() {
   const colorLabel = document.getElementById('cfgHeroBgColorLabel');
   if (colorLabel && cIn) colorLabel.textContent = cIn.value;
   try {
-    const raw = localStorage.getItem(MENU_SETTINGS_KEY);
+    const raw = posStore.getItem(MENU_SETTINGS_KEY);
     const ms  = raw ? JSON.parse(raw) : {};
     ms.heroTitleRest = tR ? tR.value : (ms.heroTitleRest || '');
     ms.heroTextRest  = dR ? dR.value : (ms.heroTextRest  || '');
     ms.heroBgColor   = cIn ? cIn.value : (ms.heroBgColor || '#1A1108');
-    localStorage.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
+    posStore.setItem(MENU_SETTINGS_KEY, JSON.stringify(ms));
     if (window.fbSync) {
       fbSync('menuSettings/heroTitleRest', ms.heroTitleRest || null);
       fbSync('menuSettings/heroTextRest',  ms.heroTextRest  || null);
@@ -13621,14 +13765,14 @@ const CAT_IMAGES_KEY = 'pos_cat_images';
 
 function cfgGetCatImages() {
   try {
-    const raw = localStorage.getItem(CAT_IMAGES_KEY);
+    const raw = posStore.getItem(CAT_IMAGES_KEY);
     return raw ? JSON.parse(raw) : {};
   } catch(e) { return {}; }
 }
 
 function cfgSaveCatImages(imgs) {
   try {
-    localStorage.setItem(CAT_IMAGES_KEY, JSON.stringify(imgs));
+    posStore.setItem(CAT_IMAGES_KEY, JSON.stringify(imgs));
   } catch(e) {
     if (e.name === 'QuotaExceededError' || e.code === 22 || e.code === 1014) {
       showToast('⚠️ Sin espacio en el dispositivo. Elimina fotos antiguas o usa imágenes más pequeñas.');
@@ -13684,7 +13828,7 @@ function cfgRenderCatImages() {
         imgs2[catNombre] = data;
         let guardadoOk = false;
         try {
-          localStorage.setItem(CAT_IMAGES_KEY, JSON.stringify(imgs2));
+          posStore.setItem(CAT_IMAGES_KEY, JSON.stringify(imgs2));
           guardadoOk = true;
           // Sincronizar a Firebase solo la clave que cambió, no el objeto completo,
           // para evitar que una sincronización parcial cruce imágenes entre categorías
@@ -13879,7 +14023,7 @@ async function emitirNotaCredito(numeroFactura) {
         if (idx >= 0) {
           historial[idx].feNotaCredito = data.cufe;
           historial[idx].feEstado = 'ANULADA';
-          localStorage.setItem('pos_historial', JSON.stringify(historial));
+          posStore.setItem('pos_historial', JSON.stringify(historial));
           try { if (window.fbSync) {
             window.fbSync('facturas/' + numeroFactura + '/feNotaCredito', data.cufe);
             window.fbSync('facturas/' + numeroFactura + '/feEstado', 'ANULADA');
@@ -13989,7 +14133,7 @@ async function confirmarNotaDebito(numeroFactura) {
     if (idx >= 0) {
       historial[idx].feNotaDebito      = data.cufe;
       historial[idx].feNotaDebitoValor = valorRaw;
-      localStorage.setItem('pos_historial', JSON.stringify(historial));
+      posStore.setItem('pos_historial', JSON.stringify(historial));
       try { if (window.fbSync) {
         window.fbSync('facturas/'+numeroFactura+'/feNotaDebito',      data.cufe);
         window.fbSync('facturas/'+numeroFactura+'/feNotaDebitoValor', valorRaw);
@@ -14007,13 +14151,13 @@ function feActualizarFactura(numero, cufe, estado) {
   const f = historial.find(x=>x.numero===numero);
   if (!f) return;
   f.feCufe = cufe; f.feEstado = estado||'ACEPTADA';
-  localStorage.setItem('pos_historial', JSON.stringify(historial));
+  posStore.setItem('pos_historial', JSON.stringify(historial));
   try { if (window.fbSync) { window.fbSync('facturas/'+numero+'/feCufe', cufe); window.fbSync('facturas/'+numero+'/feEstado', estado||'ACEPTADA'); } } catch(_) {}
 }
 
 async function _feEnviarConReintentos(factura) {
   const url = feGetBackendUrl();
-  const marcarPendiente = () => { factura.feEstado='PENDIENTE'; const i=historial.findIndex(x=>x.numero===factura.numero); if(i>=0) historial[i].feEstado='PENDIENTE'; localStorage.setItem('pos_historial',JSON.stringify(historial)); };
+  const marcarPendiente = () => { factura.feEstado='PENDIENTE'; const i=historial.findIndex(x=>x.numero===factura.numero); if(i>=0) historial[i].feEstado='PENDIENTE'; posStore.setItem('pos_historial',JSON.stringify(historial)); };
   if (!url) { marcarPendiente(); feAgregarACola(factura.numero, feConstruirPayload(factura)); showToast('⚠️ FE en cola — configura el backend en Ajustes', 4000); return; }
   marcarPendiente();
   let err = '';
@@ -14819,7 +14963,7 @@ async function ejecutarCobro(total) {
       // Actualizar en historial
       const idx = historial.findIndex(x => x.numero === factura.numero);
       if (idx >= 0) historial[idx] = factura;
-      localStorage.setItem('pos_historial', JSON.stringify(historial));
+      posStore.setItem('pos_historial', JSON.stringify(historial));
       fbSyncFactura(factura); // sincronizar con pago completo
     }
 
@@ -14866,7 +15010,7 @@ async function ejecutarCobro(total) {
       factura.pago = pagoLabel;
       const idx = historial.findIndex(x => x.numero === factura.numero);
       if (idx >= 0) historial[idx] = factura;
-      localStorage.setItem('pos_historial', JSON.stringify(historial));
+      posStore.setItem('pos_historial', JSON.stringify(historial));
       fbSyncFactura(factura); // sincronizar con pago completo
     }
     mostrarResumenCobro(factura, pagosEntries, totalPagado, cambio);
@@ -14962,7 +15106,7 @@ function cargarLoginIcon(input) {
   reader.onload = e => {
     redimensionarImagen(e.target.result, 400, 400, (b64) => {
       localStorage.setItem('pos_login_icon', b64);
-      localStorage.setItem('pos_logo', b64);
+      posStore.setItem('pos_logo', b64);
       aplicarLoginIcon();
       mostrarLoginIconPreview();
       showToast('✅ Ícono guardado');
@@ -15014,7 +15158,7 @@ function cargarLoginBg(input) {
   const reader = new FileReader();
   reader.onload = e => {
     loginBgBase64 = e.target.result;
-    localStorage.setItem('pos_login_bg', loginBgBase64);
+    posStore.setItem('pos_login_bg', loginBgBase64);
     aplicarLoginBg();
     mostrarLoginBgPreview();
     showToast('✅ Fondo de inicio guardado');
@@ -15025,7 +15169,7 @@ function cargarLoginBg(input) {
 
 function quitarLoginBg() {
   loginBgBase64 = null;
-  localStorage.removeItem('pos_login_bg');
+  posStore.removeItem('pos_login_bg');
   aplicarLoginBg();
   mostrarLoginBgPreview();
   showToast('🗑️ Fondo quitado');
@@ -15080,7 +15224,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function cargarLoginPersonalizacion() {
   const brand   = localStorage.getItem('pos_login_brand');
   const sub     = localStorage.getItem('pos_login_sub');
-  const bg      = localStorage.getItem('pos_login_bg');
+  const bg      = posStore.getItem('pos_login_bg');
   const emoji   = localStorage.getItem('pos_login_emoji');
   if (brand) { const el = document.getElementById('loginBrandText'); if (el) el.textContent = brand; }
   if (sub)   { const el = document.getElementById('loginSubText');   if (el) el.textContent = sub; }
@@ -15108,7 +15252,9 @@ function cargarLoginPersonalizacion() {
     firstRunBanner.style.display = yaPersonalizado ? 'none' : 'block';
   }
 }
-document.addEventListener('DOMContentLoaded', cargarLoginPersonalizacion);
+document.addEventListener('DOMContentLoaded', () => {
+  (window._posDBReady || Promise.resolve()).then(() => cargarLoginPersonalizacion());
+});
 
 
 
