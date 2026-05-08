@@ -5261,6 +5261,17 @@ async function conectar(cfg) {
         heroImage: localSettings.heroImage || '',
         businessLogo: localSettings.businessLogo || '' };
       delete merged.categoryImages;
+
+      // ── SYNC FIX: preservar imágenes locales de paymentMethods ──────────────
+      // index.html no guarda 'img' en Firebase pero menu_domicilio sí las almacena
+      // en localStorage. Al hacer merge inicial no debemos perder esas imágenes.
+      if (Array.isArray(fbSett.paymentMethods) && Array.isArray(localSettings.paymentMethods)) {
+        merged.paymentMethods = fbSett.paymentMethods.map(fbM => {
+          const localM = localSettings.paymentMethods.find(l => l.id === fbM.id);
+          return { ...fbM, img: fbM.img || (localM ? localM.img : null) };
+        });
+      }
+
       // Preservar preferencias personales del cliente — igual que en el listener
       const localPrefs0 = loadLocalPrefs();
       if (localPrefs0.uiTheme)   merged.uiTheme   = localPrefs0.uiTheme;
@@ -5282,6 +5293,31 @@ async function conectar(cfg) {
       }
     }
   } catch(e) { console.warn('fbLoadCategoryImages:', e); }
+
+  // SYNC FIX: cargar imágenes de formas de pago desde Firebase (nodo paymentImages)
+  // Las imágenes no se guardan en menuSettings para no saturar Firebase, sino
+  // en un nodo dedicado 'paymentImages' { [methodId]: base64 }.
+  try {
+    const snapPI = await get(ref(db, 'restaurante/paymentImages'));
+    if (snapPI.exists()) {
+      const fbPayImgs = snapPI.val();
+      if (fbPayImgs && typeof fbPayImgs === 'object' && Array.isArray(window.settings.paymentMethods)) {
+        window.settings.paymentMethods = window.settings.paymentMethods.map(m => ({
+          ...m, img: m.img || fbPayImgs[m.id] || null
+        }));
+        const localRaw = localStorage.getItem(SETTINGS_KEY_M);
+        const localS = localRaw ? JSON.parse(localRaw) : {};
+        if (Array.isArray(localS.paymentMethods)) {
+          localS.paymentMethods = localS.paymentMethods.map(m => ({
+            ...m, img: m.img || fbPayImgs[m.id] || null
+          }));
+          localStorage.setItem(SETTINGS_KEY_M, JSON.stringify(localS));
+        }
+        if (typeof renderPaymentOptions === 'function') renderPaymentOptions();
+        if (typeof renderPaymentEditor  === 'function') renderPaymentEditor();
+      }
+    }
+  } catch(e) { console.warn('fbLoadPaymentImages:', e); }
 
   // Cargar imágenes decorativas desde Firebase (fondo, cabecera, logo)
   try {
@@ -5353,12 +5389,28 @@ async function conectar(cfg) {
       heroImage: window.settings?.heroImage || localSettings.heroImage || '',
       businessLogo: window.settings?.businessLogo || localSettings.businessLogo || '' };
     delete merged.categoryImages; // categoryImages vive en su propia clave
+
+    // ── SYNC FIX: preservar imágenes locales de paymentMethods ──────────────
+    // index.html no guarda 'img' en Firebase (se elimina en saveMenuSettings)
+    // pero menu_domicilio sí las tiene en localStorage. Al hacer merge desde
+    // Firebase no debemos perder esas imágenes ya guardadas localmente.
+    if (Array.isArray(fbSett2.paymentMethods) && Array.isArray(localSettings.paymentMethods)) {
+      merged.paymentMethods = fbSett2.paymentMethods.map(fbM => {
+        const localM = localSettings.paymentMethods.find(l => l.id === fbM.id);
+        return { ...fbM, img: fbM.img || (localM ? localM.img : null) };
+      });
+    }
+
     // Preservar preferencias personales del cliente — no dejar que Firebase las pise
     const localPrefs = loadLocalPrefs();
     if (localPrefs.uiTheme)   merged.uiTheme   = localPrefs.uiTheme;
     if (localPrefs.fontScale) merged.fontScale  = localPrefs.fontScale;
     window.settings = merged;
     localStorage.setItem(SETTINGS_KEY_M, JSON.stringify(merged));
+    // Actualizar formas de pago en la UI si el carrito está abierto
+    if (typeof ensurePaymentMethods === 'function') ensurePaymentMethods();
+    if (typeof renderPaymentOptions  === 'function') renderPaymentOptions();
+    if (typeof renderPaymentEditor   === 'function') renderPaymentEditor();
     if (window.applyTheme) window.applyTheme();
     if (window.render) window.render();
     if (window.showSyncBadge) window.showSyncBadge('🔄 Configuración actualizada desde la nube');
@@ -5398,6 +5450,33 @@ async function conectar(cfg) {
     if (window.render) window.render();
   }, e => console.warn(e));
   window._fbUnsubDecorImgs = () => off(rDecorImgs);
+
+  // SYNC FIX: escuchar cambios en tiempo real — imágenes de formas de pago
+  // index.html las guarda en 'restaurante/paymentImages' para no saturar menuSettings.
+  if (window._fbUnsubPayImgs) window._fbUnsubPayImgs();
+  const rPayImgs = ref(db, 'restaurante/paymentImages');
+  onValue(rPayImgs, snap => {
+    if (!snap.exists()) return;
+    const fbPayImgs2 = snap.val();
+    if (!fbPayImgs2 || typeof fbPayImgs2 !== 'object') return;
+    if (Array.isArray(window.settings?.paymentMethods)) {
+      window.settings.paymentMethods = window.settings.paymentMethods.map(m => ({
+        ...m, img: fbPayImgs2[m.id] || m.img || null
+      }));
+      // Persistir en localStorage para no perder las imágenes en recargas
+      const localRaw4 = localStorage.getItem(SETTINGS_KEY_M);
+      const localS4 = localRaw4 ? JSON.parse(localRaw4) : {};
+      if (Array.isArray(localS4.paymentMethods)) {
+        localS4.paymentMethods = localS4.paymentMethods.map(m => ({
+          ...m, img: fbPayImgs2[m.id] || m.img || null
+        }));
+        localStorage.setItem(SETTINGS_KEY_M, JSON.stringify(localS4));
+      }
+      if (typeof renderPaymentOptions === 'function') renderPaymentOptions();
+      if (typeof renderPaymentEditor  === 'function') renderPaymentEditor();
+    }
+  }, e => console.warn(e));
+  window._fbUnsubPayImgs = () => off(rPayImgs);
 
   // Escuchar cambios en membrete del menú físico (cabecera digital)
   if (window._fbUnsubMfCfg) window._fbUnsubMfCfg();
@@ -5941,13 +6020,53 @@ window.renderCategoryGridSafe = function() {
       renderBusinessLogo();
       return;
     }
-    // Clave de settings del menú (también contiene businessLogo)
+    // Clave de settings del menú — sincronización completa de formas de pago y config
     if (e.key === 'pos_menu_settings_v1') {
       try {
         const parsed = e.newValue ? JSON.parse(e.newValue) : {};
+
+        // ── Logo ──────────────────────────────────────────────────────
         if (parsed.businessLogo !== undefined) {
           window.settings.businessLogo = parsed.businessLogo || '';
           renderBusinessLogo();
+        }
+
+        // ── Formas de pago ───────────────────────────────────────────
+        // Cuando index.html edita paymentMethods, menu_domicilio debe
+        // actualizar window.settings y re-renderizar el carrito.
+        if (Array.isArray(parsed.paymentMethods)) {
+          // Preservar imágenes locales (img en base64) que index no envía a Firebase
+          const prevMethods = Array.isArray(window.settings.paymentMethods)
+            ? window.settings.paymentMethods : [];
+          window.settings.paymentMethods = parsed.paymentMethods.map(m => {
+            const prev = prevMethods.find(p => p.id === m.id);
+            // Si el método ya tenía imagen local, conservarla
+            return { ...m, img: m.img || (prev ? prev.img : null) };
+          });
+          // Forzar re-render del carrito y opciones de pago
+          if (typeof ensurePaymentMethods === 'function') ensurePaymentMethods();
+          if (typeof renderPaymentOptions === 'function') renderPaymentOptions();
+          if (typeof renderPaymentEditor === 'function') renderPaymentEditor();
+          if (typeof renderCart === 'function') renderCart();
+        }
+
+        // ── Resto de settings relevantes (horarios, diseño, etc.) ────
+        const keysToSync = [
+          'horarios','festivos','estiloVisual','columnas','tamano','fuente',
+          'colorPrimario','colorAccent','businessWhatsApp','adminPin',
+          'hiddenCategories','mostrarDescripcion','mostrarPrecioDomicilio',
+          'textoCierre','eslogan','restaurantNombre','heroBgColor','heroAlign',
+        ];
+        let changed = false;
+        keysToSync.forEach(k => {
+          if (parsed[k] !== undefined && JSON.stringify(parsed[k]) !== JSON.stringify(window.settings[k])) {
+            window.settings[k] = parsed[k];
+            changed = true;
+          }
+        });
+        if (changed) {
+          if (typeof applyTheme === 'function') applyTheme();
+          if (typeof render === 'function') render();
         }
       } catch(_) {}
     }
