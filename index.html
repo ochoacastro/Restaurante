@@ -16804,7 +16804,9 @@ function meGuardar() {
 function abrirMenuPreview() {
   const wrap = document.getElementById('mePreviewIframeWrap');
   const iframe = document.getElementById('mePreviewIframe');
-  iframe.src = 'menu restaurante.html?admin=1&t=' + Date.now();
+  const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
+  const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
+  iframe.src = base + '?admin=1&t=' + Date.now();
   wrap.classList.add('open');
 }
 
@@ -16815,7 +16817,9 @@ function cerrarMenuPreview() {
 
 function recargarMenuPreview() {
   const iframe = document.getElementById('mePreviewIframe');
-  iframe.src = 'menu restaurante.html?admin=1&t=' + Date.now();
+  const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
+  const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
+  iframe.src = base + '?admin=1&t=' + Date.now();
 }
 
 // Exponer globalmente
