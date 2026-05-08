@@ -2567,12 +2567,19 @@
 
   /* ── Pagos ── */
   .payment-list { display: flex; flex-direction: column; gap: 8px; }
-  .payment-item { display: grid; grid-template-columns: 44px 44px 68px 1fr auto; gap: 8px; align-items: center; }
-  .payment-header-row { display: grid; grid-template-columns: 44px 44px 68px 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1.5px solid var(--borde); }
+  .payment-item { display: grid; grid-template-columns: 44px 44px 52px 1fr auto; gap: 8px; align-items: start; }
+  .payment-item-inner { display: contents; }
+  .payment-header-row { display: grid; grid-template-columns: 44px 44px 52px 1fr auto; gap: 8px; align-items: center; margin-bottom: 6px; padding-bottom: 6px; border-bottom: 1.5px solid var(--borde); }
   .pay-col-label { font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: .6px; color: var(--gris); text-align: center; line-height: 1.2; }
-  .pay-emoji-input { width: 100%; border: 1.5px solid var(--borde); border-radius: 10px; padding: 8px 6px; font-size: 18px; text-align: center; background: var(--fondo); color: var(--negro); font-family: inherit; }
+  .pay-img-btn { width: 52px; height: 40px; border: 1.5px solid var(--borde); border-radius: 10px; background: var(--fondo); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; position: relative; flex-shrink: 0; }
+  .pay-img-btn img { width: 100%; height: 100%; object-fit: cover; border-radius: 8px; display: none; }
+  .pay-img-btn img.show { display: block; }
+  .pay-img-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+  .pay-img-placeholder { font-size: 10px; color: var(--gris); text-align: center; line-height: 1.2; pointer-events: none; }
+  .pay-name-info-col { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
   .pay-label-input { width: 100%; border: 1.5px solid var(--borde); border-radius: 10px; padding: 8px 10px; font-size: 13px; background: var(--fondo); color: var(--negro); font-family: inherit; }
-  .pay-del-btn { border: none; background: #D32F2F; color: #fff; border-radius: 10px; padding: 8px 10px; font-weight: 900; font-size: 13px; cursor: pointer; white-space: nowrap; }
+  .pay-info-input { width: 100%; border: 1.5px solid var(--borde); border-radius: 10px; padding: 7px 10px; font-size: 11px; background: var(--fondo); color: var(--negro); font-family: inherit; }
+  .pay-del-btn { border: none; background: #D32F2F; color: #fff; border-radius: 10px; padding: 8px 10px; font-weight: 900; font-size: 13px; cursor: pointer; white-space: nowrap; align-self: start; }
   .toggle-wrap { display: flex; align-items: center; justify-content: center; }
   .toggle-input { display: none; }
   .toggle-label {
@@ -4353,8 +4360,8 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
         <div class="payment-header-row">
           <span class="pay-col-label">Rest.</span>
           <span class="pay-col-label">Dom.</span>
-          <span class="pay-col-label">Emoji</span>
-          <span class="pay-col-label" style="text-align:left;">Nombre</span>
+          <span class="pay-col-label">Img</span>
+          <span class="pay-col-label" style="text-align:left;">Nombre / Número</span>
           <span></span>
         </div>
         <div id="cfgPayList" class="payment-list"></div>
@@ -8924,11 +8931,14 @@ function renderPago() {
       { label:'Daviplata', emoji:'🟠' }
     ];
   }
-  const pagoOpts = metodosPago.map(m =>
-    `<button class="pago-btn ${pagoMetodo === m.label ? 'active' : ''}" onclick="setPago('${m.label}');renderPago();">
-      <span>${m.emoji || '💳'}</span>${m.label}
-    </button>`
-  ).join('');
+  const pagoOpts = metodosPago.map(m => {
+    const iconHtml = m.img
+      ? `<img src="${m.img}" style="width:22px;height:22px;object-fit:cover;border-radius:4px;flex-shrink:0;">`
+      : `<span>${m.emoji || '💳'}</span>`;
+    return `<button class="pago-btn ${pagoMetodo === m.label ? 'active' : ''}" onclick="setPago('${m.label}');renderPago();">
+      ${iconHtml}${m.label}
+    </button>`;
+  }).join('');
 
   const esDom = tipoOrden === 'domicilio';
 
@@ -13619,8 +13629,18 @@ function saveMenuSettings(s) {
     }
     console.warn('saveMenuSettings error:', e);
   }
-  // Sincronizar con Firebase si está disponible (sin las imágenes pesadas)
-  if (window.fbSync) try { window.fbSync('menuSettings', clean); } catch(e){}
+  // Sincronizar con Firebase sin imágenes base64 pesadas
+  if (window.fbSync) {
+    try {
+      const forFb = { ...clean };
+      if (Array.isArray(forFb.paymentMethods)) {
+        forFb.paymentMethods = forFb.paymentMethods.map(m => {
+          const { img, ...rest } = m; return rest;
+        });
+      }
+      window.fbSync('menuSettings', forFb);
+    } catch(e){}
+  }
 }
 
 // ── Acordeón cfg-acc ──
@@ -13980,8 +14000,8 @@ function cfgGetPayments() {
   const s = loadMenuSettings();
   if (!Array.isArray(s.paymentMethods) || !s.paymentMethods.length) {
     s.paymentMethods = [
-      { id: 'p1', label: 'Efectivo',    emoji: '💵', visibleRest: true, visibleDom: true },
-      { id: 'p2', label: 'Transferencia', emoji: '📲', visibleRest: true, visibleDom: true },
+      { id: 'p1', label: 'Efectivo',      img: null, info: '', visibleRest: true, visibleDom: true },
+      { id: 'p2', label: 'Transferencia', img: null, info: '', visibleRest: true, visibleDom: true },
     ];
     saveMenuSettings(s);
   }
@@ -13992,7 +14012,9 @@ function cfgRenderPayments() {
   const list = document.getElementById('cfgPayList');
   if (!list) return;
   const methods = cfgGetPayments();
-  list.innerHTML = methods.map((m, i) => `
+  list.innerHTML = methods.map((m, i) => {
+    const imgSrc = m.img || '';
+    return `
     <div class="payment-item" data-pi="${i}">
       <div class="toggle-wrap">
         <input type="checkbox" class="toggle-input" id="pr_${i}" ${m.visibleRest ? 'checked' : ''}>
@@ -14002,11 +14024,18 @@ function cfgRenderPayments() {
         <input type="checkbox" class="toggle-input" id="pd_${i}" ${m.visibleDom ? 'checked' : ''}>
         <label class="toggle-label" for="pd_${i}"></label>
       </div>
-      <input class="pay-emoji-input" value="${esc(m.emoji||'')}" placeholder="💳" data-pay-emoji="${i}">
-      <input class="pay-label-input" value="${esc(m.label||'')}" placeholder="Nombre" data-pay-label="${i}">
+      <div class="pay-img-btn" title="Subir imagen del método">
+        <img id="payImg_${i}" src="${imgSrc}" class="${imgSrc ? 'show' : ''}" alt="">
+        <span class="pay-img-placeholder" id="payImgPh_${i}" style="${imgSrc ? 'display:none' : ''}">📷<br>Img</span>
+        <input type="file" accept="image/*" data-pay-imgload="${i}">
+      </div>
+      <div class="pay-name-info-col">
+        <input class="pay-label-input" value="${esc(m.label||'')}" placeholder="Nombre" data-pay-label="${i}">
+        <input class="pay-info-input" value="${esc(m.info||'')}" placeholder="Nro. cuenta / teléfono / alias" data-pay-info="${i}">
+      </div>
       <button class="pay-del-btn" data-pay-del="${i}">✕</button>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 
   list.querySelectorAll('[data-pay-del]').forEach(btn => {
     btn.addEventListener('click', () => {
@@ -14017,11 +14046,29 @@ function cfgRenderPayments() {
       cfgRenderPayments();
     });
   });
-  list.querySelectorAll('[data-pay-emoji]').forEach(inp => {
-    inp.addEventListener('input', () => cfgSavePaymentField(Number(inp.dataset.payEmoji), 'emoji', inp.value));
+  list.querySelectorAll('[data-pay-imgload]').forEach(inp => {
+    inp.addEventListener('change', () => {
+      const i = Number(inp.dataset.payImgload);
+      const file = inp.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        redimensionarImagen(ev.target.result, 200, 200, (b64) => {
+          cfgSavePaymentField(i, 'img', b64);
+          const imgEl = document.getElementById('payImg_' + i);
+          const phEl  = document.getElementById('payImgPh_' + i);
+          if (imgEl) { imgEl.src = b64; imgEl.classList.add('show'); }
+          if (phEl)  phEl.style.display = 'none';
+        });
+      };
+      reader.readAsDataURL(file);
+    });
   });
   list.querySelectorAll('[data-pay-label]').forEach(inp => {
     inp.addEventListener('input', () => cfgSavePaymentField(Number(inp.dataset.payLabel), 'label', inp.value));
+  });
+  list.querySelectorAll('[data-pay-info]').forEach(inp => {
+    inp.addEventListener('input', () => cfgSavePaymentField(Number(inp.dataset.payInfo), 'info', inp.value));
   });
   list.querySelectorAll('[id^="pr_"]').forEach(chk => {
     chk.addEventListener('change', () => {
@@ -14047,7 +14094,7 @@ function cfgSavePaymentField(idx, field, value) {
 function cfgAddPayment() {
   const s = loadMenuSettings();
   if (!Array.isArray(s.paymentMethods)) s.paymentMethods = [];
-  s.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', emoji: '💳', visibleRest: true, visibleDom: true });
+  s.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', visibleRest: true, visibleDom: true });
   saveMenuSettings(s);
   cfgRenderPayments();
 }
@@ -14957,7 +15004,7 @@ function renderModalCobro(total, subtotal, descMonto) {
       </div>` : '';
     return `<div class="pago-combinado-item ${activo ? 'activo' : ''}">
       <div style="display:flex;align-items:center;gap:8px;width:100%;">
-        <span style="font-size:20px;">${m.emoji}</span>
+        ${m.img ? `<img src="${m.img}" style="width:24px;height:24px;object-fit:cover;border-radius:5px;flex-shrink:0;">` : `<span style="font-size:20px;">${m.emoji||'💳'}</span>`}
         <span class="pago-comb-label">${esc(m.label)}</span>
         <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
           <button class="cob-exacto-btn" type="button" title="Poner faltante" onclick="setCobExacto('${esc(m.label)}',${total})">Exacto</button>
