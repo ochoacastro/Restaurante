@@ -3672,15 +3672,52 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
 /* ── Categorías ordenables ── */
 .me-cat-list { list-style: none; }
 .me-cat-item {
-  display: flex; align-items: center; gap: 10px;
   background: var(--blanco); border: 1.5px solid var(--borde);
-  border-radius: var(--r-sm); padding: 11px 13px; margin-bottom: 8px;
-  cursor: grab; user-select: none;
+  border-radius: var(--r-sm); margin-bottom: 8px;
+  overflow: hidden;
 }
 .me-cat-item.dragging { opacity: 0.45; }
+.me-cat-item-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 13px; cursor: grab; user-select: none;
+}
 .me-cat-drag { font-size: 16px; color: var(--gris); flex-shrink: 0; }
 .me-cat-name { flex: 1; font-size: 14px; font-weight: 600; }
 .me-cat-count { font-size: 11px; color: var(--gris); }
+/* Foto decorativa por categoría */
+.me-cat-foto-block {
+  border-top: 1px solid var(--borde);
+  padding: 10px 13px 12px;
+  background: var(--fondo);
+}
+.me-cat-foto-label {
+  font-size: 11px; font-weight: 600; color: var(--gris-osc);
+  margin-bottom: 7px; text-transform: uppercase; letter-spacing: 0.5px;
+}
+.me-cat-foto-preview {
+  width: 100%; max-height: 110px; object-fit: cover;
+  border-radius: 8px; display: none; margin-bottom: 6px;
+}
+.me-cat-foto-preview.show { display: block; }
+.me-cat-foto-actions {
+  display: flex; gap: 7px; align-items: center;
+}
+.me-cat-foto-upload-btn {
+  position: relative; overflow: hidden;
+  background: var(--rappi-soft); border: 1.5px dashed var(--rappi);
+  color: var(--rappi); border-radius: 8px;
+  padding: 7px 12px; font-size: 12px; font-weight: 600;
+  cursor: pointer; flex: 1; text-align: center;
+}
+.me-cat-foto-upload-btn input {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+}
+.me-cat-foto-remove-btn {
+  background: none; border: 1.5px solid #ddd; color: var(--gris);
+  border-radius: 8px; padding: 7px 10px; font-size: 12px;
+  cursor: pointer; display: none;
+}
+.me-cat-foto-remove-btn.show { display: block; }
 /* ── Toggle ── */
 .me-toggle-row {
   display: flex; align-items: center; justify-content: space-between;
@@ -17371,16 +17408,35 @@ function renderMeCatList() {
     list.innerHTML = '<li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Sin categorías en el menú actual.</li>';
     return;
   }
+  const catFotos = (_meSettings.catFotos || {});
   list.innerHTML = _meCatOrder.map((cat, i) => {
-    const count = menu.filter(item => item.categoria === cat).length;
+    const count   = menu.filter(item => item.categoria === cat).length;
+    const catKey  = cat.replace(/[^a-zA-Z0-9]/g, '_');
+    const fotoSrc = catFotos[cat] || '';
+    const hasFoto = !!fotoSrc;
     return `<li class="me-cat-item" draggable="true" data-idx="${i}"
       ondragstart="meDragStart(event,${i})"
       ondragover="meDragOver(event,${i})"
       ondrop="meDrop(event,${i})"
       ondragend="meDragEnd()">
-      <span class="me-cat-drag">⠿</span>
-      <span class="me-cat-name">${cat}</span>
-      <span class="me-cat-count">${count} platos</span>
+      <div class="me-cat-item-row">
+        <span class="me-cat-drag">⠿</span>
+        <span class="me-cat-name">${cat}</span>
+        <span class="me-cat-count">${count} platos</span>
+      </div>
+      <div class="me-cat-foto-block">
+        <div class="me-cat-foto-label">📷 Foto decorativa de categoría</div>
+        <img class="me-cat-foto-preview${hasFoto?' show':''}" id="meCatFotoPreview_${catKey}"
+          src="${fotoSrc}" alt="${cat}">
+        <div class="me-cat-foto-actions">
+          <label class="me-cat-foto-upload-btn">
+            <input type="file" accept="image/*" onchange="meCatFotoLoad(event,'${cat.replace(/'/g,"\'")}')">
+            🖼️ ${hasFoto ? 'Cambiar foto' : 'Subir foto'}
+          </label>
+          <button class="me-cat-foto-remove-btn${hasFoto?' show':''}" id="meCatFotoRemove_${catKey}"
+            onclick="meCatFotoRemove('${cat.replace(/'/g,"\'")}')">✕ Quitar</button>
+        </div>
+      </div>
     </li>`;
   }).join('');
 }
@@ -17400,6 +17456,39 @@ function meDragOver(e, idx) {
 }
 function meDrop(e) { e.preventDefault(); }
 function meDragEnd() { _meDragItem = null; }
+
+// ── Foto decorativa por categoría ───────────────────────────
+function meCatFotoLoad(e, cat) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    redimensionarImagen(ev.target.result, 1200, 600, (b64) => {
+      if (!_meSettings.catFotos) _meSettings.catFotos = {};
+      _meSettings.catFotos[cat] = b64;
+      // Actualizar UI sin re-renderizar toda la lista
+      const catKey = cat.replace(/[^a-zA-Z0-9]/g, '_');
+      const prev = document.getElementById('meCatFotoPreview_' + catKey);
+      const remBtn = document.getElementById('meCatFotoRemove_' + catKey);
+      if (prev) { prev.src = b64; prev.classList.add('show'); }
+      if (remBtn) remBtn.classList.add('show');
+      // Actualizar etiqueta del botón
+      const label = e.target.closest('.me-cat-foto-upload-btn');
+      if (label) label.childNodes[label.childNodes.length-1].textContent = ' 🖼️ Cambiar foto';
+    });
+  };
+  reader.readAsDataURL(file);
+}
+
+function meCatFotoRemove(cat) {
+  if (!_meSettings.catFotos) return;
+  delete _meSettings.catFotos[cat];
+  const catKey = cat.replace(/[^a-zA-Z0-9]/g, '_');
+  const prev = document.getElementById('meCatFotoPreview_' + catKey);
+  const remBtn = document.getElementById('meCatFotoRemove_' + catKey);
+  if (prev) { prev.src = ''; prev.classList.remove('show'); }
+  if (remBtn) remBtn.classList.remove('show');
+}
 
 function meLoadImg(e, key) {
   const file = e.target.files[0];
@@ -17478,6 +17567,7 @@ function meGuardar() {
     mostrarDescripcion:     document.getElementById('meToggleDesc').checked,
     mostrarFotos:           document.getElementById('meToggleFotos').checked,
     catOrder:               _meCatOrder,
+    catFotos:               (_meSettings.catFotos || {}),
     columnas:               parseInt(document.getElementById('meColumnas').value) || 1,
     fuente:                 document.getElementById('meFuente').value || 'Playfair Display',
     tamano:                 document.getElementById('meTamano').value || 'medium',
@@ -17499,6 +17589,7 @@ function meGuardar() {
   delete forFirebase.footerBg;
   delete forFirebase.footerLogo;
   delete forFirebase.footerMembrete;
+  delete forFirebase.catFotos; // base64 — solo localStorage
 
   if (window._FB && window._FB.db) {
     const { db, ref, set } = window._FB;
@@ -17673,6 +17764,8 @@ window.meRemoveImg      = meRemoveImg;
 window.mePreviewColor   = mePreviewColor;
 window.meColorFromHex   = meColorFromHex;
 window.meGuardar        = meGuardar;
+window.meCatFotoLoad    = meCatFotoLoad;
+window.meCatFotoRemove  = meCatFotoRemove;
 window.meDragStart      = meDragStart;
 window.meDragOver       = meDragOver;
 window.meDrop           = meDrop;
