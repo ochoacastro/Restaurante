@@ -3757,6 +3757,57 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   margin-bottom: 14px;
 }
 /* ── Vista previa del menú (iframe inline) ── */
+/* ── Toggle Editar / Vista Previa ── */
+.me-mode-toggle {
+  display: flex;
+  background: var(--fondo);
+  border: 1.5px solid var(--borde);
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+  flex-shrink: 0;
+}
+.me-mode-btn {
+  flex: 1; padding: 6px 10px;
+  border: none; border-radius: 8px;
+  font-size: 11px; font-weight: 800;
+  cursor: pointer; transition: all 0.18s;
+  background: transparent; color: var(--gris);
+  white-space: nowrap; font-family: inherit;
+  letter-spacing: 0.2px;
+}
+.me-mode-btn.active {
+  background: var(--rappi);
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(255,68,26,0.3);
+}
+/* Panel Vista Previa (dentro del modal, fuera del scroll) */
+#me-panel-preview {
+  display: none;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+}
+#me-panel-preview.active { display: flex; }
+#mePreviewIframeInner {
+  flex: 1; border: none; width: 100%;
+}
+.me-preview-toolbar {
+  display: flex; gap: 8px; padding: 10px 14px;
+  border-top: 1.5px solid var(--borde);
+  background: var(--fondo); flex-shrink: 0;
+}
+.me-preview-toolbar button {
+  flex: 1; padding: 10px; border-radius: var(--r-sm);
+  border: 1.5px solid var(--borde); background: var(--blanco);
+  font-size: 12px; font-weight: 700; cursor: pointer;
+  font-family: inherit; color: var(--texto);
+}
+.me-preview-toolbar button.primary {
+  background: var(--rappi); color: #fff; border-color: transparent;
+}
+
 #mePreviewIframeWrap {
   position: fixed; inset: 0; z-index: 9500;
   background: rgba(0,0,0,0.72);
@@ -4809,7 +4860,7 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   <span id="seccionBackup" style="display:none;"></span>
 
   <!-- ADMINISTRADOR DE ALMACENAMIENTO — solo master -->
-  <div class="cfg-acc" id="cfgacc-storage" data-admin-only="1">
+  <div class="cfg-acc" id="cfgacc-storage" data-master-only="1">
     <div class="cfg-acc-header" data-cfgacc="cfgacc-storage">
       <div class="cfg-acc-left">
         <span class="cfg-acc-icon">🗄️</span>
@@ -16918,14 +16969,18 @@ function renderPedido(p) {
     <div class="me-header-left">
       <span class="me-header-icon">🌿</span>
       <div>
-        <div class="me-header-title">Editor · Menú Restaurante</div>
-        <div class="me-header-sub">Los cambios se reflejan en el menú digital</div>
+        <div class="me-header-title">Editor · Menú</div>
+        <div class="me-header-sub">Cambios en tiempo real</div>
       </div>
+    </div>
+    <div class="me-mode-toggle">
+      <button class="me-mode-btn active" id="meModeEditBtn" onclick="meSetMode('edit')">⚙️ Editar</button>
+      <button class="me-mode-btn" id="meModePreviewBtn" onclick="meSetMode('preview')">VISTA PREVIA</button>
     </div>
     <button class="me-close-btn" onclick="cerrarMenuEditor()">✕</button>
   </div>
 
-  <div class="me-tabs">
+  <div class="me-tabs" id="meTabBar">
     <div class="me-tab active" onclick="meTab('diseno', this)">🎨 Diseño</div>
     <div class="me-tab" onclick="meTab('fotos', this)">📸 Fotos</div>
     <div class="me-tab" onclick="meTab('categorias', this)">🗂️ Cats.</div>
@@ -17120,11 +17175,17 @@ function renderPedido(p) {
     <button class="me-save-btn" id="meSaveBtn" onclick="meGuardar()">
       💾 Guardar cambios
     </button>
-    <button class="me-preview-btn" onclick="abrirMenuPreview()">
-      👁️ Vista previa del menú
-    </button>
 
   </div><!-- /me-body -->
+
+  <!-- Panel Vista Previa (dentro del modal, fuera del scroll) -->
+  <div id="me-panel-preview">
+    <iframe id="mePreviewIframeInner" src="" title="Vista previa menú"></iframe>
+    <div class="me-preview-toolbar">
+      <button onclick="recargarMenuPreviewInner()">🔄 Recargar</button>
+      <button class="primary" onclick="window.open(meGetPreviewUrl(),'_blank')">↗ Nueva pestaña</button>
+    </div>
+  </div>
 </div><!-- /menuEditorModal -->
 </div><!-- /menuEditorOverlay -->
 
@@ -17166,12 +17227,16 @@ function meTab(id, el) {
 
 function abrirMenuEditor() {
   document.getElementById('menuEditorOverlay').classList.add('open');
+  meSetMode('edit'); // siempre arranca en modo edición
   meCargarSettings();
   meCargarCategorias();
 }
 
 function cerrarMenuEditor() {
   document.getElementById('menuEditorOverlay').classList.remove('open');
+  // Limpiar iframe para liberar memoria
+  const iframe = document.getElementById('mePreviewIframeInner');
+  if (iframe) iframe.src = '';
 }
 
 function meCargarSettings() {
@@ -17392,6 +17457,43 @@ function meGuardar() {
 }
 
 // ── Vista previa iframe ──────────────────────────────────────
+function meGetPreviewUrl() {
+  const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
+  const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
+  return base + '?admin=1&t=' + Date.now();
+}
+
+function meSetMode(mode) {
+  const editBtn    = document.getElementById('meModeEditBtn');
+  const previewBtn = document.getElementById('meModePreviewBtn');
+  const tabBar     = document.getElementById('meTabBar');
+  const body       = document.querySelector('.me-body');
+  const previewPanel = document.getElementById('me-panel-preview');
+  const iframe     = document.getElementById('mePreviewIframeInner');
+
+  if (mode === 'preview') {
+    editBtn.classList.remove('active');
+    previewBtn.classList.add('active');
+    if (tabBar) tabBar.style.display = 'none';
+    if (body)   body.style.display   = 'none';
+    previewPanel.classList.add('active');
+    // Cargar iframe
+    iframe.src = meGetPreviewUrl();
+  } else {
+    previewBtn.classList.remove('active');
+    editBtn.classList.add('active');
+    if (tabBar) tabBar.style.display = '';
+    if (body)   body.style.display   = '';
+    previewPanel.classList.remove('active');
+    iframe.src = '';
+  }
+}
+
+function recargarMenuPreviewInner() {
+  const iframe = document.getElementById('mePreviewIframeInner');
+  iframe.src = meGetPreviewUrl();
+}
+
 function abrirMenuPreview() {
   const wrap = document.getElementById('mePreviewIframeWrap');
   const iframe = document.getElementById('mePreviewIframe');
@@ -17495,6 +17597,9 @@ window.meDragEnd        = meDragEnd;
 window.abrirMenuPreview  = abrirMenuPreview;
 window.cerrarMenuPreview = cerrarMenuPreview;
 window.recargarMenuPreview = recargarMenuPreview;
+window.meSetMode = meSetMode;
+window.recargarMenuPreviewInner = recargarMenuPreviewInner;
+window.meGetPreviewUrl = meGetPreviewUrl;
 </script>
 
 <script>
