@@ -27,6 +27,9 @@
     --r-lg:20px;
     --sombra-s:0 2px 8px rgba(0,0,0,.08);
     --sombra-m:0 8px 28px rgba(0,0,0,.14);
+    /* BUG 5 fix: variables de borde que faltaban en :root */
+    --borde:    #E0E0E0;
+    --borde-cl: #F0F0F0;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;}
   input,textarea,select{-webkit-user-select:text;-moz-user-select:text;-ms-user-select:text;user-select:text;}
@@ -1907,7 +1910,7 @@
   <div class="start-spacer"></div>
 
   <!-- Aviso fuera de horario -->
-  <div id="closedOverlay" style="display:none;position:absolute;inset:0;z-index:20;background:rgba(8,5,2,0.88);display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;backdrop-filter:blur(4px);">
+  <div id="closedOverlay" style="display:none;position:absolute;inset:0;z-index:20;background:rgba(8,5,2,0.88);flex-direction:column;align-items:center;justify-content:center;padding:32px;text-align:center;backdrop-filter:blur(4px);">
     <div style="font-size:64px;margin-bottom:16px;animation:pulse 2s infinite;">🌙</div>
     <div style="font-size:26px;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:8px;" id="closedTitle">Estamos cerrados</div>
     <div style="font-size:15px;color:rgba(255,255,255,0.75);margin-bottom:28px;line-height:1.6;" id="closedMsg">En este momento no estamos en horario de atención.</div>
@@ -2928,9 +2931,15 @@ function ensurePaymentMethods(){
   });
 }
 
+// BUG 6 fix: la función ahora filtra correctamente por modeKey.
+// Cuando se llama con 'shared' (editor general) devuelve todos los métodos.
+// Cuando se llama con 'restaurante' o 'domicilio' filtra igual que visiblePaymentMethods.
 function paymentMethodsForMode(modeKey){
   ensurePaymentMethods();
-  return settings.paymentMethods || [];
+  const all = settings.paymentMethods || [];
+  if(modeKey === 'restaurante') return all.filter(m => m.visibleRest !== false);
+  if(modeKey === 'domicilio')   return all.filter(m => m.visibleDom  !== false);
+  return all; // 'shared' u otros → devuelve todos (para el editor)
 }
 
 function visiblePaymentMethods(modeKey){
@@ -3345,14 +3354,21 @@ function categories(){
   return ['Todos', ...new Set(menuItems.map(i => i.categoria).filter(c => !hidden.includes(c)))];
 }
 
+// BUG 8 fix: si hay dos platos con el mismo nombre en distintas categorías,
+// cart.find() solo devolvía el primero. Ahora sumamos todas las entradas
+// que coincidan por nombre para que la UI refleje la cantidad total correcta.
 function qtyOf(name){
-  const item = cart.find(x => x.nombre === name);
-  return item ? item.cantidad : 0;
+  return cart
+    .filter(x => x.nombre === name)
+    .reduce((sum, x) => sum + x.cantidad, 0);
 }
 
 function addItem(item){
   const found = cart.find(x => x.nombre === item.nombre);
-  const pricedItem = { ...clone(item), precio: Number(item.precio ?? getPrice(item)) };
+  // BUG 7 fix: usar siempre getPrice() para obtener el precio correcto según el modo
+  // (domicilio vs restaurante). item.precio puede ser undefined o ser el precio local,
+  // lo que causaba que se mostrara precio local en modo domicilio.
+  const pricedItem = { ...clone(item), precio: getPrice(item) };
   if(found) found.cantidad += 1;
   else cart.push({ ...pricedItem, cantidad: 1 });
   saveCart();
