@@ -433,12 +433,22 @@ async function cargarMenu() {
     // Fallback desde localStorage (mismo origen)
     let editorSettings = {};
     try {
-      const ls = localStorage.getItem('menu_editor_settings_v1');
+      // El POS guarda en 'pos_menu_settings_v1' — usar la misma clave como fallback
+      const ls = localStorage.getItem('pos_menu_settings_v1')
+              || localStorage.getItem('menu_editor_settings_v1');
       if (ls) editorSettings = JSON.parse(ls);
     } catch(e) {}
 
     // Firebase tiene prioridad; imágenes vienen del nodo menuImages
+    // hiddenCategories siempre viene de Firebase (ms) para garantizar consistencia
     const settings = { ...editorSettings, ...ms, ...imgs };
+    if (ms.hiddenCategories !== undefined) {
+      settings.hiddenCategories = ms.hiddenCategories;
+    } else if (editorSettings.hiddenCategories !== undefined) {
+      settings.hiddenCategories = editorSettings.hiddenCategories;
+    } else {
+      settings.hiddenCategories = [];
+    }
 
     window._menuData   = menu;
     window._menuConfig = cfg;
