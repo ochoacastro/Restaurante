@@ -6,6 +6,7 @@
 <title id="pageTitle">Menú · Restaurante</title>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root {
     --primary: #2d5a27;
@@ -412,7 +413,7 @@
 
 
 <!-- IMG BTN -->
-<button id="btnPdf" onclick="generarImagen()">🖼️ Descargar imagen JPG</button>
+<button id="btnPdf" onclick="generarImagen()">📄 Descargar PDF</button>
 
 <!-- FIREBASE -->
 <script type="module">
@@ -710,7 +711,7 @@ window.scrollToCat = function(cat, el) {
 
 window.generarImagen = async function() {
   const btn = document.getElementById('btnPdf');
-  btn.textContent = '⏳ Generando...';
+  btn.textContent = '⏳ Generando imagen...';
   btn.disabled = true;
 
   btn.style.display = 'none';
@@ -719,6 +720,7 @@ window.generarImagen = async function() {
   if (nav) nav.style.display = 'none';
 
   try {
+    // Paso 1: generar imagen del menú con html2canvas
     const canvas = await html2canvas(document.body, {
       scale: 2,
       useCORS: true,
@@ -734,19 +736,33 @@ window.generarImagen = async function() {
     const settings = window._menuSettings || {};
     const cfg      = window._menuConfig   || {};
     const nombre   = settings.restaurantNombre || cfg.nombre || 'Restaurante';
-    const filename = (nombre + ' - Menú').replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ0-9 ·-]/g,'') + '.jpg';
+    const filename = (nombre + ' - Menú').replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ0-9 ·-]/g,'') + '.pdf';
 
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = canvas.toDataURL('image/jpeg', 0.92);
-    link.click();
+    // Paso 2: convertir el canvas a PDF con jsPDF
+    btn.textContent = '⏳ Generando PDF...';
+    const imgData = canvas.toDataURL('image/jpeg', 0.92);
+    const { jsPDF } = window.jspdf;
+
+    // Calcular dimensiones: ancho A4 en mm, altura proporcional al canvas
+    const pdfWidth  = 210; // mm (A4 landscape width = 297, portrait = 210)
+    const pdfHeight = Math.round((canvas.height / canvas.width) * pdfWidth);
+
+    const doc = new jsPDF({
+      orientation: pdfHeight > pdfWidth ? 'portrait' : 'landscape',
+      unit: 'mm',
+      format: [pdfWidth, pdfHeight],
+    });
+
+    doc.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+    doc.save(filename);
+
   } catch(e) {
-    alert('Error al generar imagen: ' + e.message);
+    alert('Error al generar PDF: ' + e.message);
   }
 
   if (nav) nav.style.display = navDisplay;
   btn.style.display = '';
-  btn.innerHTML = '🖼️ Descargar imagen JPG';
+  btn.innerHTML = '📄 Descargar PDF';
   btn.disabled = false;
 };
 
