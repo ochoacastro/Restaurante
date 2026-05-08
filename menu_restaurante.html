@@ -299,7 +299,7 @@
   /* ── FOOTER ── */
   #menuFooter {
     position: relative; min-height: 70px;
-    background: var(--primary);
+    background: linear-gradient(160deg, #1a3a15 0%, #2d5a27 100%);
     display: flex; align-items: center; justify-content: center;
     overflow: hidden; margin-top: 0;
   }
@@ -317,22 +317,11 @@
     display: none; margin-bottom: 8px;
   }
   #footerText { color: rgba(255,255,255,0.8); font-size: 13px; }
-  #footerClosingInner {
+  #footerClosing {
     font-family: 'Playfair Display', serif;
     font-size: 15px; color: #fff; font-style: italic; margin-top: 4px;
   }
-  /* Barra de cierre debajo del membrete */
-  #footerClosingBar {
-    background: var(--primary);
-    text-align: center;
-    padding: 12px 20px;
-    display: none;
-  }
-  #footerClosing {
-    font-family: 'Playfair Display', serif;
-    font-size: 15px; color: #fff; font-style: italic;
-  }
-  /* Footer membrete */
+  /* Footer membrete (imagen horizontal full-width igual que header) */
   #menuFooter.has-membrete { min-height: unset; padding: 0; background: #1a1a1a; }
   #menuFooter.has-membrete #footerContent { padding: 0; width: 100%; }
   #footerMembreteImg { display: none; width: 100%; max-width: 100%; height: auto; object-fit: contain; object-position: center; vertical-align: bottom; }
@@ -340,7 +329,7 @@
   #menuFooter.has-membrete #footerBgImg { display: none !important; }
   #menuFooter.has-membrete #footerLogoImg { display: none !important; }
   #menuFooter.has-membrete #footerText,
-  #menuFooter.has-membrete #footerClosingInner { display: none; }
+  #menuFooter.has-membrete #footerClosing { display: none; }
 
   /* ── PDF BTN ── */
   #btnPdf {
@@ -403,11 +392,8 @@
     <img id="footerMembreteImg" src="" alt="Membrete pie de página">
     <img id="footerLogoImg" src="" alt="">
     <div id="footerText"></div>
-    <div id="footerClosingInner">&#161;Gracias por preferirnos!</div>
+    <div id="footerClosing">¡Gracias por preferirnos!</div>
   </div>
-</div>
-<div id="footerClosingBar">
-  <div id="footerClosing">&#161;Gracias por preferirnos!</div>
 </div>
 
 
@@ -564,8 +550,6 @@ function aplicarSettings(cfg, settings) {
     const ftr = document.getElementById('menuFooter');
     ftr.classList.add('has-membrete');
     ftr.style.background = 'none';
-    // Mostrar barra de cierre debajo del membrete
-    document.getElementById('footerClosingBar').style.display = 'block';
   } else if (settings.footerLogo) {
     const fLogo = document.getElementById('footerLogoImg');
     fLogo.src = settings.footerLogo; fLogo.style.display = 'block';
@@ -574,10 +558,7 @@ function aplicarSettings(cfg, settings) {
   const dir = cfg.direccion || settings.direccion || '';
   const info = [tel ? '📞 ' + tel : '', dir ? '📍 ' + dir : ''].filter(Boolean).join('  ·  ');
   document.getElementById('footerText').textContent = info;
-  // Aplicar textoCierre en ambos elementos (con y sin membrete)
-  const cierre = settings.textoCierre || '¡Gracias por preferirnos!';
-  document.getElementById('footerClosing').textContent = cierre;
-  document.getElementById('footerClosingInner').textContent = cierre;
+  if (settings.textoCierre) document.getElementById('footerClosing').textContent = settings.textoCierre;
 }
 
 function fmt(n) {
@@ -616,7 +597,13 @@ function renderMenu(menu, settings) {
     const numCols = parseInt(settings.columnas) || 2;
     const cols = [];
     for (let i = 0; i < numCols; i++) cols.push([]);
-    cats.forEach((cat, i) => cols[i % numCols].push(cat));
+    const catsEnCol1 = parseInt(settings.catsEnCol1);
+    if (numCols === 2 && !isNaN(catsEnCol1) && catsEnCol1 > 0 && catsEnCol1 < cats.length) {
+      cols[0] = cats.slice(0, catsEnCol1);
+      cols[1] = cats.slice(catsEnCol1);
+    } else {
+      cats.forEach((cat, i) => cols[i % numCols].push(cat));
+    }
 
     const renderCatSections = (catList) => catList.map(cat => {
       const items = disponibles.filter(i => i.categoria === cat);
