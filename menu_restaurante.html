@@ -87,7 +87,7 @@
   .cat-pill.active, .cat-pill:hover { color: #fff; border-bottom-color: var(--accent); }
 
   /* ── BODY ── */
-  #menuBody { max-width: 700px; margin: 0 auto; padding: 0 0 100px; }
+  #menuBody { max-width: 700px; margin: 0 auto; padding: 0 0 24px; }
 
   /* ═══════════════════════════════════════
      ESTILO TARJETAS (default)
@@ -291,7 +291,7 @@
     position: relative; min-height: 70px;
     background: linear-gradient(160deg, #1a3a15 0%, #2d5a27 100%);
     display: flex; align-items: center; justify-content: center;
-    overflow: hidden; margin-top: 20px;
+    overflow: hidden; margin-top: 0;
   }
   #footerBgImg {
     position: absolute; inset: 0; width: 100%; height: 100%;
@@ -311,6 +311,15 @@
     font-family: 'Playfair Display', serif;
     font-size: 15px; color: #fff; font-style: italic; margin-top: 4px;
   }
+  /* Footer membrete (imagen horizontal full-width igual que header) */
+  #menuFooter.has-membrete { min-height: unset; padding: 0; background: #1a1a1a; }
+  #menuFooter.has-membrete #footerContent { padding: 0; width: 100%; }
+  #footerMembreteImg { display: none; width: 100%; max-width: 100%; height: auto; object-fit: contain; object-position: center; vertical-align: bottom; }
+  #menuFooter.has-membrete #footerMembreteImg { display: block; }
+  #menuFooter.has-membrete #footerBgImg { display: none !important; }
+  #menuFooter.has-membrete #footerLogoImg { display: none !important; }
+  #menuFooter.has-membrete #footerText,
+  #menuFooter.has-membrete #footerClosing { display: none; }
 
   /* ── PDF BTN ── */
   #btnPdf {
@@ -370,6 +379,7 @@
 <div id="menuFooter">
   <img id="footerBgImg" src="" alt="">
   <div id="footerContent">
+    <img id="footerMembreteImg" src="" alt="Membrete pie de página">
     <img id="footerLogoImg" src="" alt="">
     <div id="footerText"></div>
     <div id="footerClosing">¡Gracias por preferirnos!</div>
@@ -514,7 +524,13 @@ function aplicarSettings(cfg, settings) {
     const fBg = document.getElementById('footerBgImg');
     fBg.src = settings.footerBg; fBg.style.display = 'block';
   }
-  if (settings.footerLogo) {
+  if (settings.footerMembrete) {
+    const fMem = document.getElementById('footerMembreteImg');
+    fMem.src = settings.footerMembrete;
+    const ftr = document.getElementById('menuFooter');
+    ftr.classList.add('has-membrete');
+    ftr.style.background = 'none';
+  } else if (settings.footerLogo) {
     const fLogo = document.getElementById('footerLogoImg');
     fLogo.src = settings.footerLogo; fLogo.style.display = 'block';
   }
