@@ -12557,6 +12557,10 @@ function fbEscucharCambios() {
         });
         renderCategorias(); renderMenu(); renderPreciosConfig(); renderProductosConfig();
         if (carrito.length > 0) renderCarrito();
+        // Si el editor de menú está abierto, actualizar lista de categorías
+        if (document.getElementById('menuEditorOverlay')?.classList.contains('open')) {
+          meCargarCategorias();
+        }
       }
     },
     { path: 'restaurante/historial', handler: (val) => {
@@ -17353,7 +17357,7 @@ function meRestoreImg(key, src, previewId, removeId, uploadId) {
 }
 
 function meCargarCategorias() {
-  const menu = (window.MENU || []);
+  const menu = (typeof MENU !== 'undefined' ? MENU : []);
   const catOrder = _meSettings.catOrder || [];
   const allCats  = [...new Set(menu.map(i => i.categoria).filter(Boolean))];
   _meCatOrder = [...catOrder.filter(c => allCats.includes(c)), ...allCats.filter(c => !catOrder.includes(c))];
@@ -17361,7 +17365,7 @@ function meCargarCategorias() {
 }
 
 function renderMeCatList() {
-  const menu = window.MENU || [];
+  const menu = (typeof MENU !== 'undefined' ? MENU : []);
   const list = document.getElementById('meCatList');
   if (!_meCatOrder.length) {
     list.innerHTML = '<li style="text-align:center;padding:20px;color:#aaa;font-size:13px;">Sin categorías en el menú actual.</li>';
