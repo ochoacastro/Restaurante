@@ -3063,9 +3063,7 @@ function renderPaymentOptions(){
     const iconHtml = m.img
       ? `<img src="${m.img}" style="width:26px;height:26px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
       : `<span>${escapeHtml(m.emoji || '💳')}</span>`;
-    const infoHtml = (m.needsInfo && m.info)
-      ? `<div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:400;margin-top:2px;letter-spacing:0;">${escapeHtml(m.info)}</div>`
-      : '';
+    const infoHtml = ''; // El número solo se muestra en el modal de confirmación, no aquí
     return `
     <button type="button" class="pay-pill ${m.id === current ? 'active' : ''}" data-pay-id="${escapeHtml(m.id)}">
       <div style="display:flex;align-items:center;gap:6px;">
