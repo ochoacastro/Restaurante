@@ -5335,12 +5335,11 @@ async function conectar(cfg) {
         businessLogo: localSettings.businessLogo || '' };
       delete merged.categoryImages;
 
-      // ── SYNC FIX: preservar imágenes locales de paymentMethods ──────────────
-      // index.html no guarda 'img' en Firebase pero menu_domicilio sí las almacena
-      // en localStorage. Al hacer merge inicial no debemos perder esas imágenes.
-      if (Array.isArray(fbSett.paymentMethods) && Array.isArray(localSettings.paymentMethods)) {
+      // ── paymentMethods: Firebase es siempre la fuente de verdad ─────────────
+      if (Array.isArray(fbSett.paymentMethods)) {
+        const localMethods = Array.isArray(localSettings.paymentMethods) ? localSettings.paymentMethods : [];
         merged.paymentMethods = fbSett.paymentMethods.map(fbM => {
-          const localM = localSettings.paymentMethods.find(l => l.id === fbM.id);
+          const localM = localMethods.find(l => l.id === fbM.id);
           return { ...fbM, img: fbM.img || (localM ? localM.img : null) };
         });
       }
@@ -5463,13 +5462,12 @@ async function conectar(cfg) {
       businessLogo: window.settings?.businessLogo || localSettings.businessLogo || '' };
     delete merged.categoryImages; // categoryImages vive en su propia clave
 
-    // ── SYNC FIX: preservar imágenes locales de paymentMethods ──────────────
-    // index.html no guarda 'img' en Firebase (se elimina en saveMenuSettings)
-    // pero menu_domicilio sí las tiene en localStorage. Al hacer merge desde
-    // Firebase no debemos perder esas imágenes ya guardadas localmente.
-    if (Array.isArray(fbSett2.paymentMethods) && Array.isArray(localSettings.paymentMethods)) {
+    // ── paymentMethods: Firebase es siempre la fuente de verdad ─────────────
+    // Solo preservamos las imágenes locales (img) porque index no las sube a Firebase.
+    if (Array.isArray(fbSett2.paymentMethods)) {
+      const localMethods = Array.isArray(localSettings.paymentMethods) ? localSettings.paymentMethods : [];
       merged.paymentMethods = fbSett2.paymentMethods.map(fbM => {
-        const localM = localSettings.paymentMethods.find(l => l.id === fbM.id);
+        const localM = localMethods.find(l => l.id === fbM.id);
         return { ...fbM, img: fbM.img || (localM ? localM.img : null) };
       });
     }
