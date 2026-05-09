@@ -2362,11 +2362,11 @@
       <div class="edit-grid-2">
         <div>
           <label class="edit-label" for="editProductPriceLocal">Precio local</label>
-          <input id="editProductPriceLocal" class="field" type="number" inputmode="numeric" placeholder="Precio local">
+          <input id="editProductPriceLocal" class="field" type="text" inputmode="numeric" placeholder="Precio local">
         </div>
         <div>
           <label class="edit-label" for="editProductPriceDom">Precio domicilio</label>
-          <input id="editProductPriceDom" class="field" type="number" inputmode="numeric" placeholder="Precio domicilio">
+          <input id="editProductPriceDom" class="field" type="text" inputmode="numeric" placeholder="Precio domicilio">
         </div>
       </div>
 
@@ -2443,7 +2443,7 @@
       </div>
       <div class="pay-cash-input-wrap" id="cashChangeWrap" style="display:none;">
         <div class="pay-cash-input-label">¿Con cuánto vas a pagar?</div>
-        <input class="pay-cash-input" id="cashAmountInput" type="number" inputmode="numeric" placeholder="Ej: 50000">
+        <input class="pay-cash-input" id="cashAmountInput" type="text" inputmode="numeric" placeholder="Ej: 50.000">
         <div id="cashVueltoLine" style="margin-top:8px;font-size:13px;color:rgba(255,255,255,.55);text-align:center;display:none;">
           Vuelto aproximado: <strong id="cashVueltoVal" style="color:#4CAF50;"></strong>
         </div>
@@ -2620,11 +2620,11 @@
             <div class="edit-grid-2">
               <div>
                 <label class="edit-label" for="newPriceLocal">Precio local</label>
-                <input id="newPriceLocal" class="field" type="number" inputmode="numeric" placeholder="0">
+                <input id="newPriceLocal" class="field" type="text" inputmode="numeric" placeholder="0">
               </div>
               <div>
                 <label class="edit-label" for="newPriceDom">Precio domicilio</label>
-                <input id="newPriceDom" class="field" type="number" inputmode="numeric" placeholder="0">
+                <input id="newPriceDom" class="field" type="text" inputmode="numeric" placeholder="0">
               </div>
             </div>
             <div>
@@ -4188,8 +4188,8 @@ function openProductEditor(index){
   const item = menuItems[index];
   if(!item) return;
   $('#editProductName').value = item.nombre || '';
-  $('#editProductPriceLocal').value = Number(item.precioLocal ?? item.precio ?? 0);
-  $('#editProductPriceDom').value = Number(item.precioDomicilio ?? item.precioLocal ?? item.precio ?? 0);
+  $('#editProductPriceLocal').value = Number(item.precioLocal ?? item.precio ?? 0) > 0 ? Number(item.precioLocal ?? item.precio ?? 0).toLocaleString('es-CO') : '';
+  $('#editProductPriceDom').value = Number(item.precioDomicilio ?? item.precioLocal ?? item.precio ?? 0) > 0 ? Number(item.precioDomicilio ?? item.precioLocal ?? item.precio ?? 0).toLocaleString('es-CO') : '';
   $('#editProductDesc').value = item.descripcion || '';
   editingPhotoData = item.foto || '';
   renderEditCategoryOptions(item.categoria || '');
@@ -4214,8 +4214,8 @@ async function saveEditedProduct(){
   const name = $('#editProductName').value.trim();
   const categorySelect = $('#editProductCategorySelect').value;
   const customCategory = $('#editProductNewCategory').value.trim();
-  const priceLocal = Number($('#editProductPriceLocal').value);
-  const priceDomRaw = Number($('#editProductPriceDom').value);
+  const priceLocal = Number($('#editProductPriceLocal').value.replace(/\./g, '').replace(/[^0-9]/g, ''));
+  const priceDomRaw = Number($('#editProductPriceDom').value.replace(/\./g, '').replace(/[^0-9]/g, ''));
   const desc = $('#editProductDesc').value.trim();
 
   let editCategory = categorySelect;
@@ -4455,8 +4455,8 @@ async function addNewItem(){
   const categorySelect = $('#newCategorySelect').value;
   const customCategory = $('#newCategoryNew').value.trim();
   let categoria = categorySelect === '__new__' ? customCategory : categorySelect;
-  const precioLocal = Number($('#newPriceLocal').value);
-  const precioDomicilio = Number($('#newPriceDom').value || $('#newPriceLocal').value);
+  const precioLocal = Number($('#newPriceLocal').value.replace(/\./g, '').replace(/[^0-9]/g, ''));
+  const precioDomicilio = Number(($('#newPriceDom').value || $('#newPriceLocal').value).replace(/\./g, '').replace(/[^0-9]/g, ''));
   const descripcion = $('#newDesc').value.trim();
   const emoji = '🍽️';
   const photoInput = $('#newPhoto');
@@ -6641,7 +6641,9 @@ window.renderCategoryGridSafe = function() {
               okBtn.disabled = !amountInput.value;
             };
             amountInput.oninput = () => {
-              const paid  = Number(amountInput.value) || 0;
+              const raw = amountInput.value.replace(/\D/g, '');
+              const paid = parseInt(raw, 10) || 0;
+              amountInput.value = paid > 0 ? paid.toLocaleString('es-CO') : '';
               const vuelto= paid - totalVal;
               if (paid > 0 && vuelto >= 0) {
                 vueltoLine.style.display = '';
@@ -7185,7 +7187,13 @@ window.renderCategoryGridSafe = function() {
 
       <div style="font-size:12px;color:#888;text-align:center;">
         📍 ${esc(p.clienteDireccion||'—')} · 💳 ${esc(p.metodoPagoLabel||'—')}
-      </div>`;
+      </div>
+
+      ${['pendiente','verificando','cambio'].includes(estado) ? `
+      <button class="seg-btn-cancelar" style="margin-top:14px;width:100%;"
+        onclick="domCancelarDesdeCliente('${esc(p.sessionId)}')">
+        ✕ Cancelar mi pedido
+      </button>` : ''}`;
 
     window._domCurrentDb  = db;
     window._domCurrentRef = ref;
@@ -7711,6 +7719,34 @@ window.renderCategoryGridSafe = function() {
   // Exponer renderMenuFisico para que el listener de Firebase lo llame directamente
   window._renderMenuFisico = renderMenuFisico;
 
+})();
+// ── Formato de miles para inputs de precio (admin) ───────────────────
+(function() {
+  function _fmtMonedaInput(inp) {
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      const selStart = this.selectionStart;
+      const prevLen  = this.value.length;
+      const raw = this.value.replace(/\D/g, '');
+      if (!raw) { this.value = ''; return; }
+      const formatted = parseInt(raw, 10).toLocaleString('es-CO');
+      const newLen = formatted.length;
+      this.value = formatted;
+      const newPos = Math.max(0, selStart + (newLen - prevLen));
+      try { this.setSelectionRange(newPos, newPos); } catch(_) {}
+    });
+  }
+  function bindPriceInputs() {
+    _fmtMonedaInput(document.getElementById('editProductPriceLocal'));
+    _fmtMonedaInput(document.getElementById('editProductPriceDom'));
+    _fmtMonedaInput(document.getElementById('newPriceLocal'));
+    _fmtMonedaInput(document.getElementById('newPriceDom'));
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindPriceInputs);
+  } else {
+    bindPriceInputs();
+  }
 })();
 </script>
 
