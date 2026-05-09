@@ -4637,8 +4637,10 @@ $('#waBtn').addEventListener('click', () => {
   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
 
   // Limpiar el carrito del modo domicilio después de enviar el pedido
-  // para evitar que al volver se restaure un pedido ya enviado
-  cartByMode[mode] = [];
+  // para evitar que al volver se restaure un pedido ya enviado.
+  // Se usa splice() en lugar de reasignar [] para conservar la referencia
+  // compartida entre cart y cartByMode[mode].
+  cartByMode[mode].splice(0);
   cart = cartByMode[mode];
   saveCart();
   // Limpiar también el localStorage de respaldo
