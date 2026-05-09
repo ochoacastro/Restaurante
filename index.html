@@ -10765,6 +10765,8 @@ function generarTextoDesdeFactura(f, paraBluetooth = false) {
   if (f.tipoOrden === 'mesa' && f.mesaNumero) t += proc('Mesa: ' + f.mesaNumero) + '\n';
   if (f.clienteNombre)   t += proc('Cliente: '  + f.clienteNombre)   + '\n';
   if (f.clienteTelefono) t += proc('Tel: '       + f.clienteTelefono) + '\n';
+  if (f.tipoOrden === 'domicilio' && f.clienteDireccion) t += proc('Domicilio: ' + f.clienteDireccion) + '\n';
+  if (f.cajero)          t += proc('Cajero: '    + f.cajero)          + '\n';
   if (f.esFacturaElectronica && (f.feNombre || f.feNit)) {
     t += linea + '\n';
     t += proc('RECEPTOR:') + '\n';
@@ -10886,12 +10888,8 @@ function generarTextoDesdeFactura(f, paraBluetooth = false) {
 
   t += linea + '\n';
   if (f.tipoOrden === 'mesa' && f.mesaNumero) t += proc('Mesa: ' + f.mesaNumero) + '\n';
-  if (f.clienteNombre)    t += proc('Cliente: '   + f.clienteNombre)    + '\n';
-  if (f.clienteTelefono)  t += proc('Tel: '        + f.clienteTelefono)  + '\n';
-  if (f.tipoOrden === 'domicilio' && f.clienteDireccion) t += proc('Domicilio: ' + f.clienteDireccion) + '\n';
   if (f.observaciones)    t += proc('Obs: '       + f.observaciones)    + '\n';
   if (f.mesero)           t += proc('Mesero: '    + f.mesero)           + '\n';
-  if (f.cajero)           t += proc('Cajero: '    + f.cajero)           + '\n';
 
   // ── Resolución DIAN (siempre al pie, como la tirilla) ─────────────────
   const feCfg = (typeof feGetConfig === 'function') ? feGetConfig() : {};
