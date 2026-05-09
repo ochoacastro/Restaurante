@@ -526,7 +526,54 @@
   .pay-pill span{font-size:16px;}
   #paymentModeLabel{ color:rgba(255,255,255,.55); }
 
-  /* ── Modal confirmación de pago ── */
+  /* ── Comprobante de pago ── */
+  .comprobante-upload-area {
+    border: 2px dashed rgba(230,81,0,.5); border-radius: 14px;
+    padding: 20px; text-align: center; cursor: pointer;
+    background: rgba(230,81,0,.06); transition: all .2s;
+    position: relative; overflow: hidden;
+  }
+  .comprobante-upload-area:active { background: rgba(230,81,0,.12); }
+  .comprobante-upload-area input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .comprobante-preview {
+    width: 100%; max-height: 200px; object-fit: contain;
+    border-radius: 10px; margin-top: 10px; display: none;
+  }
+  .comprobante-preview.show { display: block; }
+
+  /* ── Minimizar overlay de seguimiento ── */
+  #domSegMinBtn {
+    position: absolute; top: 14px; right: 14px;
+    border: none; background: rgba(255,255,255,.12); color: #fff;
+    border-radius: 999px; width: 32px; height: 32px; font-size: 16px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-family: inherit; z-index: 10; flex-shrink: 0;
+  }
+  #domSegMinBtn:active { background: rgba(255,255,255,.22); }
+  #domSeguimientoOverlay.minimized {
+    top: auto; left: 0; right: 0; bottom: 0;
+    height: auto; background: transparent;
+    display: flex; align-items: flex-end; pointer-events: none;
+  }
+  #domSeguimientoOverlay.minimized > div {
+    pointer-events: all; border-radius: 20px 20px 0 0;
+    max-height: 60px; overflow: hidden; width: 100%; max-width: 480px;
+    margin: 0 auto; padding: 14px 16px; cursor: pointer;
+    background: linear-gradient(135deg,#1a1a1a,#222);
+    border-top: 2px solid rgba(255,255,255,.08);
+    box-shadow: 0 -6px 20px rgba(0,0,0,.4);
+  }
+  #domSeguimientoOverlay.minimized #domSegContenido,
+  #domSeguimientoOverlay.minimized .handle { display: none; }
+  #domSeguimientoOverlay.minimized #domSegMinBtn { transform: rotate(180deg); }
+  #domSegMiniBar {
+    display: none; align-items: center; gap: 10px;
+    font-size: 13px; font-weight: 800; color: #fff;
+  }
+  #domSeguimientoOverlay.minimized #domSegMiniBar { display: flex; }
+  #domSegMiniStatus { font-size: 12px; font-weight: 700; color: #FF9800; flex: 1; }
   #payConfirmModal { z-index:10300; }
   .pay-confirm-card { background:#1C1C1E; border-radius:22px; padding:24px 20px 20px; width:calc(100% - 40px); max-width:380px; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,.7); }
   .pay-confirm-icon { font-size:44px; text-align:center; margin-bottom:8px; }
@@ -634,7 +681,37 @@
     border-radius:24px 24px 0 0; padding:16px 16px 20px;
     max-height:88vh; overflow:auto;
     box-shadow:0 -10px 30px rgba(0,0,0,.3);
+    transition: max-height .3s ease, padding .3s ease;
   }
+  /* Minimizado: solo muestra el handle + fila de título */
+  .cart-sheet.minimized { background:transparent; align-items:flex-end; pointer-events:none; }
+  .cart-sheet.minimized .sheet {
+    max-height:64px; overflow:hidden; padding:10px 16px 10px;
+    border-radius:20px 20px 0 0; pointer-events:all;
+    background:linear-gradient(135deg,#1a1a1a,#222);
+    border-top:2px solid rgba(255,255,255,.08);
+  }
+  .cart-sheet.minimized .handle { display:none; }
+  /* Botón minimizar/expandir */
+  .cart-minimize-btn {
+    border:none; background:rgba(255,255,255,.1); color:#fff;
+    border-radius:999px; width:30px; height:30px; font-size:14px;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    flex-shrink:0; font-family:inherit; line-height:1;
+  }
+  .cart-minimize-btn:active { background:rgba(255,255,255,.2); }
+  /* Fila del título con botón minimizar */
+  .cart-title-row {
+    display:flex; align-items:center; gap:8px; margin-bottom:6px;
+  }
+  .cart-title-row h3 { flex:1; margin:0; }
+  .cart-item-badge {
+    background:var(--rappi); color:#fff; border-radius:999px;
+    padding:2px 8px; font-size:11px; font-weight:900; display:none;
+  }
+  .cart-sheet.minimized .cart-item-badge { display:inline-block; }
+  .cart-sheet.minimized .cart-title-row { margin-bottom:0; cursor:pointer; }
+  .cart-sheet.minimized .cart-minimize-btn { transform: rotate(180deg); }
   .handle{
     width:42px;height:4px;background:rgba(255,255,255,.18);
     border-radius:999px;margin:0 auto 14px;
@@ -2114,7 +2191,11 @@
     <div class="sheet">
       <div class="handle"></div>
       <button id="backToMenuBtn" type="button" style="display:flex;align-items:center;gap:6px;border:none;background:transparent;color:var(--rappi);font-size:13px;font-weight:800;padding:0 0 10px;cursor:pointer;font-family:inherit;">← Seguir eligiendo platos</button>
-      <h3>🛒 Mi pedido</h3>
+      <div class="cart-title-row" id="cartTitleRow">
+        <h3>🛒 Mi pedido</h3>
+        <span class="cart-item-badge" id="cartItemBadge">0</span>
+        <button class="cart-minimize-btn" id="cartMinimizeBtn" title="Minimizar" type="button">▼</button>
+      </div>
       <p>Revisa los platos seleccionados antes de enviarlos.</p>
       <div id="cartList" class="cart-list"></div>
       <div class="order-card">
@@ -3602,6 +3683,13 @@ function renderCart(){
   if(modeLabel) modeLabel.textContent = mode === 'restaurante' ? 'Restaurante' : 'Domicilio';
   if(addressInput) addressInput.placeholder = mode === 'restaurante' ? 'Mesa / ubicación' : 'Dirección de entrega';
 
+  // Actualizar badge del minimizado
+  const badge = document.getElementById('cartItemBadge');
+  if (badge) {
+    const totalItems = cart.reduce((s, i) => s + (i.cantidad || 1), 0);
+    badge.textContent = totalItems + (totalItems === 1 ? ' plato' : ' platos');
+  }
+
   const nameInput = $('#customerName');
   const phoneInput = $('#customerPhone');
   // Solo prellenar si el campo está vacío (no sobreescribir lo que el usuario escribió)
@@ -4452,8 +4540,27 @@ $('#backToMenuBtn').addEventListener('click', () => {
   $('#cartSheet').setAttribute('aria-hidden', 'true');
 });
 
+// ── Minimizar / expandir carrito ─────────────────────────────────────
+const cartMinBtn  = document.getElementById('cartMinimizeBtn');
+const cartTitleRow = document.getElementById('cartTitleRow');
+
+function cartIsMinimized() { return $('#cartSheet').classList.contains('minimized'); }
+
+function cartToggleMinimize(e) {
+  if (e) e.stopPropagation();
+  const sheet = $('#cartSheet');
+  sheet.classList.toggle('minimized');
+}
+
+if (cartMinBtn)   cartMinBtn.addEventListener('click', cartToggleMinimize);
+// Al tocar la fila del título estando minimizado → expandir
+if (cartTitleRow) cartTitleRow.addEventListener('click', (e) => {
+  if (cartIsMinimized()) cartToggleMinimize(e);
+});
+
+// Al cerrar el sheet, quitar también el estado minimizado
 $('#cartSheet').addEventListener('click', (e) => {
-  if(e.target.id === 'cartSheet') {
+  if(e.target.id === 'cartSheet' && !cartIsMinimized()) {
     $('#cartSheet').classList.remove('show');
     $('#cartSheet').setAttribute('aria-hidden', 'true');
   }
@@ -6602,8 +6709,10 @@ window.renderCategoryGridSafe = function() {
       // Armar pedido
       const pedido = {
         sessionId,
-        estado: isWallet ? 'pago_pendiente' : 'pendiente',
-        timestamp: Date.now(),
+        estado:          isWallet ? 'pendiente' : 'pendiente',  // siempre pendiente al inicio
+        requierePago:    isWallet ? true : false,
+        metodoPagoInfo:  isWallet ? (payMethod.info || '') : '',
+        timestamp:       Date.now(),
         clienteNombre:    name,
         clienteTelefono:  phone,
         clienteDireccion: address,
@@ -6674,13 +6783,31 @@ window.renderCategoryGridSafe = function() {
     if (!overlay) {
       overlay = document.createElement('div');
       overlay.id = 'domSeguimientoOverlay';
-      overlay.innerHTML = `<div id="domSeguimientoSheet">
+      overlay.innerHTML = `<div id="domSeguimientoSheet" style="position:relative;">
         <div class="handle" style="width:40px;height:4px;background:#ddd;border-radius:99px;margin:0 auto 14px;"></div>
+        <button id="domSegMinBtn" title="Minimizar">▼</button>
+        <div id="domSegMiniBar">
+          <span style="font-size:18px;">🛵</span>
+          <span style="flex:1;font-size:13px;font-weight:800;color:#fff;">Seguimiento de tu pedido</span>
+          <span id="domSegMiniStatus"></span>
+          <span style="font-size:14px;color:rgba(255,255,255,.5);">▲ Expandir</span>
+        </div>
         <div id="domSegContenido"></div>
       </div>`;
       document.body.appendChild(overlay);
+
+      // Botón minimizar
+      document.getElementById('domSegMinBtn').addEventListener('click', (e) => {
+        e.stopPropagation();
+        overlay.classList.toggle('minimized');
+      });
+      // Tap en barra mini → expandir
+      document.getElementById('domSeguimientoSheet').addEventListener('click', () => {
+        if (overlay.classList.contains('minimized')) overlay.classList.remove('minimized');
+      });
     }
     overlay.classList.add('show');
+    overlay.classList.remove('minimized');
 
     // Escuchar cambios en tiempo real
     const { onValue } = window._domFBMod || {};
@@ -6710,7 +6837,6 @@ window.renderCategoryGridSafe = function() {
     const total  = (p.items||[]).reduce((s,i) => s + (i.precio||0)*(i.cantidad||1), 0);
     const fmt    = n => '$ ' + Number(n||0).toLocaleString('es-CO');
     const esc    = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
     const ESTADOS_INFO = {
       pendiente:       { color:'#FF9800', label:'🕐 Recibiendo tu pedido…' },
       verificando:     { color:'#1565C0', label:'🔍 Verificando disponibilidad' },
@@ -6739,7 +6865,163 @@ window.renderCategoryGridSafe = function() {
     const info   = ESTADOS_INFO[estado] || ESTADOS_INFO.pendiente;
     const idxAct = PASOS.findIndex(x => x.k === estado);
 
-    // ── Estado: PAGO PENDIENTE — cliente espera confirmación ────────────────
+
+    const ESTADOS_MINI = {
+      pendiente:'🕐 Recibiendo…', verificando:'🔍 Verificando…',
+      confirmado:'✅ Confirmado', pago_pendiente:'💳 Adjunta tu comprobante',
+      pago_revisando:'🔍 Revisando pago…', pago_rechazado:'❌ Pago rechazado',
+      cocina:'🍳 En cocina', listo:'📦 Listo', despachado:'🛵 En camino',
+      entregado:'🏠 Entregado', cancelado:'❌ Cancelado',
+    };
+    const miniStatus = document.getElementById('domSegMiniStatus');
+    if (miniStatus) miniStatus.textContent = ESTADOS_MINI[estado] || estado;
+
+    // ── Estado: CONFIRMADO — si es billetera, pedir comprobante ─────────────
+    if (estado === 'confirmado' && p.requierePago) {
+      cont.innerHTML = `
+        <div style="text-align:center;padding:16px 0 8px;">
+          <div style="font-size:52px;margin-bottom:10px;">💳</div>
+          <h2 style="font-size:19px;font-weight:900;color:#E65100;margin-bottom:6px;">¡Pedido confirmado! Ahora paga</h2>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:16px;">
+            Tu pedido está listo para procesar. Realiza la transferencia y adjunta el comprobante.
+          </p>
+          <div style="background:rgba(230,81,0,.12);border:1.5px solid rgba(230,81,0,.4);border-radius:14px;padding:14px 16px;margin-bottom:16px;text-align:left;">
+            <div style="font-size:11px;font-weight:800;color:#E65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">💰 Pagar a</div>
+            <div style="font-size:15px;font-weight:800;color:#fff;margin-bottom:2px;">${esc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
+            ${p.metodoPagoInfo ? `<div style="font-size:22px;font-weight:900;color:#FF8A65;letter-spacing:1px;margin:4px 0;">${esc(p.metodoPagoInfo)}</div>` : ''}
+            <div style="font-size:20px;font-weight:900;color:#FF8A65;">Total: ${fmt(total)}</div>
+          </div>
+          <div class="comprobante-upload-area" id="comprobanteUploadArea">
+            <input type="file" accept="image/*" id="comprobanteFileInput" capture="environment">
+            <div style="font-size:36px;margin-bottom:8px;">📸</div>
+            <div style="font-size:14px;font-weight:800;color:#E65100;">Adjuntar comprobante</div>
+            <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:4px;">Toca para tomar foto o seleccionar imagen</div>
+            <img id="comprobantePreview" class="comprobante-preview" alt="Comprobante">
+          </div>
+          <div id="comprobanteEnviarWrap" style="display:none;margin-top:12px;">
+            <button class="seg-btn-confirmar" id="comprobanteEnviarBtn"
+              style="background:linear-gradient(135deg,#E65100,#FF7043);padding:14px;border-radius:14px;font-size:15px;display:flex;align-items:center;justify-content:center;gap:10px;width:100%;">
+              📤 Enviar comprobante
+            </button>
+          </div>
+          <div id="comprobanteError" style="display:none;margin-top:10px;padding:10px;background:rgba(229,57,53,.15);border-radius:10px;font-size:13px;color:#EF9A9A;"></div>
+        </div>`;
+      // Lógica de previsualización y envío
+      const fileInput = document.getElementById('comprobanteFileInput');
+      const preview   = document.getElementById('comprobantePreview');
+      const enviarWrap= document.getElementById('comprobanteEnviarWrap');
+      const enviarBtn = document.getElementById('comprobanteEnviarBtn');
+      const errEl     = document.getElementById('comprobanteError');
+      let _comprobanteBase64 = null;
+
+      fileInput.addEventListener('change', async () => {
+        const file = fileInput.files[0];
+        if (!file) return;
+        if (file.size > 5 * 1024 * 1024) { errEl.textContent = '⚠️ Imagen muy grande (máx. 5 MB)'; errEl.style.display='block'; return; }
+        errEl.style.display = 'none';
+        try {
+          // Comprimir a máx 800px ancho, 0.7 calidad
+          _comprobanteBase64 = await new Promise((res, rej) => {
+            const reader = new FileReader();
+            reader.onload = e => {
+              const img = new Image();
+              img.onload = () => {
+                const MAX = 800;
+                const ratio = Math.min(1, MAX / Math.max(img.width, img.height));
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width * ratio; canvas.height = img.height * ratio;
+                canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                res(canvas.toDataURL('image/jpeg', 0.7));
+              };
+              img.onerror = rej;
+              img.src = e.target.result;
+            };
+            reader.onerror = rej;
+            reader.readAsDataURL(file);
+          });
+          preview.src = _comprobanteBase64;
+          preview.classList.add('show');
+          enviarWrap.style.display = 'block';
+        } catch(e) { errEl.textContent = '⚠️ Error al procesar imagen'; errEl.style.display='block'; }
+      });
+
+      enviarBtn.addEventListener('click', async () => {
+        if (!_comprobanteBase64) return;
+        enviarBtn.disabled = true; enviarBtn.textContent = '⏳ Enviando…';
+        try {
+          const { getDatabase, ref: fbRef, update } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+          const { getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+          const fbApp = getApps()[0]; if (!fbApp) throw new Error('Sin conexión');
+          const fbDb = getDatabase(fbApp);
+          await update(fbRef(fbDb, `restaurante/domicilios/${p.sessionId}`), {
+            estado:            'pago_revisando',
+            comprobanteImg:    _comprobanteBase64,
+            comprobanteTs:     Date.now(),
+          });
+        } catch(e) {
+          errEl.textContent = '❌ Error al enviar: ' + e.message;
+          errEl.style.display = 'block';
+          enviarBtn.disabled = false; enviarBtn.textContent = '📤 Enviar comprobante';
+        }
+      });
+      return;
+    }
+
+    // ── Estado: PAGO_REVISANDO — esperando que el admin revise ──────────────
+    if (estado === 'pago_revisando') {
+      cont.innerHTML = `
+        <div style="text-align:center;padding:20px 16px 12px;">
+          <div style="font-size:56px;margin-bottom:12px;animation:pulse 1.5s ease-in-out infinite;">🔍</div>
+          <h2 style="font-size:19px;font-weight:900;color:#1565C0;margin-bottom:6px;">Comprobante enviado</h2>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:16px;">
+            El restaurante está revisando tu comprobante de pago. En breve recibirás confirmación.
+          </p>
+          ${p.comprobanteImg ? `
+            <div style="border-radius:12px;overflow:hidden;margin-bottom:16px;border:2px solid rgba(21,101,192,.4);">
+              <img src="${p.comprobanteImg}" style="width:100%;max-height:220px;object-fit:contain;display:block;background:#000;">
+            </div>` : ''}
+          <div style="background:rgba(21,101,192,.1);border:1.5px solid rgba(21,101,192,.3);border-radius:12px;padding:12px 14px;font-size:13px;color:rgba(255,255,255,.6);">
+            🔔 Esta pantalla se actualiza automáticamente cuando el restaurante apruebe tu pago.
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── Estado: PAGO_RECHAZADO — admin rechazó, cliente puede reenviar ──────
+    if (estado === 'pago_rechazado') {
+      cont.innerHTML = `
+        <div style="text-align:center;padding:16px 0 8px;">
+          <div style="font-size:52px;margin-bottom:10px;">❌</div>
+          <h2 style="font-size:19px;font-weight:900;color:#E53935;margin-bottom:6px;">Comprobante rechazado</h2>
+          ${p.motivoRechazo ? `
+            <div style="background:rgba(229,57,53,.12);border:1.5px solid rgba(229,57,53,.4);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px;color:#EF9A9A;font-weight:700;">
+              💬 "${esc(p.motivoRechazo)}"
+            </div>` : ''}
+          <p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.5;margin-bottom:16px;">
+            Por favor realiza el pago correctamente y adjunta un nuevo comprobante.
+          </p>
+          <div class="comprobante-upload-area" id="comprobanteUploadArea2">
+            <input type="file" accept="image/*" id="comprobanteFileInput2" capture="environment">
+            <div style="font-size:32px;margin-bottom:6px;">📸</div>
+            <div style="font-size:14px;font-weight:800;color:#E65100;">Adjuntar nuevo comprobante</div>
+            <img id="comprobantePreview2" class="comprobante-preview" alt="Comprobante">
+          </div>
+          <div id="comprobanteEnviarWrap2" style="display:none;margin-top:12px;">
+            <button class="seg-btn-confirmar" id="comprobanteEnviarBtn2"
+              style="background:linear-gradient(135deg,#E65100,#FF7043);padding:14px;border-radius:14px;font-size:15px;width:100%;display:flex;align-items:center;justify-content:center;gap:10px;">
+              📤 Reenviar comprobante
+            </button>
+          </div>
+          <button class="seg-btn-cancelar" style="margin-top:10px;width:100%;" onclick="domCancelarDesdeCliente('${esc(p.sessionId)}')">
+            ✕ Cancelar mi pedido
+          </button>
+        </div>`;
+      // Reusar la misma lógica de carga
+      _domBindComprobanteUpload('comprobanteFileInput2','comprobantePreview2','comprobanteEnviarWrap2','comprobanteEnviarBtn2', p.sessionId);
+      return;
+    }
+
+    // ── Estado: PAGO PENDIENTE (legacy — billetera sin flujo de comprobante) ─
     if (estado === 'pago_pendiente') {
       cont.innerHTML = `
         <div style="text-align:center;padding:20px 16px 12px;">
@@ -6760,8 +7042,6 @@ window.renderCategoryGridSafe = function() {
         </div>`;
       return;
     }
-
-    // ── Estado: PAGO CONFIRMADO → cocina (transición automática, no necesita pantalla propia) ──
 
     // ── Estado: EN CAMINO — mostrar botón de confirmación ───────────────
     if (estado === 'despachado') {
@@ -6908,6 +7188,55 @@ window.renderCategoryGridSafe = function() {
     window._domCurrentDb  = db;
     window._domCurrentRef = ref;
   }
+
+  // Helper reutilizable para el input de comprobante
+  window._domBindComprobanteUpload = function(inputId, previewId, wrapId, btnId, sessionId) {
+    const fileInput = document.getElementById(inputId);
+    const preview   = document.getElementById(previewId);
+    const wrap      = document.getElementById(wrapId);
+    const btn       = document.getElementById(btnId);
+    if (!fileInput || !btn) return;
+    let _b64 = null;
+    fileInput.addEventListener('change', async () => {
+      const file = fileInput.files[0]; if (!file) return;
+      if (file.size > 5 * 1024 * 1024) { alert('⚠️ Imagen muy grande (máx. 5 MB)'); return; }
+      try {
+        _b64 = await new Promise((res, rej) => {
+          const reader = new FileReader();
+          reader.onload = e => {
+            const img = new Image();
+            img.onload = () => {
+              const MAX = 800;
+              const ratio = Math.min(1, MAX / Math.max(img.width, img.height));
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width * ratio; canvas.height = img.height * ratio;
+              canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+              res(canvas.toDataURL('image/jpeg', 0.7));
+            };
+            img.onerror = rej; img.src = e.target.result;
+          };
+          reader.onerror = rej; reader.readAsDataURL(file);
+        });
+        if (preview) { preview.src = _b64; preview.classList.add('show'); }
+        if (wrap) wrap.style.display = 'block';
+      } catch(e) { alert('⚠️ Error al procesar imagen'); }
+    });
+    btn.addEventListener('click', async () => {
+      if (!_b64) return;
+      btn.disabled = true; btn.textContent = '⏳ Enviando…';
+      try {
+        const { getDatabase, ref: fbRef, update } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+        const { getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+        const fbApp = getApps()[0]; if (!fbApp) throw new Error('Sin conexión');
+        await update(fbRef(getDatabase(fbApp), `restaurante/domicilios/${sessionId}`), {
+          estado: 'pago_revisando', comprobanteImg: _b64, comprobanteTs: Date.now(),
+        });
+      } catch(e) {
+        alert('❌ Error al enviar: ' + e.message);
+        btn.disabled = false; btn.textContent = '📤 Reenviar comprobante';
+      }
+    });
+  };
 
   window.domEnviarCambio = async function(sessionId) {
     const checks = document.querySelectorAll('#segReemplazosWrap input[type=checkbox]:checked');
