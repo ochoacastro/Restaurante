@@ -526,6 +526,32 @@
   .pay-pill span{font-size:16px;}
   #paymentModeLabel{ color:rgba(255,255,255,.55); }
 
+  /* ── Modal confirmación de pago ── */
+  #payConfirmModal { z-index:10300; }
+  .pay-confirm-card { background:#1C1C1E; border-radius:22px; padding:24px 20px 20px; width:calc(100% - 40px); max-width:380px; margin:auto; box-shadow:0 20px 60px rgba(0,0,0,.7); }
+  .pay-confirm-icon { font-size:44px; text-align:center; margin-bottom:8px; }
+  .pay-confirm-title { font-size:18px; font-weight:900; color:#fff; text-align:center; margin-bottom:4px; }
+  .pay-confirm-sub { font-size:13px; color:rgba(255,255,255,.55); text-align:center; margin-bottom:18px; line-height:1.4; }
+  .pay-confirm-total { background:rgba(255,255,255,.06); border-radius:12px; padding:12px 14px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; }
+  .pay-confirm-total-label { font-size:13px; color:rgba(255,255,255,.6); font-weight:700; }
+  .pay-confirm-total-val { font-size:20px; font-weight:900; color:var(--rappi); }
+  .pay-cash-options { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .pay-cash-opt { background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.12); border-radius:13px; padding:13px 14px; font-size:14px; font-weight:800; color:#fff; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; transition:all .18s; font-family:inherit; width:100%; }
+  .pay-cash-opt.selected { background:rgba(255,68,26,.15); border-color:var(--rappi); color:var(--rappi); }
+  .pay-cash-opt-icon { font-size:22px; flex-shrink:0; }
+  .pay-cash-input-wrap { margin-bottom:16px; }
+  .pay-cash-input-label { font-size:12px; color:rgba(255,255,255,.5); font-weight:700; margin-bottom:6px; }
+  .pay-cash-input { width:100%; background:rgba(255,255,255,.08); border:1.5px solid rgba(255,255,255,.15); border-radius:12px; padding:12px 14px; font-size:18px; font-weight:800; color:#fff; font-family:inherit; box-sizing:border-box; text-align:center; }
+  .pay-cash-input:focus { border-color:var(--rappi); outline:none; }
+  .pay-wallet-info { background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.12); border-radius:13px; padding:14px 16px; margin-bottom:16px; text-align:center; }
+  .pay-wallet-info-label { font-size:11px; color:rgba(255,255,255,.5); font-weight:700; text-transform:uppercase; letter-spacing:.6px; margin-bottom:4px; }
+  .pay-wallet-info-number { font-size:22px; font-weight:900; color:#fff; letter-spacing:1px; margin-bottom:6px; }
+  .pay-wallet-info-hint { font-size:12px; color:rgba(255,255,255,.45); line-height:1.4; }
+  .pay-wallet-copy-btn { margin-top:8px; background:rgba(255,255,255,.1); border:none; border-radius:10px; padding:8px 16px; font-size:12px; font-weight:800; color:#fff; cursor:pointer; font-family:inherit; }
+  .pay-confirm-actions { display:flex; gap:8px; }
+  .pay-confirm-cancel { flex:1; background:rgba(255,255,255,.08); border:none; border-radius:13px; padding:14px; font-size:14px; font-weight:800; color:rgba(255,255,255,.7); cursor:pointer; font-family:inherit; }
+  .pay-confirm-ok { flex:2; background:var(--rappi); border:none; border-radius:13px; padding:14px; font-size:15px; font-weight:900; color:#fff; cursor:pointer; font-family:inherit; }
+
   .info{flex:1; min-width:0;}
   .name{
     font-size:16px; font-weight:800; letter-spacing:-.2px;
@@ -2302,6 +2328,58 @@
     <div class="dialog-actions">
       <button id="appConfirmCancel" class="dialog-btn dialog-cancel" type="button">Cancelar</button>
       <button id="appConfirmOk" class="dialog-btn dialog-ok" type="button">Aceptar</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal confirmación de pago (efectivo / billetera digital) -->
+<div id="payConfirmModal" class="modal-overlay dialog-overlay" aria-hidden="true">
+  <div class="pay-confirm-card">
+    <div class="pay-confirm-icon" id="payConfirmIcon">💵</div>
+    <div class="pay-confirm-title" id="payConfirmTitle">Pago en efectivo</div>
+    <div class="pay-confirm-sub" id="payConfirmSub">¿Cómo vas a pagar?</div>
+    <div class="pay-confirm-total">
+      <span class="pay-confirm-total-label">Total del pedido</span>
+      <span class="pay-confirm-total-val" id="payConfirmTotal">$ 0</span>
+    </div>
+    <!-- Sección efectivo -->
+    <div id="payConfirmCashSection">
+      <div class="pay-cash-options">
+        <button class="pay-cash-opt" id="cashOptExact" type="button">
+          <span class="pay-cash-opt-icon">✅</span>
+          <div>
+            <div>Pago exacto</div>
+            <div style="font-size:11px;font-weight:400;color:rgba(255,255,255,.5);margin-top:2px;">Tengo el valor exacto</div>
+          </div>
+        </button>
+        <button class="pay-cash-opt" id="cashOptChange" type="button">
+          <span class="pay-cash-opt-icon">💰</span>
+          <div>
+            <div>Necesito devuelta</div>
+            <div style="font-size:11px;font-weight:400;color:rgba(255,255,255,.5);margin-top:2px;">Pago con billete mayor</div>
+          </div>
+        </button>
+      </div>
+      <div class="pay-cash-input-wrap" id="cashChangeWrap" style="display:none;">
+        <div class="pay-cash-input-label">¿Con cuánto vas a pagar?</div>
+        <input class="pay-cash-input" id="cashAmountInput" type="number" inputmode="numeric" placeholder="Ej: 50000">
+        <div id="cashVueltoLine" style="margin-top:8px;font-size:13px;color:rgba(255,255,255,.55);text-align:center;display:none;">
+          Vuelto aproximado: <strong id="cashVueltoVal" style="color:#4CAF50;"></strong>
+        </div>
+      </div>
+    </div>
+    <!-- Sección billetera digital -->
+    <div id="payConfirmWalletSection" style="display:none;">
+      <div class="pay-wallet-info">
+        <div class="pay-wallet-info-label">Número para transferir</div>
+        <div class="pay-wallet-info-number" id="walletNumber">—</div>
+        <div class="pay-wallet-info-hint">Transfiere el valor exacto del pedido antes de que llegue el domiciliario</div>
+        <button class="pay-wallet-copy-btn" id="walletCopyBtn" type="button">📋 Copiar número</button>
+      </div>
+    </div>
+    <div class="pay-confirm-actions">
+      <button class="pay-confirm-cancel" id="payConfirmCancel" type="button">Cancelar</button>
+      <button class="pay-confirm-ok" id="payConfirmOk" type="button">Confirmar pedido</button>
     </div>
   </div>
 </div>
@@ -4443,6 +4521,7 @@ $('#waBtn').addEventListener('click', () => {
     `📱 Teléfono: ${phone}`,
     `📍 Dirección: ${address}`,
     `💳 Forma de pago: ${paymentLabel}`,
+    ...(orderForm.notasPago ? [`💵 Pago: ${orderForm.notasPago}`] : []),
     ...(notes ? [`📝 Observaciones: ${notes}`] : []),
     '',
     ...lines,
@@ -6391,6 +6470,130 @@ window.renderCategoryGridSafe = function() {
       }));
       if (!items.length) { showAlertDialog('No hay productos en el carrito.'); return; }
 
+      // ── Modal de confirmación de pago ──────────────────────────────────
+      const payMethod = (settings.paymentMethods || []).find(m => m.id === paymentId);
+      const totalVal  = typeof subtotal === 'function' ? subtotal() : 0;
+      const totalFmt  = '$ ' + Number(totalVal).toLocaleString('es-CO');
+      const isEfectivo = paymentId === 'efectivo' || (payMethod && payMethod.label && payMethod.label.toLowerCase().includes('efectivo'));
+      const isWallet   = payMethod && payMethod.needsInfo && payMethod.info;
+
+      let cashNotes = ''; // notas de vuelto que se añaden al pedido
+
+      if (isEfectivo || isWallet) {
+        const confirmed = await new Promise(resolve => {
+          const modal        = document.getElementById('payConfirmModal');
+          const iconEl       = document.getElementById('payConfirmIcon');
+          const titleEl      = document.getElementById('payConfirmTitle');
+          const subEl        = document.getElementById('payConfirmSub');
+          const totalEl      = document.getElementById('payConfirmTotal');
+          const cashSection  = document.getElementById('payConfirmCashSection');
+          const walletSection= document.getElementById('payConfirmWalletSection');
+          const walletNum    = document.getElementById('walletNumber');
+          const walletCopy   = document.getElementById('walletCopyBtn');
+          const cashOptExact = document.getElementById('cashOptExact');
+          const cashOptChange= document.getElementById('cashOptChange');
+          const changeWrap   = document.getElementById('cashChangeWrap');
+          const amountInput  = document.getElementById('cashAmountInput');
+          const vueltoLine   = document.getElementById('cashVueltoLine');
+          const vueltoVal    = document.getElementById('cashVueltoVal');
+          const okBtn        = document.getElementById('payConfirmOk');
+          const cancelBtn    = document.getElementById('payConfirmCancel');
+
+          totalEl.textContent = totalFmt;
+          cashNotes = '';
+          let cashMode = ''; // 'exact' | 'change'
+
+          if (isEfectivo) {
+            iconEl.textContent  = '💵';
+            titleEl.textContent = 'Pago en efectivo';
+            subEl.textContent   = '¿Cómo vas a pagar tu pedido?';
+            cashSection.style.display  = '';
+            walletSection.style.display= 'none';
+            okBtn.textContent   = 'Confirmar pedido';
+            okBtn.disabled      = true;
+            // reset estado
+            cashOptExact.classList.remove('selected');
+            cashOptChange.classList.remove('selected');
+            changeWrap.style.display = 'none';
+            vueltoLine.style.display = 'none';
+            amountInput.value = '';
+
+            cashOptExact.onclick = () => {
+              cashMode = 'exact';
+              cashOptExact.classList.add('selected');
+              cashOptChange.classList.remove('selected');
+              changeWrap.style.display = 'none';
+              vueltoLine.style.display = 'none';
+              cashNotes = 'Pago exacto en efectivo';
+              okBtn.disabled = false;
+            };
+            cashOptChange.onclick = () => {
+              cashMode = 'change';
+              cashOptChange.classList.add('selected');
+              cashOptExact.classList.remove('selected');
+              changeWrap.style.display = '';
+              amountInput.focus();
+              okBtn.disabled = !amountInput.value;
+            };
+            amountInput.oninput = () => {
+              const paid  = Number(amountInput.value) || 0;
+              const vuelto= paid - totalVal;
+              if (paid > 0 && vuelto >= 0) {
+                vueltoLine.style.display = '';
+                vueltoVal.textContent = '$ ' + vuelto.toLocaleString('es-CO');
+                cashNotes = `Paga con $${paid.toLocaleString('es-CO')} — vuelto $${vuelto.toLocaleString('es-CO')}`;
+                okBtn.disabled = false;
+              } else if (paid > 0 && vuelto < 0) {
+                vueltoLine.style.display = '';
+                vueltoVal.textContent = '⚠️ Monto menor al total';
+                vueltoVal.style.color = '#FF5252';
+                cashNotes = '';
+                okBtn.disabled = true;
+              } else {
+                vueltoLine.style.display = 'none';
+                okBtn.disabled = true;
+              }
+            };
+
+          } else if (isWallet) {
+            const imgHtml = payMethod.img
+              ? `<img src="${payMethod.img}" style="width:32px;height:32px;object-fit:cover;border-radius:8px;display:inline-block;vertical-align:middle;margin-right:6px;">`
+              : '';
+            iconEl.innerHTML    = imgHtml || (payMethod.emoji ? `<span>${payMethod.emoji}</span>` : '💳');
+            titleEl.textContent = `Pagar con ${payMethod.label}`;
+            subEl.textContent   = 'Realiza la transferencia antes de que llegue el domiciliario';
+            cashSection.style.display  = 'none';
+            walletSection.style.display= '';
+            walletNum.textContent = payMethod.info;
+            okBtn.textContent   = '✅ Ya transferí';
+            okBtn.disabled      = false;
+            cashNotes = `Pago vía ${payMethod.label} al ${payMethod.info}`;
+            walletCopy.onclick = () => {
+              navigator.clipboard.writeText(payMethod.info).then(() => {
+                walletCopy.textContent = '✅ Copiado';
+                setTimeout(() => { walletCopy.textContent = '📋 Copiar número'; }, 2000);
+              }).catch(() => {
+                window.prompt('Copia este número:', payMethod.info);
+              });
+            };
+          }
+
+          modal.setAttribute('aria-hidden','false');
+          modal.style.display = 'flex';
+
+          const close = (result) => {
+            modal.setAttribute('aria-hidden','true');
+            modal.style.display = 'none';
+            okBtn.onclick = null; cancelBtn.onclick = null;
+            resolve(result);
+          };
+          okBtn.onclick     = () => close(true);
+          cancelBtn.onclick = () => close(false);
+        });
+
+        if (!confirmed) return; // usuario canceló
+      }
+
       const fbCfg = getFBConfig();
       if (!fbCfg || !fbCfg.databaseURL) {
         showAlertDialog('⚠️ El restaurante aún no tiene el sistema en línea configurado. Por favor usa WhatsApp para tu pedido.');
@@ -6398,16 +6601,18 @@ window.renderCategoryGridSafe = function() {
       }
 
       const sessionId = getOrCreateSessionId();
+      if (typeof orderForm !== 'undefined') orderForm.notasPago = cashNotes || '';
 
       // Armar pedido
       const pedido = {
         sessionId,
-        estado: 'pendiente',
+        estado: isWallet ? 'pago_pendiente' : 'pendiente',
         timestamp: Date.now(),
         clienteNombre:    name,
         clienteTelefono:  phone,
         clienteDireccion: address,
         clienteNotas:     notes,
+        notasPago:        cashNotes || '',
         items,
         metodoPago:      paymentId,
         metodoPagoLabel: paymentLabel,
@@ -6511,30 +6716,56 @@ window.renderCategoryGridSafe = function() {
     const esc    = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 
     const ESTADOS_INFO = {
-      pendiente:   { color:'#FF9800', label:'🕐 Recibiendo tu pedido…' },
-      verificando: { color:'#1565C0', label:'🔍 Verificando disponibilidad' },
-      cambio:      { color:'#E53935', label:'⚠️ Necesitamos un cambio' },
-      confirmado:  { color:'#2E7D32', label:'✅ ¡Pedido confirmado!' },
-      pago:        { color:'#F4511E', label:'💳 Procesando tu pago' },
-      cocina:      { color:'#FF6F00', label:'🍳 ¡Preparando tu pedido!' },
-      listo:       { color:'#00C853', label:'📦 Listo para enviar' },
-      despachado:  { color:'#0D47A1', label:'🛵 ¡Tu pedido va en camino!' },
-      entregado:   { color:'#00C853', label:'🏠 ¡Pedido entregado!' },
-      cancelado:   { color:'#888',    label:'❌ Pedido cancelado' },
+      pendiente:       { color:'#FF9800', label:'🕐 Recibiendo tu pedido…' },
+      verificando:     { color:'#1565C0', label:'🔍 Verificando disponibilidad' },
+      cambio:          { color:'#E53935', label:'⚠️ Necesitamos un cambio' },
+      confirmado:      { color:'#2E7D32', label:'✅ ¡Pedido confirmado!' },
+      pago_pendiente:  { color:'#E65100', label:'⏳ Esperando confirmación de pago…' },
+      pago:            { color:'#F4511E', label:'💳 Procesando tu pago' },
+      cocina:          { color:'#FF6F00', label: p.pagoConfirmado ? '✅ ¡Pago confirmado · Preparando tu pedido!' : '🍳 ¡Preparando tu pedido!' },
+      listo:           { color:'#00C853', label:'📦 Listo para enviar' },
+      despachado:      { color:'#0D47A1', label:'🛵 ¡Tu pedido va en camino!' },
+      entregado:       { color:'#00C853', label:'🏠 ¡Pedido entregado!' },
+      cancelado:       { color:'#888',    label:'❌ Pedido cancelado' },
     };
 
     const PASOS = [
-      { k:'pendiente',   icon:'📥', label:'Recibido',   sub:'Tu pedido fue recibido' },
-      { k:'verificando', icon:'🔍', label:'Verificado',  sub:'Revisamos disponibilidad' },
-      { k:'confirmado',  icon:'✅', label:'Confirmado',  sub:'Pedido aceptado' },
-      { k:'cocina',      icon:'🍳', label:'En cocina',   sub:'Preparando tu pedido' },
-      { k:'listo',       icon:'📦', label:'Listo',       sub:'Listo para el repartidor' },
-      { k:'despachado',  icon:'🛵', label:'En camino',   sub:'Tu pedido está en camino' },
-      { k:'entregado',   icon:'🏠', label:'Entregado',   sub:'¡Pedido recibido!' },
+      { k:'pendiente',      icon:'📥', label:'Recibido',    sub:'Tu pedido fue recibido' },
+      { k:'verificando',    icon:'🔍', label:'Verificado',  sub:'Revisamos disponibilidad' },
+      { k:'confirmado',     icon:'✅', label:'Confirmado',  sub:'Pedido aceptado' },
+      { k:'pago_pendiente', icon:'💳', label:'Pago',        sub:'Confirmando tu pago' },
+      { k:'cocina',         icon:'🍳', label:'En cocina',   sub:'Preparando tu pedido' },
+      { k:'listo',          icon:'📦', label:'Listo',       sub:'Listo para el repartidor' },
+      { k:'despachado',     icon:'🛵', label:'En camino',   sub:'Tu pedido está en camino' },
+      { k:'entregado',      icon:'🏠', label:'Entregado',   sub:'¡Pedido recibido!' },
     ];
 
     const info   = ESTADOS_INFO[estado] || ESTADOS_INFO.pendiente;
     const idxAct = PASOS.findIndex(x => x.k === estado);
+
+    // ── Estado: PAGO PENDIENTE — cliente espera confirmación ────────────────
+    if (estado === 'pago_pendiente') {
+      cont.innerHTML = `
+        <div style="text-align:center;padding:20px 16px 12px;">
+          <div style="font-size:64px;margin-bottom:12px;animation:pulse 1.5s ease-in-out infinite;">⏳</div>
+          <h2 style="font-size:20px;font-weight:900;color:#E65100;margin-bottom:6px;">Esperando confirmación de pago</h2>
+          <p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:20px;">
+            El restaurante está verificando tu pago. En cuanto lo confirmen, tu pedido pasará a preparación.
+          </p>
+          <div style="background:rgba(230,81,0,.12);border:1.5px solid rgba(230,81,0,.35);border-radius:14px;padding:16px 14px;margin-bottom:20px;text-align:left;">
+            <div style="font-size:11px;font-weight:800;color:#E65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💳 Tu pago</div>
+            <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">${esc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
+            <div style="font-size:22px;font-weight:900;color:#FF8A65;">${fmt(total)}</div>
+            ${p.notasPago ? `<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:6px;">${esc(p.notasPago)}</div>` : ''}
+          </div>
+          <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;">
+            🔔 Esta pantalla se actualiza automáticamente cuando el restaurante confirme tu pago.
+          </div>
+        </div>`;
+      return;
+    }
+
+    // ── Estado: PAGO CONFIRMADO → cocina (transición automática, no necesita pantalla propia) ──
 
     // ── Estado: EN CAMINO — mostrar botón de confirmación ───────────────
     if (estado === 'despachado') {
