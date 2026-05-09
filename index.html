@@ -4667,6 +4667,26 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
           <div style="font-size:11px;color:var(--gris);margin-top:4px;">Se pre-llenará al enviar domicilios por WhatsApp y es el número de contacto para pedidos.</div>
         </div>
         <div class="config-field">
+          <!-- Toggle: ¿Cobrar envío a domicilio? -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+            <div>
+              <div style="font-size:14px;font-weight:700;color:var(--negro);">🛵 ¿Cobrar envío a domicilio?</div>
+              <div style="font-size:11px;color:var(--gris);margin-top:2px;">Activa para ingresar el costo que se sumará al total</div>
+            </div>
+            <label class="mpp-toggle" style="flex-shrink:0;">
+              <input type="checkbox" id="cfgCobrarEnvioToggle" onchange="cfgToggleCobrarEnvio(this.checked)">
+              <span class="mpp-slider"></span>
+            </label>
+          </div>
+          <!-- Cajón: valor del envío — visible solo si el toggle está activo -->
+          <div id="cfgCostoEnvioDrawer" style="display:none;margin-top:12px;padding:12px 14px;background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);">
+            <div style="font-size:12px;font-weight:700;color:var(--gris-osc);margin-bottom:8px;">Costo del envío</div>
+            <input class="config-input" id="cfgCostoEnvio" type="number" inputmode="numeric" min="0"
+              placeholder="Ej: 3000" style="margin:0;">
+            <div style="font-size:11px;color:var(--gris);margin-top:6px;">Este valor se suma automáticamente al total de cada pedido a domicilio.</div>
+          </div>
+        </div>
+        <div class="config-field">
           <label>💬 Mensaje de WhatsApp (factura)</label>
           <textarea class="config-input" id="cfgWaMensaje" rows="3"
             placeholder="Ej: Hola, te envío tu factura. Que la disfrutes 😊"
@@ -5713,7 +5733,9 @@ let config = {
   mensaje: "¡Gracias por tu visita!",
   consecutivo:   1,
   consecutivoFE: 1,
-  waTelDomicilio: ""
+  waTelDomicilio: "",
+  cobrarEnvio: false,  // si true, se cobra envío en pedidos a domicilio
+  costoEnvio: 0        // valor del envío cuando cobrarEnvio = true
 };
 
 let carrito = [];
@@ -6761,6 +6783,13 @@ function cargarConfig() {
   document.getElementById('cfgMsg').value    = config.mensaje;
   document.getElementById('cfgWaDomicilio').value = config.waTelDomicilio || '';
   document.getElementById('cfgWaMensaje').value = config.waMensaje || '';
+  const toggleEnvio = document.getElementById('cfgCobrarEnvioToggle');
+  if (toggleEnvio) {
+    toggleEnvio.checked = !!config.cobrarEnvio;
+    const drawer = document.getElementById('cfgCostoEnvioDrawer');
+    if (drawer) drawer.style.display = config.cobrarEnvio ? '' : 'none';
+  }
+  document.getElementById('cfgCostoEnvio').value = config.costoEnvio > 0 ? config.costoEnvio : '';
   // Actualizar título de pestaña con el nombre guardado
   const storedBrand = localStorage.getItem('pos_login_brand');
   const titleBrand = storedBrand || config.nombre || 'POS';
@@ -7447,6 +7476,9 @@ function saveConfig() {
     ? rawNum.slice(2)
     : rawNum;
   config.waMensaje = document.getElementById('cfgWaMensaje').value.trim();
+  config.cobrarEnvio = !!(document.getElementById('cfgCobrarEnvioToggle')?.checked);
+  const rawEnvio = parseInt(document.getElementById('cfgCostoEnvio').value, 10);
+  config.costoEnvio = (config.cobrarEnvio && !isNaN(rawEnvio) && rawEnvio > 0) ? rawEnvio : 0;
   localStorage.setItem('pos_config', JSON.stringify(config));
 
   try {
@@ -7507,6 +7539,16 @@ function saveConfig() {
   if (firstRunBanner) firstRunBanner.style.display = 'none';
 
   showToast('✅ Configuración guardada');
+}
+
+// Muestra/oculta el cajón del costo de envío al activar el toggle
+function cfgToggleCobrarEnvio(checked) {
+  const drawer = document.getElementById('cfgCostoEnvioDrawer');
+  if (!drawer) return;
+  drawer.style.display = checked ? '' : 'none';
+  if (checked) {
+    setTimeout(() => document.getElementById('cfgCostoEnvio')?.focus(), 80);
+  }
 }
 
 function resetConsec() {
@@ -8447,6 +8489,18 @@ function cambiarQtyMenu(idx, delta) {
 
   const item = MENU[idx];
   const precio = tipoOrden === 'domicilio' ? (item.precioDomicilio || item.precio) : item.precio;
+
+  // Sincronizar el precio correcto en TODOS los ítems del carrito según tipoOrden actual.
+  // Así los ítems que no se tocan en esta llamada también reflejan el tipo de precio vigente.
+  carrito.forEach(ci => {
+    const menuItem = MENU.find(m => m.nombre === ci.nombre);
+    if (menuItem) {
+      ci.precio = tipoOrden === 'domicilio'
+        ? (menuItem.precioDomicilio || menuItem.precio)
+        : menuItem.precio;
+    }
+  });
+
   const existeIdx = carrito.findIndex(c => c.nombre === item.nombre);
   if (existeIdx >= 0) {
     carrito[existeIdx].cantidad += delta;
@@ -8583,7 +8637,10 @@ function confirmarEditarPrecio() {
   if (!itemActual) { showToast('⚠️ El producto ya no existe, recarga la lista'); cerrarModal('modalPrecio'); return; }
   itemActual.precio = val;
   const enCarrito = carrito.find(c => c.nombre === itemActual.nombre);
-  if (enCarrito) enCarrito.precio = val;
+  if (enCarrito) {
+    enCarrito.precio = val;
+    guardarOrdenActiva(); // persistir nuevo precio en la orden activa antes de que Firebase haga sync
+  }
   guardarMenuLocalStorage();
   renderMenu();
   renderPreciosConfig();
@@ -8889,8 +8946,9 @@ function renderCarrito() {
     <div class="totales" style="border-top:2px solid ${uc}22;">
       <div class="total-row"><span>Subtotal</span><span class="val" style="color:${uc}99;">${fmt(subtotal)}</span></div>
       ${descMonto > 0 ? `<div class="total-row" style="color:${uc};"><span>Descuento</span><span class="val">−${fmt(descMonto)}</span></div>` : ''}
+      ${(()=>{ const costoEnv = (tipoOrden === 'domicilio' && config.costoEnvio > 0) ? config.costoEnvio : 0; return costoEnv > 0 ? `<div class="total-row" style="color:var(--gris-osc);"><span>🛵 Envío</span><span class="val">${fmt(costoEnv)}</span></div>` : ''; })()}
       ${(()=>{ const resumen = {}; carrito.forEach(item => { const tasa = (item.iva !== undefined && item.iva !== null) ? Number(item.iva) : 8; if (tasa === 0) return; const precioTotal = item.precio * item.cantidad; const base = Math.round(precioTotal / (1 + tasa / 100)); const imp = precioTotal - base; if (!resumen[tasa]) resumen[tasa] = 0; resumen[tasa] += imp; }); return Object.entries(resumen).filter(([,v])=>v>0).map(([tasa,imp])=>`<div class="total-row" style="font-size:12px;opacity:0.75;"><span>${Number(tasa)===8?'Impoconsumo 8%':'IVA '+tasa+'%'} (incl.)</span><span class="val">${fmt(imp)}</span></div>`).join(''); })()}
-      <div class="total-row grande" style="color:${uc};"><span>TOTAL</span><span class="val" style="color:${uc};">${fmt(total)}</span></div>
+      <div class="total-row grande" style="color:${uc};"><span>TOTAL</span><span class="val" style="color:${uc};">${fmt(total + ((tipoOrden === 'domicilio' && config.costoEnvio > 0) ? config.costoEnvio : 0))}</span></div>
     </div>
     ${(()=>{
       const rolBtn = usuarioActivo ? usuarioActivo.rol : 'admin';
@@ -9031,8 +9089,9 @@ function renderPago() {
     <div class="totales" style="border-top:2px solid ${uc}22;margin-bottom:8px;">
       <div class="total-row"><span>Subtotal</span><span class="val" style="color:${uc}99;">${fmt(subtotal)}</span></div>
       ${descMonto > 0 ? `<div class="total-row" style="color:${uc};"><span>Descuento</span><span class="val">−${fmt(descMonto)}</span></div>` : ''}
+      ${esDom && config.costoEnvio > 0 ? `<div class="total-row" style="color:var(--gris-osc);"><span>🛵 Envío</span><span class="val">${fmt(config.costoEnvio)}</span></div>` : ''}
       ${(()=>{ const resumen = {}; carrito.forEach(item => { const tasa = (item.iva !== undefined && item.iva !== null) ? Number(item.iva) : 8; if (tasa === 0) return; const precioTotal = item.precio * item.cantidad; const base = Math.round(precioTotal / (1 + tasa / 100)); const imp = precioTotal - base; if (!resumen[tasa]) resumen[tasa] = { imp: 0, base: 0 }; resumen[tasa].imp += imp; resumen[tasa].base += base; }); const entradas = Object.entries(resumen).filter(([,v])=>v.imp>0); if (!entradas.length) return ''; return `<div style="border-top:1px solid ${uc}22;padding-top:6px;margin-top:2px;">` + entradas.map(([tasa, v]) => `<div class="total-row" style="font-size:12px;opacity:0.8;"><span>Base ${tasa}%</span><span class="val">${fmt(v.base)}</span></div><div class="total-row" style="font-size:12px;color:${uc};"><span>${Number(tasa)===8?'Impoconsumo 8%':'IVA '+tasa+'%'} (incluido)</span><span class="val" style="font-weight:700;">${fmt(v.imp)}</span></div>`).join('') + `</div>`; })()}
-      <div class="total-row grande" style="color:${uc};"><span>TOTAL</span><span class="val" style="color:${uc};">${fmt(total)}</span></div>
+      <div class="total-row grande" style="color:${uc};"><span>TOTAL</span><span class="val" style="color:${uc};">${fmt(total + (esDom && config.costoEnvio > 0 ? config.costoEnvio : 0))}</span></div>
     </div>
 
     <!-- Botones de acción -->
@@ -9635,6 +9694,8 @@ function guardarNotaUnidadMenu() {
   guardarOrdenActiva();
   cerrarModal('modalNota');
   renderMenu();
+  // Si el drawer del carrito está abierto, refrescarlo también para mostrar la nota
+  if (typeof _drawerActual !== 'undefined' && _drawerActual === 'carrito') renderCarrito();
 }
 
 function beepFactura() {
@@ -10216,7 +10277,6 @@ function abrirCierreDia(fechaFiltro) {
     // Hay historial de otros días — abrir el modal apuntando al día más reciente con ventas
     // Solo fechas que realmente tengan facturas para evitar recursión infinita
     const fechasUnicas = [...new Set(historial.map(f => f.fecha))]
-      .filter(fd => historial.some(f => f.fecha === fd))
       .sort().reverse();
     const fechaValida = fechasUnicas.find(fd => fd !== fecha);
     if (fechaValida) {
@@ -10654,6 +10714,9 @@ function generarTextoDesdeFactura(f, paraBluetooth = false) {
   if (f.descuentoMonto > 0) {
     t += fila('Subtotal:', p(f.subtotal || (f.total + f.descuentoMonto))) + '\n';
     t += fila('Descuento:', '-' + p(f.descuentoMonto)) + '\n';
+  }
+  if (f.costoEnvio > 0) {
+    t += fila('Envio domicilio:', p(f.costoEnvio)) + '\n';
   }
 
   // Construir tabla de impuestos como la tirilla
@@ -11508,15 +11571,21 @@ async function finalizarFactura() {
   }
   // BUG 2 fix: clampear descMonto para que totalFinal nunca sea negativo
   descMonto = Math.min(descMonto, subtotal);
-  const totalFinal = subtotal - descMonto;
+  // Costo de envío: solo se suma si la orden es a domicilio, cobrarEnvio está activo y el valor > 0
+  const costoEnvioAplicado = (tipoOrden === 'domicilio' && config.cobrarEnvio && config.costoEnvio > 0) ? config.costoEnvio : 0;
+  const totalFinal = subtotal - descMonto + costoEnvioAplicado;
 
   // ── Calcular IVA / Impoconsumo desglosado por tarifa ─────────────────
-  // El precio de cada producto ya INCLUYE el impuesto (precio con IVA)
-  // precioBase = precio / (1 + tasa)  → impoconsumo = precio - precioBase
+  // El precio de cada producto ya INCLUYE el impuesto (precio con IVA).
+  // Si hay descuento, se aplica proporcionalmente a cada ítem antes de
+  // calcular la base y el impuesto, para que el desglose fiscal coincida
+  // exactamente con el totalFinal cobrado.
+  // precioBase = precioConDesc / (1 + tasa)  → impuesto = precioConDesc - precioBase
+  const _factorDesc = subtotal > 0 ? totalFinal / subtotal : 1; // ej. 0.90 si hay 10% dto
   const ivaResumen = {}; // { '8': { base: X, impuesto: Y }, '19': {...}, ... }
   carrito.forEach(item => {
     const tasa = (item.iva !== undefined && item.iva !== null) ? Number(item.iva) : 8;
-    const precioTotalItem = item.precio * item.cantidad;
+    const precioTotalItem = Math.round(item.precio * item.cantidad * _factorDesc);
     const baseItem = tasa > 0
       ? Math.round(precioTotalItem / (1 + tasa / 100))
       : precioTotalItem;
@@ -11526,7 +11595,7 @@ async function finalizarFactura() {
     ivaResumen[key].base      += baseItem;
     ivaResumen[key].impuesto  += impuestoItem;
   });
-  // Totales globales antes de descuento
+  // Totales globales sobre el monto final (ya con descuento aplicado)
   const totalBaseIva    = Object.values(ivaResumen).reduce((s, v) => s + v.base, 0);
   const totalImpuestos  = Object.values(ivaResumen).reduce((s, v) => s + v.impuesto, 0);
   const factura = {
@@ -11540,6 +11609,7 @@ async function finalizarFactura() {
     descuentoMonto: descMonto,
     descuentoTipo,
     descuentoValor,
+    costoEnvio: costoEnvioAplicado,
     total: totalFinal,
     pago: pagoMetodo,
     observaciones,
@@ -12544,8 +12614,9 @@ async function fbSyncFactura(factura) {
     await set(ref(db, 'restaurante/historial_items/' + factura.numero), factura);
   } catch(e) {
     console.warn('fbSyncFactura error:', e.message);
-    // Fallback: si falla la escritura granular, intentar con el array completo
-    try { await set(ref(db, 'restaurante/historial'), historial); } catch(_) {}
+    // No hacer fallback con el historial completo: con muchas facturas superaría
+    // los límites de escritura de Firebase y mezclaría dos formatos de nodo.
+    // La factura quedará en localStorage y se sincronizará en el próximo fbPrimerSync.
   }
 }
 
