@@ -3367,6 +3367,8 @@
 .dom-card.estado-cambio      { border-left:4px solid #E53935; }
 .dom-card.estado-confirmado  { border-left:4px solid #7B1FA2; }
 .dom-card.estado-pago_pendiente { border-left:4px solid #E65100; background: rgba(230,81,0,.05); }
+.dom-card.estado-pago_revisando { border-left:4px solid #1565C0; background: rgba(21,101,192,.04); }
+.dom-card.estado-pago_rechazado { border-left:4px solid #E53935; background: rgba(229,57,53,.04); }
 .dom-card.estado-pago        { border-left:4px solid #F4511E; }
 .dom-card.estado-cocina      { border-left:4px solid #FF9800; }
 .dom-card.estado-listo       { border-left:4px solid #00C853; }
@@ -16134,6 +16136,8 @@ document.addEventListener('DOMContentLoaded', () => {
     cambio:          '⚠️ Cambio requerido',
     confirmado:      '✅ Confirmado',
     pago_pendiente:  '💳 Pago por confirmar',
+    pago_revisando:  '🔍 Revisando comprobante',
+    pago_rechazado:  '❌ Comprobante rechazado',
     pago:            '💳 Esperando pago',
     cocina:          '🍳 En cocina',
     listo:           '📦 Listo para envío',
@@ -16301,9 +16305,12 @@ document.addEventListener('DOMContentLoaded', () => {
           btns += `<button class="dom-btn primary" onclick="event.stopPropagation();domConfirmarPago('${p.sessionId}')">💳 Confirmar pago</button>`;
         }
         break;
-      case 'pago_pendiente':
-        btns += `<div style="font-size:11px;color:#E65100;font-weight:800;">💳 ${domEsc(p.metodoPagoLabel||p.metodoPago||'Pago')} · ${domFmt((p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0))}</div>`;
-        btns += `<button class="dom-btn green" onclick="event.stopPropagation();domConfirmarPagoRecibido('${p.sessionId}')">✅ Confirmar pago</button>`;
+      case 'pago_revisando':
+        btns += `<div style="font-size:11px;color:#1565C0;font-weight:800;">🔍 Revisando comprobante</div>`;
+        btns += `<button class="dom-btn green" onclick="event.stopPropagation();domVerComprobante('${p.sessionId}')">📋 Ver y decidir</button>`;
+        break;
+      case 'pago_rechazado':
+        btns += `<div style="font-size:11px;color:#E53935;font-weight:800;">❌ Pago rechazado — esperando nuevo comprobante</div>`;
         break;
       case 'pago':
         btns += `<span style="font-size:11px;color:#BF360C;font-weight:700;">Esperando confirmación de pago…</span>`;
@@ -16377,12 +16384,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Progreso visual de estados
-    const PASOS = ['pendiente','verificando','confirmado','pago_pendiente','cocina','listo','despachado','entregado'];
-    const idxActual = PASOS.indexOf(estado);
+    const PASOS = ['pendiente','verificando','confirmado','pago_revisando','cocina','listo','despachado','entregado'];
+    const idxActual = PASOS.indexOf(estado === 'pago_rechazado' ? 'pago_revisando' : estado);
     const progresoBtns = PASOS.map((s, i) => {
       const activo  = i === idxActual;
       const pasado  = i < idxActual;
-      const color   = pasado ? '#00C853' : activo ? '#1565C0' : 'var(--gris-cl)';
+      const color   = pasado ? '#00C853' : activo ? (estado === 'pago_rechazado' ? '#E53935' : '#1565C0') : 'var(--gris-cl)';
       const textC   = (pasado || activo) ? '#fff' : 'var(--gris)';
       const labels  = ['Recibido','Verificado','Confirmado','Pago','Cocina','Listo','Despachado','Entregado'];
       return `<div style="flex:1;text-align:center;">
@@ -16472,21 +16479,39 @@ document.addEventListener('DOMContentLoaded', () => {
           btns = `<button class="dom-btn primary" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPago('${p.sessionId}')">💳 Confirmar pago del cliente</button>`;
         }
         break;
-      case 'pago_pendiente': {
-        const totalP = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0);
+      case 'pago_revisando': {
+        const totalR = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0);
         btns = `
-          <div style="background:rgba(230,81,0,.08);border:2px solid rgba(230,81,0,.4);border-radius:14px;padding:14px 16px;margin-bottom:12px;">
-            <div style="font-size:12px;font-weight:800;color:#E65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">💳 Pago pendiente por confirmar</div>
+          <div style="background:rgba(21,101,192,.08);border:2px solid rgba(21,101,192,.35);border-radius:14px;padding:14px 16px;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">🔍 Comprobante de pago recibido</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--negro);margin-bottom:10px;">
               <div><b>👤 Cliente:</b><br>${domEsc(p.clienteNombre||'—')}</div>
               <div><b>📱 Teléfono:</b><br>${domEsc(p.clienteTelefono||'—')}</div>
               <div><b>💳 Método:</b><br>${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
-              <div><b>💰 Monto:</b><br><span style="color:var(--rappi);font-weight:900;font-size:16px;">${domFmt(totalP)}</span></div>
+              <div><b>💰 Monto:</b><br><span style="color:var(--rappi);font-weight:900;font-size:16px;">${domFmt(totalR)}</span></div>
             </div>
-            ${p.notasPago ? `<div style="background:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;font-size:12px;color:#555;margin-bottom:4px;">📝 ${domEsc(p.notasPago)}</div>` : ''}
+            ${p.comprobanteImg ? `
+              <div style="border-radius:10px;overflow:hidden;margin-bottom:10px;border:2px solid rgba(21,101,192,.3);">
+                <img src="${p.comprobanteImg}" style="width:100%;max-height:260px;object-fit:contain;display:block;background:#000;" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'260px':'none'">
+                <div style="font-size:11px;color:#888;text-align:center;padding:4px;">Toca la imagen para ampliar</div>
+              </div>` : '<div style="font-size:12px;color:#888;margin-bottom:10px;">Sin imagen de comprobante</div>'}
           </div>
-          <button class="dom-btn green" style="width:100%;padding:14px;font-size:15px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPagoRecibido('${p.sessionId}')">✅ Confirmar pago — enviar a cocina</button>
-          <button class="dom-btn danger" style="width:100%;padding:11px;margin-top:8px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+          <div style="margin-bottom:10px;">
+            <div style="font-size:11px;color:var(--gris);font-weight:700;margin-bottom:6px;">Motivo de rechazo (opcional):</div>
+            <input id="motivoRechazoInput" style="width:100%;background:var(--fondo);border:1.5px solid var(--borde);border-radius:10px;padding:10px;font-size:13px;color:var(--negro);font-family:inherit;box-sizing:border-box;" placeholder="Ej: Monto incorrecto, imagen borrosa…">
+          </div>
+          <button class="dom-btn green" style="width:100%;padding:13px;font-size:15px;" onclick="cerrarModal('modalDomDetalle');domAprobarPago('${p.sessionId}')">✅ Pago válido — enviar a cocina</button>
+          <button class="dom-btn danger" style="width:100%;padding:11px;margin-top:8px;" onclick="domRechazarPago('${p.sessionId}')">❌ Rechazar comprobante</button>
+          <button class="dom-btn" style="width:100%;padding:10px;margin-top:8px;background:var(--gris-cl);color:var(--negro);" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+        break;
+      }
+      case 'pago_rechazado': {
+        btns = `
+          <div style="background:rgba(229,57,53,.08);border:1.5px solid rgba(229,57,53,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--negro);">
+            ❌ Comprobante rechazado — esperando nuevo comprobante del cliente.
+            ${p.motivoRechazo ? `<br><b>Motivo:</b> ${domEsc(p.motivoRechazo)}` : ''}
+          </div>
+          <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         break;
       }
       case 'pago':
@@ -16590,11 +16615,9 @@ document.addEventListener('DOMContentLoaded', () => {
       callback() {
         const p = _domPedidos.find(x => x.sessionId === sessionId);
         if (!p) return;
-        const metPago = (p.metodoPago || '').toLowerCase();
-        const esEfectivo = metPago === 'efectivo' || metPago.includes('efectivo');
-        const nuevoEstado = esEfectivo ? 'confirmado' : 'confirmado';
-        domSetEstado(sessionId, nuevoEstado);
-        window.showToast('✅ Pedido confirmado');
+        // Si requiere pago digital: pasar a confirmado con flag para que cliente adjunte comprobante
+        domSetEstado(sessionId, 'confirmado');
+        window.showToast('✅ Pedido confirmado' + (p.requierePago ? ' — esperando comprobante de pago' : ''));
       }
     });
   };
@@ -16624,6 +16647,48 @@ document.addEventListener('DOMContentLoaded', () => {
         window.showToast('✅ Pago confirmado — pedido enviado a cocina');
       }
     });
+  };
+
+  // Aprobar comprobante → cocina
+  window.domAprobarPago = function(sessionId) {
+    window.confirmar({
+      icono: '✅',
+      titulo: 'Aprobar pago',
+      mensaje: '¿El comprobante es válido? Se enviará el pedido a cocina.',
+      textoOk: '✅ Sí, aprobar',
+      callback() {
+        domSetEstado(sessionId, 'cocina', {
+          pagoConfirmado: true, pagoConfirmadoTs: Date.now(),
+        });
+        domEnviarACocinaInterno(sessionId);
+        window.showToast('✅ Pago aprobado — pedido a cocina');
+      }
+    });
+  };
+
+  // Rechazar comprobante → cliente debe reenviar
+  window.domRechazarPago = function(sessionId) {
+    const motivo = document.getElementById('motivoRechazoInput')?.value?.trim() || '';
+    window.confirmar({
+      icono: '❌',
+      titulo: 'Rechazar comprobante',
+      mensaje: motivo ? `¿Rechazar con motivo: "${motivo}"?` : '¿Rechazar este comprobante? El cliente deberá enviar uno nuevo.',
+      textoOk: '❌ Sí, rechazar',
+      callback() {
+        domSetEstado(sessionId, 'pago_rechazado', {
+          motivoRechazo: motivo || 'Comprobante no válido',
+          comprobanteRechazadoTs: Date.now(),
+        });
+        cerrarModal('modalDomDetalle');
+        window.showToast('❌ Comprobante rechazado — cliente notificado');
+      }
+    });
+  };
+
+  // Abrir modal de detalle directamente en el comprobante
+  window.domVerComprobante = function(sessionId) {
+    const p = _domPedidos.find(x => x.sessionId === sessionId);
+    if (p) domRenderDetalle(p);
   };
 
   window.domPagoRecibido = function(sessionId) {
