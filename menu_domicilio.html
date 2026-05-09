@@ -6575,16 +6575,17 @@ window.renderCategoryGridSafe = function() {
       }));
       if (!items.length) { showAlertDialog('No hay productos en el carrito.'); return; }
 
-      // ── Modal de confirmación de pago ──────────────────────────────────
+      // ── Enviar pedido directo — el pago se gestiona DESPUÉS de que el restaurante confirme disponibilidad ──
       const payMethod = (settings.paymentMethods || []).find(m => m.id === paymentId);
       const totalVal  = typeof subtotal === 'function' ? subtotal() : 0;
-      const totalFmt  = '$ ' + Number(totalVal).toLocaleString('es-CO');
       const isEfectivo = paymentId === 'efectivo' || (payMethod && payMethod.label && payMethod.label.toLowerCase().includes('efectivo'));
       const isWallet   = payMethod && payMethod.needsInfo && payMethod.info;
 
-      let cashNotes = ''; // notas de vuelto que se añaden al pedido
-
-      if (isEfectivo || isWallet) {
+      // Para efectivo: preguntar cuánto va a pagar (útil para preparar cambio)
+      // ya NO se muestra el número de billetera ni se pide transferencia previa
+      let cashNotes = '';
+      if (isEfectivo) {
+        const totalFmt = '$ ' + Number(totalVal).toLocaleString('es-CO');
         const confirmed = await new Promise(resolve => {
           const modal        = document.getElementById('payConfirmModal');
           const iconEl       = document.getElementById('payConfirmIcon');
@@ -6593,8 +6594,6 @@ window.renderCategoryGridSafe = function() {
           const totalEl      = document.getElementById('payConfirmTotal');
           const cashSection  = document.getElementById('payConfirmCashSection');
           const walletSection= document.getElementById('payConfirmWalletSection');
-          const walletNum    = document.getElementById('walletNumber');
-          const walletCopy   = document.getElementById('walletCopyBtn');
           const cashOptExact = document.getElementById('cashOptExact');
           const cashOptChange= document.getElementById('cashOptChange');
           const changeWrap   = document.getElementById('cashChangeWrap');
@@ -6604,90 +6603,61 @@ window.renderCategoryGridSafe = function() {
           const okBtn        = document.getElementById('payConfirmOk');
           const cancelBtn    = document.getElementById('payConfirmCancel');
 
-          totalEl.textContent = totalFmt;
+          totalEl.textContent         = totalFmt;
+          cashSection.style.display   = '';
+          walletSection.style.display = 'none';
+          iconEl.textContent          = '💵';
+          titleEl.textContent         = 'Pago en efectivo';
+          subEl.textContent           = '¿Con cuánto vas a pagar? (para preparar tu cambio)';
+          okBtn.textContent           = 'Enviar pedido';
+          okBtn.disabled              = true;
+          cashOptExact.classList.remove('selected');
+          cashOptChange.classList.remove('selected');
+          changeWrap.style.display    = 'none';
+          vueltoLine.style.display    = 'none';
+          amountInput.value           = '';
           cashNotes = '';
-          let cashMode = ''; // 'exact' | 'change'
 
-          if (isEfectivo) {
-            iconEl.textContent  = '💵';
-            titleEl.textContent = 'Pago en efectivo';
-            subEl.textContent   = '¿Cómo vas a pagar tu pedido?';
-            cashSection.style.display  = '';
-            walletSection.style.display= 'none';
-            okBtn.textContent   = 'Confirmar pedido';
-            okBtn.disabled      = true;
-            // reset estado
-            cashOptExact.classList.remove('selected');
+          cashOptExact.onclick = () => {
+            cashOptExact.classList.add('selected');
             cashOptChange.classList.remove('selected');
             changeWrap.style.display = 'none';
             vueltoLine.style.display = 'none';
-            amountInput.value = '';
-
-            cashOptExact.onclick = () => {
-              cashMode = 'exact';
-              cashOptExact.classList.add('selected');
-              cashOptChange.classList.remove('selected');
-              changeWrap.style.display = 'none';
-              vueltoLine.style.display = 'none';
-              cashNotes = 'Pago exacto en efectivo';
+            cashNotes    = 'Pago exacto en efectivo';
+            okBtn.disabled = false;
+          };
+          cashOptChange.onclick = () => {
+            cashOptChange.classList.add('selected');
+            cashOptExact.classList.remove('selected');
+            changeWrap.style.display = '';
+            amountInput.focus();
+            okBtn.disabled = !amountInput.value;
+          };
+          amountInput.oninput = () => {
+            const raw  = amountInput.value.replace(/\D/g, '');
+            const paid = parseInt(raw, 10) || 0;
+            amountInput.value = paid > 0 ? paid.toLocaleString('es-CO') : '';
+            const vuelto = paid - totalVal;
+            if (paid > 0 && vuelto >= 0) {
+              vueltoLine.style.display = '';
+              vueltoVal.textContent    = '$ ' + vuelto.toLocaleString('es-CO');
+              vueltoVal.style.color    = '';
+              cashNotes    = `Paga con $${paid.toLocaleString('es-CO')} — vuelto $${vuelto.toLocaleString('es-CO')}`;
               okBtn.disabled = false;
-            };
-            cashOptChange.onclick = () => {
-              cashMode = 'change';
-              cashOptChange.classList.add('selected');
-              cashOptExact.classList.remove('selected');
-              changeWrap.style.display = '';
-              amountInput.focus();
-              okBtn.disabled = !amountInput.value;
-            };
-            amountInput.oninput = () => {
-              const raw = amountInput.value.replace(/\D/g, '');
-              const paid = parseInt(raw, 10) || 0;
-              amountInput.value = paid > 0 ? paid.toLocaleString('es-CO') : '';
-              const vuelto= paid - totalVal;
-              if (paid > 0 && vuelto >= 0) {
-                vueltoLine.style.display = '';
-                vueltoVal.textContent = '$ ' + vuelto.toLocaleString('es-CO');
-                cashNotes = `Paga con $${paid.toLocaleString('es-CO')} — vuelto $${vuelto.toLocaleString('es-CO')}`;
-                okBtn.disabled = false;
-              } else if (paid > 0 && vuelto < 0) {
-                vueltoLine.style.display = '';
-                vueltoVal.textContent = '⚠️ Monto menor al total';
-                vueltoVal.style.color = '#FF5252';
-                cashNotes = '';
-                okBtn.disabled = true;
-              } else {
-                vueltoLine.style.display = 'none';
-                okBtn.disabled = true;
-              }
-            };
-
-          } else if (isWallet) {
-            const imgHtml = payMethod.img
-              ? `<img src="${payMethod.img}" style="width:32px;height:32px;object-fit:cover;border-radius:8px;display:inline-block;vertical-align:middle;margin-right:6px;">`
-              : '';
-            iconEl.innerHTML    = imgHtml || (payMethod.emoji ? `<span>${payMethod.emoji}</span>` : '💳');
-            titleEl.textContent = `Pagar con ${payMethod.label}`;
-            subEl.textContent   = 'Realiza la transferencia antes de que llegue el domiciliario';
-            cashSection.style.display  = 'none';
-            walletSection.style.display= '';
-            walletNum.textContent = payMethod.info;
-            okBtn.textContent   = '✅ Ya transferí';
-            okBtn.disabled      = false;
-            cashNotes = `Pago vía ${payMethod.label} al ${payMethod.info}`;
-            walletCopy.onclick = () => {
-              navigator.clipboard.writeText(payMethod.info).then(() => {
-                walletCopy.textContent = '✅ Copiado';
-                setTimeout(() => { walletCopy.textContent = '📋 Copiar número'; }, 2000);
-              }).catch(() => {
-                window.prompt('Copia este número:', payMethod.info);
-              });
-            };
-          }
+            } else if (paid > 0 && vuelto < 0) {
+              vueltoLine.style.display = '';
+              vueltoVal.textContent    = '⚠️ Monto menor al total';
+              vueltoVal.style.color    = '#FF5252';
+              cashNotes    = '';
+              okBtn.disabled = true;
+            } else {
+              vueltoLine.style.display = 'none';
+              okBtn.disabled = true;
+            }
+          };
 
           modal.setAttribute('aria-hidden','false');
           modal.style.display = 'flex';
-
           const close = (result) => {
             modal.setAttribute('aria-hidden','true');
             modal.style.display = 'none';
@@ -6697,8 +6667,7 @@ window.renderCategoryGridSafe = function() {
           okBtn.onclick     = () => close(true);
           cancelBtn.onclick = () => close(false);
         });
-
-        if (!confirmed) return; // usuario canceló
+        if (!confirmed) return;
       }
 
       const fbCfg = getFBConfig();
@@ -6710,10 +6679,11 @@ window.renderCategoryGridSafe = function() {
       const sessionId = getOrCreateSessionId();
       if (typeof orderForm !== 'undefined') orderForm.notasPago = cashNotes || '';
 
-      // Armar pedido
+      // Armar pedido — siempre empieza en 'pendiente'
+      // requierePago = true para wallets: el restaurante confirmará y luego el cliente paga
       const pedido = {
         sessionId,
-        estado:          isWallet ? 'pendiente' : 'pendiente',  // siempre pendiente al inicio
+        estado:          'pendiente',
         requierePago:    isWallet ? true : false,
         metodoPagoInfo:  isWallet ? (payMethod.info || '') : '',
         timestamp:       Date.now(),
@@ -7187,13 +7157,7 @@ window.renderCategoryGridSafe = function() {
 
       <div style="font-size:12px;color:#888;text-align:center;">
         📍 ${esc(p.clienteDireccion||'—')} · 💳 ${esc(p.metodoPagoLabel||'—')}
-      </div>
-
-      ${['pendiente','verificando','cambio'].includes(estado) ? `
-      <button class="seg-btn-cancelar" style="margin-top:14px;width:100%;"
-        onclick="domCancelarDesdeCliente('${esc(p.sessionId)}')">
-        ✕ Cancelar mi pedido
-      </button>` : ''}`;
+      </div>`;
 
     window._domCurrentDb  = db;
     window._domCurrentRef = ref;
