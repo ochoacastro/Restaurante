@@ -16293,6 +16293,41 @@ document.addEventListener('DOMContentLoaded', () => {
   let _domPedidoActual = null; // id del pedido en modal actual
   let _domAsignarId = null;    // id del pedido a asignar
   let _domStockId   = null;    // id del pedido en modal stock
+  // IDs ya vistos — para detectar pedidos realmente nuevos
+  const _domSeenIds = new Set();
+  let _domPrimerCarga = true; // la primera llamada del onValue llena _domSeenIds sin alertar
+
+  function _domAlertarNuevoPedido(pedido) {
+    // Solo alertar a admin/master
+    const rol = window.usuarioActivo?.rol;
+    if (rol !== 'admin' && rol !== 'master') return;
+
+    // Sonido: 3 beeps urgentes
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 880, 1100].forEach((freq, i) => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = 'square';
+        gain.gain.setValueAtTime(0.18, ctx.currentTime + i * 0.22);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.22 + 0.18);
+        osc.start(ctx.currentTime + i * 0.22);
+        osc.stop(ctx.currentTime + i * 0.22 + 0.18);
+      });
+    } catch(_) {}
+
+    // Toast prominente
+    const cliente = pedido.clienteNombre || pedido.nombre || 'Cliente';
+    if (typeof showToast === 'function') {
+      showToast('🛵 Nuevo pedido de ' + cliente + ' — ve a Domicilios', 6000);
+    }
+
+    // Navegar al tab de domicilios automáticamente si no está activo
+    const panelDom = document.getElementById('panel-domicilios');
+    if (panelDom && !panelDom.classList.contains('active')) {
+      if (typeof showTab === 'function') showTab('domicilios');
+    }
+  }
 
   // ── Helpers ─────────────────────────────────────────────────────────────
   function esPuedeVerDomicilios() {
@@ -16353,6 +16388,23 @@ document.addEventListener('DOMContentLoaded', () => {
           .filter(Boolean)
           .sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
       }
+
+      // Detectar pedidos nuevos con estado 'pendiente'
+      if (_domPrimerCarga) {
+        // Primera carga: solo registrar IDs existentes, sin alertar
+        _domPedidos.forEach(p => { if (p.sessionId) _domSeenIds.add(p.sessionId); });
+        _domPrimerCarga = false;
+      } else {
+        _domPedidos.forEach(p => {
+          if (p.sessionId && !_domSeenIds.has(p.sessionId) && p.estado === 'pendiente') {
+            _domSeenIds.add(p.sessionId);
+            _domAlertarNuevoPedido(p);
+          } else if (p.sessionId) {
+            _domSeenIds.add(p.sessionId);
+          }
+        });
+      }
+
       domActualizarBadges();
       if (document.getElementById('panel-domicilios')?.classList.contains('active')) {
         renderDomicilios();
