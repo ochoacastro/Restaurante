@@ -2278,7 +2278,7 @@
   /* Modal usuario */
   .modal-usuarios { padding-bottom: 36px; }
   .form-row { margin-bottom: 13px; }
-  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--gris); margin-bottom: 6px; }
+  .form-label { display: block; font-size: 12px; font-weight: 600; color: var(--negro); margin-bottom: 6px; }
   .form-input {
     width: 100%; border: 1.5px solid #E8E8E8; border-radius: var(--r-sm);
     padding: 12px 13px; font-family: 'Inter', sans-serif; font-size: 15px;
@@ -2530,7 +2530,7 @@
   }
   .edit-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .form-label-small {
-    display: block; font-size: 11px; font-weight: 800; color: var(--gris);
+    display: block; font-size: 11px; font-weight: 800; color: var(--negro);
     text-transform: uppercase; letter-spacing: .6px; margin-bottom: 6px;
   }
 
@@ -2569,6 +2569,29 @@
   body.dark .cfg-acc.open .cfg-acc-header { background: rgba(123,31,162,0.18); }
   body.dark .cfg-acc.open .cfg-acc-title  { color: #CE93D8; }
   body.dark .cfg-acc.open .cfg-acc-arrow  { color: #CE93D8; }
+
+  /* Placeholders vacíos de imágenes en dark */
+  body.dark #cfgBgEmptyWrap,
+  body.dark #cfgHeroEmptyWrap,
+  body.dark #cfgClosedBgEmptyWrap { background: #2A2A2A !important; border-color: #444 !important; }
+  body.dark #cfgBgEmptyWrap span,
+  body.dark #cfgHeroEmptyWrap span,
+  body.dark #cfgClosedBgEmptyWrap span { color: #AAAAAA !important; }
+  body.dark .cfg-acc-inner .form-label,
+  body.dark .cfg-acc-inner .form-label-small { color: #E0E0E0; }
+  body.dark .cfg-acc-inner label,
+  body.dark .cfg-acc-inner p,
+  body.dark .cfg-acc-inner span:not(.cfg-acc-arrow) { color: #D0D0D0; }
+  body.dark .cfg-acc-inner input,
+  body.dark .cfg-acc-inner textarea,
+  body.dark .cfg-acc-inner select {
+    background: #2E2E2E; color: #F0F0F0; border-color: #444;
+  }
+  body.dark .cfg-acc-inner [style*="color:var(--gris)"],
+  body.dark .cfg-acc-inner [style*="color: var(--gris)"] { color: #AAAAAA !important; }
+  /* Placeholder y texto vacío */
+  body.dark .cfg-acc-inner [style*="Sin imagen"],
+  body.dark .cfg-acc-inner [style*="sin imagen"] { color: #888 !important; }
 
   /* ── Pagos ── */
   .payment-list { display: flex; flex-direction: column; gap: 10px; }
@@ -3501,9 +3524,14 @@ body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F
   display: flex; align-items: center; justify-content: center;
   font-size: 20px;
 }
-.menu-editor-trigger-title { font-size: 15px; font-weight: 700; }
+.menu-editor-trigger-title { font-size: 15px; font-weight: 700; color: var(--negro); }
 .menu-editor-trigger-sub { font-size: 11px; color: var(--gris); margin-top: 2px; }
 .menu-editor-trigger-arrow { font-size: 18px; color: var(--gris); }
+
+body.dark .menu-editor-trigger-btn { background: #2A2A2A; border-color: #444; }
+body.dark .menu-editor-trigger-title { color: #F0F0F0; }
+body.dark .menu-editor-trigger-sub  { color: #AAAAAA; }
+body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
 
 /* ══ OVERLAY / MODAL DEL EDITOR ══ */
 #menuEditorOverlay {
@@ -13704,7 +13732,7 @@ document.querySelectorAll('.cfg-acc-header[data-cfgacc]').forEach(header => {
 });
 
 function onCfgAccOpen(id) {
-  if (id === 'cfgacc-pagos')    { cfgRenderPayments(); cfgRenderDomTarifa(); }
+  if (id === 'cfgacc-pagos')    { cfgRenderPayments(); }
   if (id === 'cfgacc-cats')     cfgRenderCategories();
   if (id === 'cfgacc-productos') { renderProductosConfig(); }
   if (id === 'cfgacc-precios')  { renderPreciosConfig(); }
