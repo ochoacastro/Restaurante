@@ -3343,6 +3343,7 @@
 .dom-card.estado-verificando { border-left:4px solid #1976D2; }
 .dom-card.estado-cambio      { border-left:4px solid #E53935; }
 .dom-card.estado-confirmado  { border-left:4px solid #7B1FA2; }
+.dom-card.estado-pago_pendiente { border-left:4px solid #E65100; background: rgba(230,81,0,.05); }
 .dom-card.estado-pago        { border-left:4px solid #F4511E; }
 .dom-card.estado-cocina      { border-left:4px solid #FF9800; }
 .dom-card.estado-listo       { border-left:4px solid #00C853; }
@@ -3373,7 +3374,8 @@
 .dom-estado-badge.verificando { background:rgba(25,118,210,.10); color:#1565C0; }
 .dom-estado-badge.cambio      { background:rgba(229,57,53,.10);  color:#C62828; }
 .dom-estado-badge.confirmado  { background:rgba(123,31,162,.10); color:#6A1B9A; }
-.dom-estado-badge.pago        { background:rgba(244,81,30,.10);  color:#BF360C; }
+.dom-estado-badge.pago_pendiente { background:rgba(230,81,0,.15);  color:#BF360C; font-weight:900; }
+  .dom-estado-badge.pago        { background:rgba(244,81,30,.10);  color:#BF360C; }
 .dom-estado-badge.cocina      { background:rgba(255,152,0,.12);  color:#E65100; }
 .dom-estado-badge.listo       { background:rgba(0,200,83,.10);   color:#1B5E20; }
 .dom-estado-badge.despachado  { background:rgba(255,68,26,.12);  color:var(--rappi-dark); }
@@ -16080,16 +16082,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const ESTADOS_LABEL = {
-    pendiente:   '🕐 Pendiente',
-    verificando: '🔍 Verificando',
-    cambio:      '⚠️ Cambio requerido',
-    confirmado:  '✅ Confirmado',
-    pago:        '💳 Esperando pago',
-    cocina:      '🍳 En cocina',
-    listo:       '📦 Listo para envío',
-    despachado:  '🛵 En camino',
-    entregado:   '🏠 Entregado',
-    cancelado:   '❌ Cancelado',
+    pendiente:       '🕐 Pendiente',
+    verificando:     '🔍 Verificando',
+    cambio:          '⚠️ Cambio requerido',
+    confirmado:      '✅ Confirmado',
+    pago_pendiente:  '💳 Pago por confirmar',
+    pago:            '💳 Esperando pago',
+    cocina:          '🍳 En cocina',
+    listo:           '📦 Listo para envío',
+    despachado:      '🛵 En camino',
+    entregado:       '🏠 Entregado',
+    cancelado:       '❌ Cancelado',
   };
 
   // ── Iniciar escucha Firebase ─────────────────────────────────────────────
@@ -16251,6 +16254,10 @@ document.addEventListener('DOMContentLoaded', () => {
           btns += `<button class="dom-btn primary" onclick="event.stopPropagation();domConfirmarPago('${p.sessionId}')">💳 Confirmar pago</button>`;
         }
         break;
+      case 'pago_pendiente':
+        btns += `<div style="font-size:11px;color:#E65100;font-weight:800;">💳 ${domEsc(p.metodoPagoLabel||p.metodoPago||'Pago')} · ${domFmt((p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0))}</div>`;
+        btns += `<button class="dom-btn green" onclick="event.stopPropagation();domConfirmarPagoRecibido('${p.sessionId}')">✅ Confirmar pago</button>`;
+        break;
       case 'pago':
         btns += `<span style="font-size:11px;color:#BF360C;font-weight:700;">Esperando confirmación de pago…</span>`;
         btns += `<button class="dom-btn green" onclick="event.stopPropagation();domPagoRecibido('${p.sessionId}')">✅ Pago recibido</button>`;
@@ -16323,14 +16330,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Progreso visual de estados
-    const PASOS = ['pendiente','verificando','confirmado','cocina','listo','despachado','entregado'];
+    const PASOS = ['pendiente','verificando','confirmado','pago_pendiente','cocina','listo','despachado','entregado'];
     const idxActual = PASOS.indexOf(estado);
     const progresoBtns = PASOS.map((s, i) => {
       const activo  = i === idxActual;
       const pasado  = i < idxActual;
       const color   = pasado ? '#00C853' : activo ? '#1565C0' : 'var(--gris-cl)';
       const textC   = (pasado || activo) ? '#fff' : 'var(--gris)';
-      const labels  = ['Recibido','Verificado','Confirmado','Cocina','Listo','Despachado','Entregado'];
+      const labels  = ['Recibido','Verificado','Confirmado','Pago','Cocina','Listo','Despachado','Entregado'];
       return `<div style="flex:1;text-align:center;">
         <div style="width:28px;height:28px;border-radius:50%;background:${color};color:${textC};
           display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-bottom:3px;">
@@ -16418,6 +16425,23 @@ document.addEventListener('DOMContentLoaded', () => {
           btns = `<button class="dom-btn primary" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPago('${p.sessionId}')">💳 Confirmar pago del cliente</button>`;
         }
         break;
+      case 'pago_pendiente': {
+        const totalP = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0);
+        btns = `
+          <div style="background:rgba(230,81,0,.08);border:2px solid rgba(230,81,0,.4);border-radius:14px;padding:14px 16px;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:800;color:#E65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">💳 Pago pendiente por confirmar</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--negro);margin-bottom:10px;">
+              <div><b>👤 Cliente:</b><br>${domEsc(p.clienteNombre||'—')}</div>
+              <div><b>📱 Teléfono:</b><br>${domEsc(p.clienteTelefono||'—')}</div>
+              <div><b>💳 Método:</b><br>${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
+              <div><b>💰 Monto:</b><br><span style="color:var(--rappi);font-weight:900;font-size:16px;">${domFmt(totalP)}</span></div>
+            </div>
+            ${p.notasPago ? `<div style="background:rgba(255,255,255,.6);border-radius:8px;padding:8px 10px;font-size:12px;color:#555;margin-bottom:4px;">📝 ${domEsc(p.notasPago)}</div>` : ''}
+          </div>
+          <button class="dom-btn green" style="width:100%;padding:14px;font-size:15px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPagoRecibido('${p.sessionId}')">✅ Confirmar pago — enviar a cocina</button>
+          <button class="dom-btn danger" style="width:100%;padding:11px;margin-top:8px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+        break;
+      }
       case 'pago':
         btns = `<button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domPagoRecibido('${p.sessionId}')">✅ Pago recibido — enviar a cocina</button>`;
         break;
@@ -16520,17 +16544,39 @@ document.addEventListener('DOMContentLoaded', () => {
         const p = _domPedidos.find(x => x.sessionId === sessionId);
         if (!p) return;
         const metPago = (p.metodoPago || '').toLowerCase();
-        const nuevoEstado = metPago === 'efectivo' ? 'confirmado' : 'pago';
-        domSetEstado(sessionId, nuevoEstado === 'pago' ? 'confirmado' : 'confirmado');
+        const esEfectivo = metPago === 'efectivo' || metPago.includes('efectivo');
+        const nuevoEstado = esEfectivo ? 'confirmado' : 'confirmado';
+        domSetEstado(sessionId, nuevoEstado);
         window.showToast('✅ Pedido confirmado');
       }
     });
   };
 
-  // 3. Confirmar pago externo
+  // 3a. Notificar cliente que debe pagar (billetera/transferencia) — ya no se usa directamente
   window.domConfirmarPago = function(sessionId) {
     domSetEstado(sessionId, 'pago', { notifCliente: { tipo: 'pago', ts: Date.now() } });
     window.showToast('💳 Esperando confirmación de pago del cliente');
+  };
+
+  // 3b. Cliente avisó que pagó → admin confirma y pasa a cocina
+  window.domConfirmarPagoRecibido = function(sessionId) {
+    const p = _domPedidos.find(x => x.sessionId === sessionId);
+    if (!p) return;
+    window.confirmar({
+      icono: '✅',
+      titulo: 'Confirmar pago',
+      mensaje: `¿Confirmás que recibiste el pago de ${domFmt((p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0))} vía ${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}?`,
+      textoOk: '✅ Sí, confirmar pago',
+      callback() {
+        domSetEstado(sessionId, 'cocina', {
+          pagoConfirmado: true,
+          pagoConfirmadoTs: Date.now(),
+          notifCliente: { tipo: 'pago_confirmado', ts: Date.now() }
+        });
+        domEnviarACocinaInterno(sessionId);
+        window.showToast('✅ Pago confirmado — pedido enviado a cocina');
+      }
+    });
   };
 
   window.domPagoRecibido = function(sessionId) {
