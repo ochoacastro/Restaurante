@@ -494,6 +494,51 @@
     display: none;
   }
 
+  /* Bottom nav completo con 5 tabs */
+  #bottomBar {
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: var(--blanco);
+    border-top: 1.5px solid var(--borde);
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.10);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    align-items: stretch;
+    justify-content: stretch;
+    height: calc(60px + env(safe-area-inset-bottom, 0px));
+  }
+  body.dark #bottomBar {
+    background: #161616;
+    border-top-color: #2A2A2A;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.40);
+  }
+  .bnav-btn {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 3px; padding: 8px 4px 6px;
+    border: none; background: transparent;
+    color: var(--gris); font-size: 10px; font-weight: 600;
+    font-family: inherit; cursor: pointer; position: relative;
+    letter-spacing: 0.2px;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent;
+    transition: color 0.15s;
+  }
+  .bnav-btn .bnav-icon { font-size: 22px; line-height: 1; }
+  .bnav-btn.active { color: var(--rappi); }
+  .bnav-btn.active .bnav-icon { transform: scale(1.08); }
+  body.dark .bnav-btn { color: rgba(255,255,255,0.40); }
+  body.dark .bnav-btn.active { color: var(--rappi); }
+  .bnav-badge {
+    position: absolute; top: 5px; right: calc(50% - 16px);
+    background: var(--rappi); color: #111;
+    border-radius: 999px; min-width: 17px; height: 17px;
+    padding: 0 4px; font-size: 10px; font-weight: 900;
+    display: none; align-items: center; justify-content: center;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .bnav-badge.dom { background: #1565C0; color: #fff; }
+  .bnav-badge.ped { background: #7B1FA2; color: #fff; }
+  /* El tab de domicilios en el bnav se oculta para no-admin */
+  #bnavDomicilios { display: none; }
+
 
   body.dark #bottomBarHome { background: #1A1A1A; }
   /* Panel home compacto */
@@ -4047,6 +4092,38 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
   </button>
 </div>
 
+<!-- BOTTOM NAV COMPLETO: tabs Inicio / Menú / Pedidos / Historial / Domicilios -->
+<div id="bottomBar">
+  <!-- Inicio -->
+  <button class="bnav-btn active" id="bnavHome" onclick="showTab('home')">
+    <span class="bnav-icon">🏠</span>
+    <span>Inicio</span>
+  </button>
+  <!-- Menú -->
+  <button class="bnav-btn" id="bnavMenu" onclick="showTab('menu')">
+    <span class="bnav-icon">🍽️</span>
+    <span>Menú</span>
+    <span class="bnav-badge" id="badgeCarritoNav">0</span>
+  </button>
+  <!-- Pedidos -->
+  <button class="bnav-btn" id="bnavPedidos" onclick="showTab('pedidos')">
+    <span class="bnav-icon">📑</span>
+    <span>Pedidos</span>
+    <span class="bnav-badge ped" id="bnavBadgePedidos">0</span>
+  </button>
+  <!-- Historial -->
+  <button class="bnav-btn" id="bnavHistorial" onclick="showTab('historial')">
+    <span class="bnav-icon">📋</span>
+    <span>Historial</span>
+  </button>
+  <!-- Domicilios (solo admin/master — mostrado via JS) -->
+  <button class="bnav-btn" id="bnavDomicilios" onclick="showTab('domicilios')">
+    <span class="bnav-icon">🛵</span>
+    <span>Domicilios</span>
+    <span class="bnav-badge dom" id="bnavBadgeDom">0</span>
+  </button>
+</div>
+
 
 <!-- PANEL HOME -->
 <div id="panel-home" class="active">
@@ -4681,8 +4758,8 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
           <!-- Cajón: valor del envío — visible solo si el toggle está activo -->
           <div id="cfgCostoEnvioDrawer" style="display:none;margin-top:12px;padding:12px 14px;background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);">
             <div style="font-size:12px;font-weight:700;color:var(--gris-osc);margin-bottom:8px;">Costo del envío</div>
-            <input class="config-input" id="cfgCostoEnvio" type="number" inputmode="numeric" min="0"
-              placeholder="Ej: 3000" style="margin:0;">
+            <input class="config-input" id="cfgCostoEnvio" type="text" inputmode="numeric" min="0"
+              placeholder="Ej: 3.000" style="margin:0;">
             <div style="font-size:11px;color:var(--gris);margin-top:6px;">Este valor se suma automáticamente al total de cada pedido a domicilio.</div>
           </div>
         </div>
@@ -5537,7 +5614,7 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
     <div class="modal-handle"></div>
     <h3>✏️ Editar precio</h3>
     <p id="modalPrecioNombre" style="margin-bottom:14px;font-weight:600;color:var(--negro);font-size:15px;"></p>
-    <input type="number" class="precio-modal-input" id="modalPrecioInput" placeholder="0" inputmode="numeric">
+    <input type="text" class="precio-modal-input" id="modalPrecioInput" placeholder="0" inputmode="numeric">
     <div class="modal-btns">
       <button class="modal-btn-cancel" onclick="cerrarModal('modalPrecio')">Cancelar</button>
       <button class="modal-btn-ok" onclick="confirmarEditarPrecio()">✅ Guardar</button>
@@ -6789,7 +6866,7 @@ function cargarConfig() {
     const drawer = document.getElementById('cfgCostoEnvioDrawer');
     if (drawer) drawer.style.display = config.cobrarEnvio ? '' : 'none';
   }
-  document.getElementById('cfgCostoEnvio').value = config.costoEnvio > 0 ? config.costoEnvio : '';
+  document.getElementById('cfgCostoEnvio').value = config.costoEnvio > 0 ? Number(config.costoEnvio).toLocaleString('es-CO') : '';
   // Actualizar título de pestaña con el nombre guardado
   const storedBrand = localStorage.getItem('pos_login_brand');
   const titleBrand = storedBrand || config.nombre || 'POS';
@@ -7477,7 +7554,7 @@ function saveConfig() {
     : rawNum;
   config.waMensaje = document.getElementById('cfgWaMensaje').value.trim();
   config.cobrarEnvio = !!(document.getElementById('cfgCobrarEnvioToggle')?.checked);
-  const rawEnvio = parseInt(document.getElementById('cfgCostoEnvio').value, 10);
+  const rawEnvio = parseInt(document.getElementById('cfgCostoEnvio').value.replace(/\./g, '').replace(/[^0-9]/g, ''), 10);
   config.costoEnvio = (config.cobrarEnvio && !isNaN(rawEnvio) && rawEnvio > 0) ? rawEnvio : 0;
   localStorage.setItem('pos_config', JSON.stringify(config));
 
@@ -7550,6 +7627,30 @@ function cfgToggleCobrarEnvio(checked) {
     setTimeout(() => document.getElementById('cfgCostoEnvio')?.focus(), 80);
   }
 }
+
+// Formato de miles para cfgCostoEnvio
+(function() {
+  function bindCfgCostoEnvio() {
+    const inp = document.getElementById('cfgCostoEnvio');
+    if (!inp) return;
+    inp.addEventListener('input', function() {
+      const selStart = this.selectionStart;
+      const prevLen  = this.value.length;
+      const raw = this.value.replace(/\D/g, '');
+      if (!raw) { this.value = ''; return; }
+      const formatted = parseInt(raw, 10).toLocaleString('es-CO');
+      const newLen = formatted.length;
+      this.value = formatted;
+      const newPos = Math.max(0, selStart + (newLen - prevLen));
+      try { this.setSelectionRange(newPos, newPos); } catch(_) {}
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindCfgCostoEnvio);
+  } else {
+    bindCfgCostoEnvio();
+  }
+})();
 
 function resetConsec() {
   confirmar({ icono:'🔢', titulo:'Reiniciar numeración', mensaje:'¿Reiniciar numeración de facturas a 000001?', textoOk:'Reiniciar', callback() {
@@ -8554,6 +8655,12 @@ function actualizarBadge() {
     sidebarPedidos.textContent = ordenesPropias.length;
     sidebarPedidos.style.display = ordenesPropias.length > 0 ? 'inline-flex' : 'none';
   }
+  // Badge tab Pedidos en bottomBar
+  const bnavBadgePedidos = document.getElementById('bnavBadgePedidos');
+  if (bnavBadgePedidos) {
+    bnavBadgePedidos.textContent = ordenesPropias.length;
+    bnavBadgePedidos.style.display = ordenesPropias.length > 0 ? 'inline-flex' : 'none';
+  }
   // Subtítulo y badge botón Órdenes pendientes en home
   const homeSub = document.getElementById('homePendientesSubtitle');
   if (homeSub) {
@@ -8583,6 +8690,7 @@ function actualizarBadge() {
     const _fBar     = document.getElementById('bottomBar');
     if (_esCajeroSync) {
       if (_hBar) _hBar.style.display = 'none'; // cajero nunca ve Empecemos
+      if (_fBar) _fBar.style.display = 'flex'; // cajero siempre ve el nav completo
     } else {
       if (_hBar) _hBar.style.display = _tiene2 ? 'none' : 'flex';
       if (_fBar) _fBar.style.display = _tiene2 ? 'flex' : 'none';
@@ -8622,13 +8730,13 @@ function abrirEditarPrecio(idx) {
   editPrecioIdx = idx;
   const item = MENU[idx];
   document.getElementById('modalPrecioNombre').textContent = item.nombre;
-  document.getElementById('modalPrecioInput').value = item.precio;
+  document.getElementById('modalPrecioInput').value = Number(item.precio).toLocaleString('es-CO');
   document.getElementById('modalPrecio').classList.add('show');
   setTimeout(() => document.getElementById('modalPrecioInput').select(), 100);
 }
 
 function confirmarEditarPrecio() {
-  const val = parseInt(document.getElementById('modalPrecioInput').value);
+  const val = parseInt(document.getElementById('modalPrecioInput').value.replace(/\./g, '').replace(/[^0-9]/g, ''));
   if (isNaN(val) || val <= 0) { showToast('⚠️ Ingresa un precio válido'); return; }
   const item = MENU[editPrecioIdx];
   if (!item) { showToast('⚠️ El producto ya no existe, recarga la lista'); cerrarModal('modalPrecio'); return; }
@@ -12076,6 +12184,17 @@ function showToast(msg, duracion) {
 document.getElementById('modalPrecioInput').addEventListener('keydown', function(e) {
   if (e.key === 'Enter') confirmarEditarPrecio();
 });
+document.getElementById('modalPrecioInput').addEventListener('input', function() {
+  const selStart = this.selectionStart;
+  const prevLen  = this.value.length;
+  const raw = this.value.replace(/\D/g, '');
+  if (!raw) { this.value = ''; return; }
+  const formatted = parseInt(raw, 10).toLocaleString('es-CO');
+  const newLen = formatted.length;
+  this.value = formatted;
+  const newPos = Math.max(0, selStart + (newLen - prevLen));
+  try { this.setSelectionRange(newPos, newPos); } catch(_) {}
+});
 
 // Teclado físico para PIN
 document.addEventListener('keydown', function(e) {
@@ -15155,11 +15274,11 @@ function renderModalCobro(total, subtotal, descMonto) {
       <div class="descuento-row">
         <button class="descuento-tipo-btn ${descuentoTipo==='pct'?'active':''}" onclick="setDescuentoTipo('pct');abrirModalCobro();" style="${descuentoTipo==='pct'?'background:rgba(255,68,26,0.08);border-color:var(--rappi);color:var(--rappi);':''}">%</button>
         <button class="descuento-tipo-btn ${descuentoTipo==='fijo'?'active':''}" onclick="setDescuentoTipo('fijo');abrirModalCobro();" style="${descuentoTipo==='fijo'?'background:rgba(255,68,26,0.08);border-color:var(--rappi);color:var(--rappi);':''}">$</button>
-        <input class="obs-input" type="number" inputmode="numeric"
+        <input class="obs-input" type="text" inputmode="numeric"
           placeholder="${descuentoTipo==='pct'?'0 – 100':'Monto fijo'}"
-          value="${descuentoValor > 0 ? descuentoValor : ''}"
+          value="${descuentoValor > 0 ? (descuentoTipo==='fijo' ? Number(descuentoValor).toLocaleString('es-CO') : descuentoValor) : ''}"
           style="flex:1;margin:0;padding:9px 10px;"
-          oninput="descuentoValor=Math.min(descuentoTipo==='pct'?100:(carrito.reduce((s,i)=>s+i.precio*i.cantidad,0)||Infinity),Math.max(0,parseFloat(this.value)||0));this.value=descuentoValor||'';abrirModalCobro();"
+          oninput="(function(el){const raw=el.value.replace(/\\D/g,'');const num=Math.max(0,parseInt(raw,10)||0);if(descuentoTipo==='fijo'){const maxV=carrito.reduce((s,i)=>s+i.precio*i.cantidad,0)||Infinity;descuentoValor=Math.min(maxV,num);el.value=descuentoValor>0?Number(descuentoValor).toLocaleString('es-CO'):'';}else{descuentoValor=Math.min(100,num);el.value=descuentoValor||'';}abrirModalCobro();})(this)"
           min="0" max="${descuentoTipo==='pct'?100:''}">
       </div>
       ${descMonto > 0 ? `<div style="font-size:12px;color:var(--rappi);font-weight:700;margin-top:6px;">Descuento aplicado: −${fmt(descMonto)}</div>` : ''}
@@ -16277,6 +16396,18 @@ document.addEventListener('DOMContentLoaded', () => {
       sideBadge.textContent = activos;
       sideBadge.style.display = activos > 0 ? 'inline-flex' : 'none';
     }
+
+    // Tab bnavDomicilios (solo admin/master)
+    const bnavDom = document.getElementById('bnavDomicilios');
+    if (bnavDom) {
+      const esAdminDom = window.usuarioActivo?.rol === 'admin' || window.usuarioActivo?.rol === 'master';
+      bnavDom.style.display = esAdminDom ? 'flex' : 'none';
+    }
+    const bnavBadgeDom = document.getElementById('bnavBadgeDom');
+    if (bnavBadgeDom) {
+      bnavBadgeDom.textContent = activos;
+      bnavBadgeDom.style.display = activos > 0 ? 'inline-flex' : 'none';
+    }
   }
 
   // ── Render panel principal ───────────────────────────────────────────────
@@ -16855,6 +16986,90 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // 8. Cerrar pedido cuando CLIENTE confirmó recibido
+  // ── Guardar domicilio cerrado en pos_historial ───────────────────────────
+  function domGuardarEnHistorial(sessionId, estadoFinal) {
+    const p = _domPedidos.find(x => x.sessionId === sessionId);
+    if (!p) return;
+    const ahora = new Date();
+    const total = (p.items || []).reduce((s, i) => s + (Number(i.precio) || 0) * (Number(i.cantidad) || 1), 0);
+    const costoEnvio = Number(p.costoEnvio || 0);
+    // Calcular IVA simple (8% incluido, igual que el POS normal)
+    const ivaResumen = {};
+    (p.items || []).forEach(item => {
+      const tasa = (item.iva !== undefined && item.iva !== null) ? Number(item.iva) : 8;
+      const precioTotal = Number(item.precio || 0) * Number(item.cantidad || 1);
+      const base = tasa > 0 ? Math.round(precioTotal / (1 + tasa / 100)) : precioTotal;
+      const impuesto = precioTotal - base;
+      const key = String(tasa);
+      if (!ivaResumen[key]) ivaResumen[key] = { base: 0, impuesto: 0, tasa };
+      ivaResumen[key].base     += base;
+      ivaResumen[key].impuesto += impuesto;
+    });
+    const totalBaseIva   = Object.values(ivaResumen).reduce((s, v) => s + v.base, 0);
+    const totalImpuestos = Object.values(ivaResumen).reduce((s, v) => s + v.impuesto, 0);
+
+    // Usar consecutivo local para domicilios (prefijo DOM-)
+    const cfg = (() => { try { return JSON.parse(localStorage.getItem('pos_config') || '{}'); } catch(e) { return {}; } })();
+    cfg.consecutivoDom = (cfg.consecutivoDom || 0) + 1;
+    const numDom = 'DOM-' + String(cfg.consecutivoDom).padStart(6, '0');
+    try { localStorage.setItem('pos_config', JSON.stringify(cfg)); } catch(e) {}
+
+    const registro = {
+      numero:           numDom,
+      fecha:            ahora.toLocaleDateString('es-CO'),
+      hora:             ahora.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
+      items:            (p.items || []).map(i => ({ ...i })),
+      subtotal:         total,
+      descuentoMonto:   0,
+      descuentoTipo:    'pct',
+      descuentoValor:   0,
+      costoEnvio:       costoEnvio,
+      total:            total + costoEnvio,
+      pago:             p.metodoPago || 'Efectivo',
+      observaciones:    p.observaciones || '',
+      clienteNombre:    p.clienteNombre || '',
+      clienteDireccion: p.clienteDireccion || '',
+      clienteTelefono:  p.clienteTelefono || '',
+      tipoOrden:        'domicilio',
+      mesaNumero:       '',
+      cajero:           window.usuarioActivo?.nombre || '',
+      esFacturaElectronica: p.tipoDocumento === 'fe',
+      feNombre:         p.feNombre  || '',
+      feNit:            p.feNit     || '',
+      feCorreo:         p.feCorreo  || '',
+      feTipoDoc:        p.feTipoDoc || 'CC',
+      feDireccion:      '',
+      feTelefono:       '',
+      ivaResumen,
+      totalBaseIva,
+      totalImpuestos,
+      feCufe:           '',
+      feEstado:         '',
+      domSessionId:     sessionId,
+      domEstadoFinal:   estadoFinal,
+    };
+
+    // Guardar en array global historial y persistir
+    if (typeof historial !== 'undefined') {
+      historial.unshift(registro);
+      try {
+        window.posStore.setItem('pos_historial', JSON.stringify(historial));
+      } catch(e) {
+        try { localStorage.setItem('pos_historial', JSON.stringify(historial)); } catch(_) {}
+      }
+      if (typeof actualizarBadgeHistorial === 'function') actualizarBadgeHistorial();
+      // Sync Firebase si está disponible
+      if (window._FB && window._FB.db) {
+        try {
+          window._FB.set(
+            window._FB.ref(window._FB.db, 'restaurante/historial/' + numDom.replace(/-/g,'_')),
+            registro
+          );
+        } catch(e) { console.warn('domHistorial FB sync error:', e); }
+      }
+    }
+  }
+
   window.domCerrarPedido = function(sessionId) {
     window.confirmar({
       icono: '✅',
@@ -16867,6 +17082,7 @@ document.addEventListener('DOMContentLoaded', () => {
           cierrePor: 'cliente',
           notifCliente: { tipo: 'entregado', ts: Date.now() }
         });
+        domGuardarEnHistorial(sessionId, 'entregado');
         window.showToast('🏠 Pedido cerrado — entregado por confirmación del cliente');
       }
     });
@@ -16885,6 +17101,7 @@ document.addEventListener('DOMContentLoaded', () => {
           cierrePor: 'admin',
           notifCliente: { tipo: 'entregado', ts: Date.now() }
         });
+        domGuardarEnHistorial(sessionId, 'entregado');
         window.showToast('🏠 Pedido cerrado por confirmación del repartidor');
       }
     });
@@ -16902,6 +17119,7 @@ document.addEventListener('DOMContentLoaded', () => {
         domSetEstado(sessionId, 'cancelado', {
           notifCliente: { tipo: 'cancelado', ts: Date.now() }
         });
+        domGuardarEnHistorial(sessionId, 'cancelado');
         window.showToast('❌ Pedido cancelado');
       }
     });
