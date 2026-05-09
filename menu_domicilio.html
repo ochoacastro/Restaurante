@@ -7157,7 +7157,13 @@ window.renderCategoryGridSafe = function() {
 
       <div style="font-size:12px;color:#888;text-align:center;">
         📍 ${esc(p.clienteDireccion||'—')} · 💳 ${esc(p.metodoPagoLabel||'—')}
-      </div>`;
+      </div>
+
+      ${['pendiente','verificando','cambio'].includes(estado) ? `
+      <button class="seg-btn-cancelar" style="margin-top:14px;width:100%;"
+        onclick="domCancelarDesdeCliente('${esc(p.sessionId)}')">
+        ✕ Cancelar mi pedido
+      </button>` : ''}` ;
 
     window._domCurrentDb  = db;
     window._domCurrentRef = ref;
