@@ -5632,6 +5632,7 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
       }
     }));
     _ready = true;
+    window._posStoreReady = true;
     // Procesar escrituras encoladas
     for (const {op, key, value} of _queue) {
       try {
@@ -5642,7 +5643,8 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
     _queue.length = 0;
   }).catch(e => {
     console.warn('[posDB] IDB no disponible, usando localStorage:', e);
-    _ready = true; // seguimos con localStorage
+    _ready = true;
+    window._posStoreReady = true; // seguimos con localStorage
   });
 
   // API pública que reemplaza localStorage para claves IDB
@@ -13696,6 +13698,22 @@ function saveMenuSettings(s) {
   if (window.fbSync) {
     try {
       const forFb = { ...clean };
+      // Preservar campos del Menu Editor que viven en su propio localStorage (ME_KEY)
+      // para no borrarlos cuando saveMenuSettings solo actualiza paymentMethods u otros campos
+      try {
+        const ME_KEY = 'menu_editor_settings_v1';
+        const meRaw = localStorage.getItem(ME_KEY);
+        if (meRaw) {
+          const meData = JSON.parse(meRaw);
+          // Campos exclusivos del Menu Editor — no los tiene posStore
+          const meFields = ['restaurantNombre','eslogan','textoCierre','colorPrimario','colorAccent',
+            'mostrarPrecioDomicilio','mostrarDescripcion','mostrarFotos','catOrder','hiddenCategories',
+            'columnas','catsEnCol1','fuente','tamano','estiloVisual'];
+          meFields.forEach(k => {
+            if (meData[k] !== undefined && forFb[k] === undefined) forFb[k] = meData[k];
+          });
+        }
+      } catch(_) {}
       if (Array.isArray(forFb.paymentMethods)) {
         // SYNC FIX: guardar imágenes de métodos de pago en un nodo separado de Firebase
         // (paymentImages) para no saturar menuSettings, y que menu_domicilio pueda
@@ -14072,7 +14090,8 @@ function cfgGetPayments() {
       { id: 'p1', label: 'Efectivo',      img: null, info: '', visibleRest: true, visibleDom: true },
       { id: 'p2', label: 'Transferencia', img: null, info: '', visibleRest: true, visibleDom: true },
     ];
-    saveMenuSettings(s);
+    // Solo guardar defaults si IDB ya cargó — evita pisar datos reales con defaults vacíos
+    if (window._posStoreReady) saveMenuSettings(s);
   }
   return s.paymentMethods;
 }
@@ -17800,6 +17819,13 @@ function meGuardar() {
 
   if (window._FB && window._FB.db) {
     const { db, ref, set } = window._FB;
+    // Preservar paymentMethods — el Menu Editor no los maneja pero no debe borrarlos
+    const currentSettings = loadMenuSettings ? loadMenuSettings() : {};
+    if (Array.isArray(currentSettings.paymentMethods) && currentSettings.paymentMethods.length) {
+      forFirebase.paymentMethods = currentSettings.paymentMethods.map(m => {
+        const { img, ...rest } = m; return rest; // sin imágenes base64
+      });
+    }
     const saves = [
       set(ref(db, 'restaurante/menuSettings'), forFirebase),
       set(ref(db, 'restaurante/menuImages/headerLogo'), settings.headerLogo || null),
