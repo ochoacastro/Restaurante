@@ -863,11 +863,20 @@ body{
 <div class="screen" id="screenChat" style="min-height:100dvh;">
   <div class="chat-header">
     <div class="chat-header-top">
-      <div class="chat-resto-name" id="chatRestoName">Restaurante</div>
-      <div class="chat-pedido-id" id="chatPedidoId">#------</div>
+      <div>
+        <div class="chat-resto-name" id="chatRestoName">Restaurante</div>
+        <div class="chat-pedido-id" id="chatPedidoId">#------</div>
+      </div>
+      <button onclick="showScreen('menu');actualizarFab()"
+        style="background:rgba(255,255,255,.15);border:none;border-radius:999px;
+               padding:7px 14px;color:#fff;font-size:13px;font-weight:800;
+               font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:6px;
+               flex-shrink:0;">
+        🏠 Menú
+      </button>
     </div>
     <div style="font-size:11px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;">
-      💬 Chat con el restaurante
+      💬 Chat con el restaurante · Tu pedido sigue activo
     </div>
   </div>
   <div class="chat-estado-bar">
