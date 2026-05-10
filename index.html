@@ -2,6 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net; frame-src https://www.google.com https://www.grecaptcha.net;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mi Restaurante · POS</title>
 <meta name="theme-color" content="#FF441A">
@@ -20,6 +21,8 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, set, get, onValue, off, serverTimestamp, remove, runTransaction, update }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+  import { initializeAppCheck, ReCaptchaEnterpriseProvider }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
   let _fbReadyDispatched = false;
   try {
 
@@ -46,6 +49,12 @@
 
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
+
+  // ── APP CHECK ────────────────────────────────────────────────────────
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider('6LckYOMsAAAAAGH4M-rH1f2d8C1KEONIroqnqwcP'),
+    isTokenAutoRefreshEnabled: true
+  });
 
   // ── ID ÚNICO DE ESTA PESTAÑA/DISPOSITIVO ─────────────────────────────
   const SESSION_TAB_ID = Math.random().toString(36).slice(2);
@@ -3535,6 +3544,47 @@ body.dark .dom-responsable-badge { background:rgba(255,255,255,.08); color:#BBB;
 }
 body.dark .dom-assign-select { background:#252525; border-color:#333; color:#F0F0F0; }
 
+/* Badge mensajes no leídos en tarjeta domicilio */
+.dom-msg-badge {
+  display:inline-flex; align-items:center; justify-content:center;
+  background:#E53935; color:#fff; border-radius:50%;
+  min-width:20px; height:20px; font-size:11px; font-weight:900;
+  margin-left:6px; animation:domBadgePop .3s cubic-bezier(.34,1.56,.64,1);
+  flex-shrink:0;
+}
+@keyframes domBadgePop{from{transform:scale(0);}to{transform:scale(1);}}
+
+/* Preview del último mensaje en la tarjeta */
+.dom-card-last-msg {
+  padding:6px 14px 8px;
+  font-size:12px; color:var(--gris-osc);
+  border-top:1px solid var(--gris-cl);
+  display:flex; align-items:center; gap:6px;
+  line-height:1.4;
+}
+.dom-card-last-msg .lm-autor {
+  font-weight:800; color:var(--gris); flex-shrink:0; font-size:11px;
+}
+.dom-card-last-msg .lm-txt {
+  flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.dom-card-last-msg.has-unread .lm-txt { font-weight:800; color:var(--negro); }
+
+/* Countdown tiempo estimado en tarjeta */
+.dom-card-eta {
+  padding:5px 14px;
+  font-size:12px; font-weight:800; color:#0D47A1;
+  background:rgba(21,101,192,.07);
+  display:flex; align-items:center; gap:6px;
+}
+.dom-card-eta .eta-clock { font-size:14px; }
+
+/* Botón WhatsApp */
+.dom-btn.whatsapp {
+  background:#25D366; color:#fff;
+  font-size:14px; padding:8px 10px;
+}
+
 /* Badge en tab de domicilios */
 .tab-badge {
   position:absolute; top:4px; right:50%; transform:translateX(12px);
@@ -5972,6 +6022,27 @@ function cargarUsuarios() {
   }
 }
 
+// ── Fix 2: HASH DE PINs con SHA-256 ──────────────────────────────────
+const _PIN_SALT = 'los-helechos-pos-2024';
+
+async function hashPin(pin) {
+  const buf = await crypto.subtle.digest(
+    'SHA-256', new TextEncoder().encode(pin + _PIN_SALT)
+  );
+  return Array.from(new Uint8Array(buf))
+    .map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Migra un usuario de pin en texto plano a pinHash (se llama al login correcto)
+async function migrarPinSiNecesario(usuario, pinIngresado) {
+  if (usuario.pin && !usuario.pinHash) {
+    usuario.pinHash = await hashPin(pinIngresado);
+    usuario.pinLen  = pinIngresado.length;
+    delete usuario.pin;
+    guardarUsuarios();
+  }
+}
+
 function guardarUsuarios(sincronizar = true) {
   localStorage.setItem('pos_usuarios', JSON.stringify(usuarios));
   // BUG 4 fix: solo sincronizar con Firebase cuando se hace un cambio explícito,
@@ -6169,6 +6240,7 @@ function loginVolverDesdePin() {
   pinBuffer = '';
   _pinIntentosFallidos = 0;
   _pinBloqueadoHasta = 0;
+  try { localStorage.removeItem('pos_pin_bloqueo'); } catch(e) {}
   const _le = document.getElementById('loginError');
   if (_le) _le.textContent = '';
   document.getElementById('loginForm').classList.remove('visible');
@@ -6199,7 +6271,9 @@ function volverSelectorUsuarios() {
 }
 
 function pinPress(d) {
-  const maxLen = loginTargetUser ? loginTargetUser.pin.length : 4;
+  const maxLen = loginTargetUser
+    ? (loginTargetUser.pinLen || loginTargetUser.pin?.length || 4)
+    : 4;
   if (pinBuffer.length >= maxLen) return;
   pinBuffer += d;
   actualizarPinDots();
@@ -6215,20 +6289,41 @@ function pinDel() {
 let _pinIntentosFallidos = 0;
 let _pinBloqueadoHasta   = 0;
 
+// Fix 3: leer estado de bloqueo persistido al arrancar
+(function _cargarBloqueoPin() {
+  try {
+    const b = JSON.parse(localStorage.getItem('pos_pin_bloqueo') || '{}');
+    if (b.hasta && Date.now() < b.hasta) {
+      _pinBloqueadoHasta   = b.hasta;
+      _pinIntentosFallidos = b.intentos || 0;
+    } else {
+      localStorage.removeItem('pos_pin_bloqueo');
+    }
+  } catch(e) {}
+})();
+
 async function pinEnter() {
   if (!loginTargetUser) return;
 
-  // Corrección Bug 5: bloqueo temporal tras 3 intentos fallidos
+  // Corrección Bug 5 + Fix 3: bloqueo temporal persistido en localStorage
   if (Date.now() < _pinBloqueadoHasta) {
     const segs = Math.ceil((_pinBloqueadoHasta - Date.now()) / 1000);
     const _le=document.getElementById('loginError');if(_le)_le.textContent = `🔒 Demasiados intentos. Espera ${segs}s`;
     return;
   }
 
-  if (pinBuffer === loginTargetUser.pin) {
-    // Login correcto: resetear contador
+  // Fix 2: comparar hash si ya está migrado, o texto plano + migrar
+  const pinCorrecto = loginTargetUser.pinHash
+    ? (await hashPin(pinBuffer) === loginTargetUser.pinHash)
+    : (pinBuffer === loginTargetUser.pin);
+
+  if (pinCorrecto) {
+    // Migrar a hash si aún estaba en texto plano
+    await migrarPinSiNecesario(loginTargetUser, pinBuffer);
+    // Login correcto: resetear contador y limpiar persistencia
     _pinIntentosFallidos = 0;
     _pinBloqueadoHasta   = 0;
+    localStorage.removeItem('pos_pin_bloqueo');
     usuarioActivo = loginTargetUser;
     if (usuarioActivo.rol === 'cocina') {
       aplicarRolUI(); // muestra el panel cocina dentro del loginScreen
@@ -6268,6 +6363,7 @@ async function pinEnter() {
     if (_pinIntentosFallidos >= 3) {
       _pinBloqueadoHasta   = Date.now() + 30000; // 30 segundos de bloqueo
       _pinIntentosFallidos = 0;
+      try { localStorage.setItem('pos_pin_bloqueo', JSON.stringify({ hasta: _pinBloqueadoHasta, intentos: 0 })); } catch(e) {}
       const _le=document.getElementById('loginError');if(_le)_le.textContent = '🔒 Bloqueado 30s por múltiples intentos fallidos';
     } else {
       const _le=document.getElementById('loginError');if(_le)_le.textContent =
@@ -6395,6 +6491,12 @@ async function cerrarSesion() {
   // set de abajo dispare el onValue y sobreescriba con un array vacío
   fbDetenerListeners();
 
+  // Fix A: limpiar listeners huérfanos que no pasaban por fbDetenerListeners()
+  if (typeof _fbUnsubCobros === 'function') { _fbUnsubCobros(); }
+  _fbUnsubCobros = null;
+  if (typeof cerrarKDSInline === 'function') cerrarKDSInline(); // limpia kdsUnsub, kdsTimerIv, kdsClockIv
+  if (typeof window._domDetener === 'function') window._domDetener(); // limpia _domUnsub, _domUnsubKDS, _domUnsubRespuestas
+
   // Paso 4: persistir órdenes activas en Firebase (solo si hay órdenes)
   if (window._FB && window._FB.db && ordenesAlCerrar.length > 0) {
     try {
@@ -6409,6 +6511,10 @@ async function cerrarSesion() {
   }
   // fix #12: detener el reloj del header al cerrar sesión
   if (window._renderHeaderInterval) { clearInterval(window._renderHeaderInterval); window._renderHeaderInterval = null; }
+  // Fix F: detener intervalos huérfanos al cerrar sesión
+  if (window._btReconectarInterval) { clearInterval(window._btReconectarInterval); window._btReconectarInterval = null; }
+  if (window._fbStatusInterval)     { clearInterval(window._fbStatusInterval);     window._fbStatusInterval     = null; }
+  if (window._feColaInterval)       { clearInterval(window._feColaInterval);       window._feColaInterval       = null; }
   // Borrar sesión persistida — única forma de salir es cierre manual
   limpiarSesionActiva();
   usuarioActivo = null;
@@ -6597,7 +6703,7 @@ function selColor(c) {
   renderColorPicker();
 }
 
-function guardarUsuario() {
+async function guardarUsuario() {
   const nombre = document.getElementById('editNombre').value.trim();
   const pin    = document.getElementById('editPin').value.trim();
   if (!nombre) { showToast('⚠️ Ingresa un nombre'); return; }
@@ -6607,7 +6713,16 @@ function guardarUsuario() {
 
   if (editUserId) {
     const u = usuarios.find(x => x.id === editUserId);
-    if (u) { u.nombre = nombre; if (pin) u.pin = pin; u.rol = editRolSeleccionado; u.color = editColorSeleccionado; }
+    if (u) {
+      u.nombre = nombre;
+      if (pin) {
+        // Fix 2: guardar hash, no texto plano
+        u.pinHash = await hashPin(pin);
+        u.pinLen  = pin.length;
+        delete u.pin;
+      }
+      u.rol = editRolSeleccionado; u.color = editColorSeleccionado;
+    }
     // Si el usuario activo fue editado, actualizar
     if (u && usuarioActivo?.id === editUserId) {
       usuarioActivo = { ...u };
@@ -6616,7 +6731,9 @@ function guardarUsuario() {
     }
   } else {
     const newId = Math.max(0, ...usuarios.map(u => u.id)) + 1;
-    usuarios.push({ id: newId, nombre, pin, rol: editRolSeleccionado, color: editColorSeleccionado });
+    // Fix 2: guardar hash, no texto plano
+    const pinHash = await hashPin(pin);
+    usuarios.push({ id: newId, nombre, pinHash, pinLen: pin.length, rol: editRolSeleccionado, color: editColorSeleccionado });
   }
   guardarUsuarios();
   renderUsuariosConfig();
@@ -7001,7 +7118,7 @@ function _programarReconexion(delay) {
   }, delay);
 }
 
-setInterval(() => { if (savedPrinterName && !btChar && !_btDesconectandoIntencional) conectarImpresora(false); }, 15000);
+window._btReconectarInterval = setInterval(() => { if (savedPrinterName && !btChar && !_btDesconectandoIntencional) conectarImpresora(false); }, 15000);
 
 function cargarImpresora() {
   const nombre = localStorage.getItem('pos_printer_name');
@@ -7219,10 +7336,21 @@ function agregarFestivo() {
 
 function eliminarFestivo(idx) {
   const festivos = cargarFestivos();
-  festivos.splice(idx, 1);
-  guardarFestivosLocal(festivos);
-  if (window.fbSync) fbSync('menuSettings/festivos', festivos);
-  renderFestivos();
+  const f = festivos[idx];
+  const label = f ? `${f.nombre} (${f.fecha})` : 'este festivo';
+  // Fix C: confirmar antes de eliminar
+  confirmar({
+    icono: '🗑️',
+    titulo: 'Eliminar festivo',
+    mensaje: `¿Eliminar ${label}?`,
+    textoOk: 'Eliminar',
+    callback() {
+      festivos.splice(idx, 1);
+      guardarFestivosLocal(festivos);
+      if (window.fbSync) fbSync('menuSettings/festivos', festivos);
+      renderFestivos();
+    }
+  });
 }
 
 // ── IMAGEN DE FONDO AVISO CERRADO ────────────────────────────────────
@@ -7488,13 +7616,22 @@ function moverBanner(idx, dir) {
 }
 
 function eliminarAdBanner(idx) {
-  const key = 'clasico';
-  const banners = getAdBanners();
-  const arr = banners[key] || [];
-  arr.splice(idx, 1);
-  saveAdBannersArr(key, arr);
-  renderAdBannerPreview();
-  showToast('🗑️ Banner eliminado');
+  // Fix C: confirmar antes de eliminar el banner
+  confirmar({
+    icono: '🗑️',
+    titulo: 'Eliminar banner',
+    mensaje: '¿Eliminar este banner? La imagen se perderá.',
+    textoOk: 'Eliminar',
+    callback() {
+      const key = 'clasico';
+      const banners = getAdBanners();
+      const arr = banners[key] || [];
+      arr.splice(idx, 1);
+      saveAdBannersArr(key, arr);
+      renderAdBannerPreview();
+      showToast('🗑️ Banner eliminado');
+    }
+  });
 }
 
 function cargarAdBanner(input) {
@@ -9421,7 +9558,17 @@ function cargarOrdenGuardada(id) {
 }
 
 function eliminarOrdenGuardada(id) {
-  cerrarOrden(id);
+  // Fix C: confirmar antes de eliminar la orden
+  const orden = ordenes.find(o => o.id === id);
+  const label = orden ? (orden.mesa || orden.clienteNombre || 'esta orden') : 'esta orden';
+  confirmar({
+    icono: '🗑️',
+    titulo: 'Eliminar orden',
+    mensaje: `¿Eliminar la orden de ${label}? Esta acción no se puede deshacer.`,
+    textoOk: 'Eliminar',
+    colorOk: '#D32F2F',
+    callback() { cerrarOrden(id); }
+  });
 }
 
 function cobrarTodo() {
@@ -9858,7 +10005,7 @@ function metodosIndividualesFact(f) {
 
 // ── HISTORIAL ─────────────────────────────────────────────────────────
 // Estado de filtros activos
-let _histFiltros = { tipos: new Set(), pagos: new Set(), fecha: '' };
+let _histFiltros = { tipos: new Set(), pagos: new Set(), fecha: '', busqueda: '' };
 
 function renderHistorial() {
   const el = document.getElementById('histContent');
@@ -9923,6 +10070,16 @@ function renderHistorial() {
     filtradas = filtradas.filter(f => f.fecha === _histFiltros.fecha);
   }
 
+  // Fix E: filtro de búsqueda por nombre de cliente o número de factura
+  if (_histFiltros.busqueda.trim()) {
+    const q = _histFiltros.busqueda.trim().toLowerCase();
+    filtradas = filtradas.filter(f =>
+      (f.clienteNombre && f.clienteNombre.toLowerCase().includes(q)) ||
+      (f.numero && String(f.numero).toLowerCase().includes(q)) ||
+      (f.mesaNumero && f.mesaNumero.toLowerCase().includes(q))
+    );
+  }
+
   // ── Opciones de pago disponibles (métodos individuales, no combinaciones) ─────
   const pagosDisponibles = [...new Set(
     historialVisible.flatMap(f => [...metodosIndividualesFact(f)])
@@ -9930,7 +10087,7 @@ function renderHistorial() {
   // ── Fechas disponibles ────────────────────────────────────────────────
   const fechasDisponibles = [...new Set(historialVisible.map(f => f.fecha))].sort().reverse();
 
-  const hayFiltroActivo = _histFiltros.tipos.size > 0 || _histFiltros.pagos.size > 0 || _histFiltros.fecha !== '';
+  const hayFiltroActivo = _histFiltros.tipos.size > 0 || _histFiltros.pagos.size > 0 || _histFiltros.fecha !== '' || _histFiltros.busqueda.trim() !== '';
   const totalFiltrado = filtradas.reduce((s, f) => s + f.total, 0);
 
   // ── Render de tarjetas agrupadas por día ─────────────────────────────
@@ -9938,6 +10095,8 @@ function renderHistorial() {
 
   // Estado de colapso por día — hoy expandido, los demás colapsados
   if (!window._histDiasColapsados) window._histDiasColapsados = new Set();
+  // Fix D: paginación por grupo — máx 30 facturas visibles por día, expandible
+  if (!window._histPaginaGrupo) window._histPaginaGrupo = {};
 
   // Agrupar por fecha
   const grupos = [];
@@ -9983,7 +10142,13 @@ function renderHistorial() {
         const colapsado = window._histDiasColapsados.has(grupo.fecha);
         const safeKey = grupo.fecha.replace(/\//g,'_');
 
-        const tarjetas = colapsado ? '' : grupo.facturas.map((f) => {
+        // Fix D: paginación — mostrar solo las primeras N facturas del grupo
+        const HIST_PAGE_SIZE = 30;
+        const paginaActual = window._histPaginaGrupo[grupo.fecha] || 1;
+        const facturasPagina = colapsado ? [] : grupo.facturas.slice(0, paginaActual * HIST_PAGE_SIZE);
+        const hayMas = !colapsado && grupo.facturas.length > paginaActual * HIST_PAGE_SIZE;
+
+        const tarjetas = colapsado ? '' : facturasPagina.map((f) => {
           const resumen = f.items.map(it => `${it.cantidad}x ${esc(it.nombre)}`).join(', ');
           const esMiOrden = esMeseroHist && (f.cajero === nombreCajero || f.mesero === nombreCajero);
           const fueCobradasPorOtro = esMiOrden && f.cajero && f.cajero !== nombreCajero;
@@ -10030,7 +10195,8 @@ function renderHistorial() {
             <span style="font-size:18px;color:var(--rappi);font-weight:700;transition:transform 0.2s;display:inline-block;transform:${colapsado?'rotate(-90deg)':'rotate(0deg)'};">⌄</span>
           </div>
         </div>
-        ${tarjetas}`;
+        ${tarjetas}
+        ${hayMas ? `<button onclick="window._histPaginaGrupo['${grupo.fecha}']=(window._histPaginaGrupo['${grupo.fecha}']||1)+1;renderHistorial()" style="width:100%;padding:10px;margin-bottom:8px;background:var(--fondo);color:var(--rappi);border:1.5px solid rgba(255,68,26,0.25);border-radius:var(--r-sm);font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;">Ver más (${grupo.facturas.length - paginaActual * HIST_PAGE_SIZE} facturas restantes)</button>` : ''}`;
       }).join('');
 
   el.innerHTML = `
@@ -10069,6 +10235,21 @@ function renderHistorial() {
       </button>
       <!-- Cuerpo colapsable -->
       <div style="display:${window._histAcordeonAbierto?'flex':'none'};flex-direction:column;gap:12px;padding:0 14px 14px;border-top:1px solid var(--borde);">
+        <!-- Fix E: Búsqueda por nombre o número de factura -->
+        <div style="padding-top:12px;">
+          <div style="font-size:11px;color:var(--gris);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Buscar</div>
+          <div style="position:relative;">
+            <span style="position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:14px;pointer-events:none;">🔍</span>
+            <input
+              type="text"
+              placeholder="Nombre cliente, # factura, mesa…"
+              value="${esc(_histFiltros.busqueda)}"
+              oninput="_histFiltros.busqueda=this.value;window._histAcordeonAbierto=true;window._histPaginaGrupo={};renderHistorial()"
+              style="width:100%;box-sizing:border-box;padding:9px 10px 9px 34px;border:1.5px solid ${_histFiltros.busqueda?'var(--rappi)':'var(--borde)'};border-radius:var(--r-sm);font-size:13px;font-family:inherit;background:var(--blanco);color:var(--negro);outline:none;"
+            >
+            ${_histFiltros.busqueda ? `<button onclick="event.stopPropagation();_histFiltros.busqueda='';window._histPaginaGrupo={};renderHistorial()" style="position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:16px;color:var(--gris);cursor:pointer;padding:0;line-height:1;">✕</button>` : ''}
+          </div>
+        </div>
         <!-- Tipo -->
         <div style="padding-top:12px;">
           <div style="font-size:11px;color:var(--gris);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:0.6px;">Tipo de factura <span style="font-weight:400;opacity:0.7;">(selección múltiple)</span></div>
@@ -10261,7 +10442,8 @@ function histSetFiltro(campo, valor) {
 }
 
 function histLimpiarFiltros() {
-  _histFiltros = { tipos: new Set(), pagos: new Set(), fecha: '' };
+  _histFiltros = { tipos: new Set(), pagos: new Set(), fecha: '', busqueda: '' };
+  window._histPaginaGrupo = {}; // Fix D: resetear paginación al cambiar filtros
   renderHistorial();
 }
 
@@ -12557,6 +12739,11 @@ function confirmar({ icono = '⚠️', titulo = 'Confirmar', mensaje, textoOk = 
 
 // ── BACKUP / RESTAURAR ────────────────────────────────────────────────
 function exportarBackup() {
+  // Fix 4: solo el rol master puede exportar
+  if (usuarioActivo?.rol !== 'master') {
+    showToast('⛔ Solo el Master puede exportar el backup');
+    return;
+  }
   // Corrección Bug 17: advertir con modal (no solo confirm) que el backup incluye credenciales
   const tieneFB = !!localStorage.getItem('pos_fb_config');
   const advertencia = tieneFB
@@ -13185,7 +13372,7 @@ function renderEstadoFirebase() {
 
 // Corrección Bug 14: el intervalo solo actualiza el indicador cuando hay usuario activo,
 // evitando accesos al DOM de configuración antes de que el login haya terminado.
-setInterval(() => { if (usuarioActivo) renderEstadoFirebase(); }, 3000);
+window._fbStatusInterval = setInterval(() => { if (usuarioActivo) renderEstadoFirebase(); }, 3000);
 
 // ── Hook en init() para arrancar listeners ────────────────────────────
 const _origInit = init;
@@ -14814,7 +15001,7 @@ async function feProcesarCola() {
   }
 }
 
-setInterval(() => { if (navigator.onLine && feGetCola().length>0) feProcesarCola(); }, 5*60*1000);
+window._feColaInterval = setInterval(() => { if (navigator.onLine && feGetCola().length>0) feProcesarCola(); }, 5*60*1000);
 window.addEventListener('online', () => { if (feGetCola().length>0) setTimeout(feProcesarCola, 2000); });
 
 function feRenderConfigPanel() {
@@ -15109,6 +15296,25 @@ let _pagosSeleccionados = {}; // { 'Efectivo': 15000, 'Nequi': 10000 }
 function abrirModalCobro() {
   // Cobro directo desde admin/cajero en el carrito actual
   if (carrito.length === 0) { showToast('⚠️ El carrito está vacío'); return; }
+
+  // Fix B: validar campos requeridos para domicilios antes de abrir el modal de cobro
+  if (tipoOrden === 'domicilio') {
+    const nombreOk    = clienteNombre.trim().length >= 2;
+    const telefonoOk  = /^\d{7,15}$/.test(clienteTelefono.replace(/[\s\-()]/g, ''));
+    const direccionOk = clienteDireccion.trim().length >= 5;
+    if (!nombreOk) {
+      showToast('⚠️ Ingresa el nombre del cliente (mín. 2 caracteres)');
+      showTab('pago'); return;
+    }
+    if (!telefonoOk) {
+      showToast('⚠️ Ingresa un teléfono válido (7–15 dígitos)');
+      showTab('pago'); return;
+    }
+    if (!direccionOk) {
+      showToast('⚠️ Ingresa la dirección de entrega (mín. 5 caracteres)');
+      showTab('pago'); return;
+    }
+  }
   const subtotal = carrito.reduce((s, i) => s + i.precio * i.cantidad, 0);
   let descMonto = 0;
   if (descuentoValor > 0) {
@@ -16303,6 +16509,22 @@ document.addEventListener('DOMContentLoaded', () => {
   // IDs ya vistos — para detectar pedidos realmente nuevos
   const _domSeenIds = new Set();
   let _domPrimerCarga = true; // la primera llamada del onValue llena _domSeenIds sin alertar
+  // Contador de mensajes del cliente por pedido — para detectar mensajes nuevos
+  const _domMsgCounts = new Map();
+
+  // Beep suave: cliente escribió un mensaje nuevo
+  function _domBeepMensaje() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator(), gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.frequency.value = 660; osc.type = 'sine';
+      gain.gain.setValueAtTime(0.12, ctx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.28);
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.28);
+    } catch(_) {}
+  }
 
   function _domAlertarNuevoPedido(pedido) {
     // Solo alertar a admin/master
@@ -16363,19 +16585,22 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   const ESTADOS_LABEL = {
-    pendiente:       '🕐 Pendiente',
-    verificando:     '🔍 Verificando',
-    cambio:          '⚠️ Cambio requerido',
-    confirmado:      '✅ Confirmado',
-    pago_pendiente:  '💳 Pago por confirmar',
-    pago_revisando:  '🔍 Revisando comprobante',
-    pago_rechazado:  '❌ Comprobante rechazado',
-    pago:            '💳 Esperando pago',
-    cocina:          '🍳 En cocina',
-    listo:           '📦 Listo para envío',
-    despachado:      '🛵 En camino',
-    entregado:       '🏠 Entregado',
-    cancelado:       '❌ Cancelado',
+    pendiente:            '🕐 Pendiente',
+    verificando:          '🔍 Verificando',
+    no_disponible:        '⚠️ Sin disponibilidad',
+    cambio:               '⚠️ Cambio requerido',
+    confirmado:           '✅ Confirmado',
+    esperando_pago:       '💳 Esperando pago',
+    comprobante_enviado:  '📎 Comprobante enviado',
+    pago_pendiente:       '💳 Pago por confirmar',
+    pago_revisando:       '🔍 Revisando comprobante',
+    pago_rechazado:       '❌ Comprobante rechazado',
+    pago:                 '💳 Esperando pago',
+    cocina:               '🍳 En cocina',
+    listo:                '📦 Listo para envío',
+    despachado:           '🛵 En camino',
+    entregado:            '🏠 Entregado',
+    cancelado:            '❌ Cancelado',
   };
 
   // ── Iniciar escucha Firebase ─────────────────────────────────────────────
@@ -16427,6 +16652,17 @@ document.addEventListener('DOMContentLoaded', () => {
             _domSeenIds.add(p.sessionId);
             _domAlertarNuevoPedido(p);
           } else if (p.sessionId) {
+            // Detectar nuevo mensaje del cliente (sonido suave)
+            const prev = _domMsgCounts.get(p.sessionId) || 0;
+            const msgs = Array.isArray(p.mensajes) ? p.mensajes : [];
+            const clienteMsgs = msgs.filter(m => m.autor === 'cliente').length;
+            if (clienteMsgs > prev) {
+              const rol = window.usuarioActivo?.rol;
+              if (rol === 'admin' || rol === 'master') {
+                _domBeepMensaje();
+              }
+            }
+            _domMsgCounts.set(p.sessionId, clienteMsgs);
             _domSeenIds.add(p.sessionId);
           }
         });
@@ -16532,6 +16768,35 @@ document.addEventListener('DOMContentLoaded', () => {
     const tipoDoc = p.tipoDocumento === 'fe' ? '🧾 F.E.' : '🗒️ Recibo';
     const responsable = p.responsableNombre ? `<span class="dom-responsable-badge">👤 ${domEsc(p.responsableNombre)}</span>` : '';
 
+    // ── Mensajes no leídos ──
+    const mensajes = Array.isArray(p.mensajes) ? p.mensajes : [];
+    const lastAdminReadTs = p.adminReadTs || 0;
+    const unreadCount = mensajes.filter(m => m.autor === 'cliente' && (m.ts || 0) > lastAdminReadTs).length;
+    const unreadBadge = unreadCount > 0 ? `<span class="dom-msg-badge">${unreadCount}</span>` : '';
+
+    // ── Preview último mensaje ──
+    let lastMsgHtml = '';
+    if (mensajes.length > 0) {
+      const lm = mensajes[mensajes.length - 1];
+      if (lm.tipo !== 'sistema') {
+        const autor = lm.autor === 'admin' ? 'Tú' : (p.clienteNombre || 'Cliente').split(' ')[0];
+        const hasUnread = unreadCount > 0 && lm.autor === 'cliente';
+        lastMsgHtml = `<div class="dom-card-last-msg${hasUnread ? ' has-unread' : ''}">
+          <span class="lm-autor">${domEsc(autor)}:</span>
+          <span class="lm-txt">${domEsc(lm.texto)}</span>
+        </div>`;
+      }
+    }
+
+    // ── ETA countdown ──
+    let etaHtml = '';
+    if (p.etaMin && p.etaTs) {
+      const remaining = Math.max(0, Math.round((p.etaTs + p.etaMin * 60000 - Date.now()) / 60000));
+      if (remaining > 0) {
+        etaHtml = `<div class="dom-card-eta"><span class="eta-clock">⏱️</span>Tiempo estimado: <b>${remaining} min restantes</b></div>`;
+      }
+    }
+
     const itemsHtml = (p.items || []).slice(0, 3).map(i => {
       const sinStock = (p.sinStock || []).includes(i.nombre);
       return `<div class="dom-card-item-row${sinStock ? ' sin-stock' : ''}">
@@ -16544,12 +16809,14 @@ document.addEventListener('DOMContentLoaded', () => {
     return `<div class="dom-card estado-${estado}" onclick="domAbrirDetalle('${domEsc(p.sessionId)}')">
       <div class="dom-card-header">
         <div class="dom-card-titulo">
-          <div class="dom-card-nombre">${domEsc(p.clienteNombre || 'Cliente')}</div>
+          <div class="dom-card-nombre" style="display:flex;align-items:center;gap:0;">${domEsc(p.clienteNombre || 'Cliente')}${unreadBadge}</div>
           <div class="dom-card-meta">📞 ${domEsc(p.clienteTelefono || '—')} · ${hora} · ${tipoDoc} ${responsable}</div>
         </div>
         <span class="dom-estado-badge ${estado}">${labelEstado}</span>
       </div>
+      ${etaHtml}
       <div class="dom-card-items">${itemsHtml}${masItems}</div>
+      ${lastMsgHtml}
       <div class="dom-card-footer">
         <div class="dom-card-total">${domFmt(total)}</div>
         <div class="dom-btns">${domBotonesCard(p)}</div>
@@ -16580,13 +16847,25 @@ document.addEventListener('DOMContentLoaded', () => {
         btns += `<span style="font-size:11px;color:#E65100;font-weight:700;">Esperando al cliente…</span>`;
         break;
       case 'confirmado':
-        if (!p.metodoPago) {
-          btns += `<span style="font-size:11px;color:#F57C00;font-weight:800;">⏳ Esperando método de pago…</span>`;
-        } else if (p.metodoPagoLabel && p.metodoPagoLabel.toLowerCase().includes('efectivo')) {
-          btns += `<button class="dom-btn green" onclick="event.stopPropagation();domEnviarACocina('${p.sessionId}')">🍳 Enviar a cocina</button>`;
+        if (p.esEfectivo || (p.metodoPagoLabel||'').toLowerCase().includes('efectivo')) {
+          btns += `<button class="dom-btn green" onclick="event.stopPropagation();domEnviarACocina('${p.sessionId}')">🍳 A cocina</button>`;
+        } else {
+          btns += `<button class="dom-btn blue" onclick="event.stopPropagation();domEnviarMetodosPagoAlCliente('${p.sessionId}')">💳 Enviar pago</button>`;
+        }
+        break;
+      case 'esperando_pago':
+        if (p.esEfectivo || (p.metodoPagoLabel||'').toLowerCase().includes('efectivo')) {
+          btns += `<button class="dom-btn green" onclick="event.stopPropagation();domEnviarACocina('${p.sessionId}')">🍳 A cocina</button>`;
         } else {
           btns += `<span style="font-size:11px;color:#1565C0;font-weight:800;">⏳ Esperando comprobante…</span>`;
         }
+        break;
+      case 'comprobante_enviado':
+        btns += `<button class="dom-btn green" onclick="event.stopPropagation();domVerComprobante('${p.sessionId}')">📎 Revisar comprobante</button>`;
+        break;
+      case 'no_disponible':
+        btns += `<button class="dom-btn blue" onclick="event.stopPropagation();domAbrirStock('${p.sessionId}')">⚠️ Gestionar stock</button>`;
+        btns += `<button class="dom-btn danger" onclick="event.stopPropagation();domCancelar('${p.sessionId}')">✕</button>`;
         break;
       case 'pago_revisando':
         btns += `<div style="font-size:11px;color:#1565C0;font-weight:800;">🔍 Revisando comprobante</div>`;
@@ -16622,6 +16901,12 @@ document.addEventListener('DOMContentLoaded', () => {
         break;
     }
 
+    // Botón WhatsApp (si hay teléfono)
+    if (p.clienteTelefono) {
+      const waNum = String(p.clienteTelefono).replace(/\D/g,'');
+      btns += `<button class="dom-btn whatsapp" onclick="event.stopPropagation();window.open('https://wa.me/57${waNum}','_blank')" title="Abrir WhatsApp">💬</button>`;
+    }
+
     // Botón asignar responsable (admin siempre puede)
     if (!['despachado','entregado','cancelado'].includes(estado)) {
       btns += `<button class="dom-btn secondary" onclick="event.stopPropagation();domAbrirAsignar('${p.sessionId}')" title="Asignar responsable">👤</button>`;
@@ -16635,6 +16920,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const p = _domPedidos.find(x => x.sessionId === sessionId);
     if (!p) return;
     _domPedidoActual = sessionId;
+    // Marcar mensajes como leídos
+    if (window._FB) {
+      window._FB.update(window._FB.ref(window._FB.db, `${DOM_PATH}/${sessionId}`), { adminReadTs: Date.now() }).catch(()=>{});
+    }
     domRenderDetalle(p);
     document.getElementById('modalDomDetalle').classList.add('show');
   };
@@ -16643,7 +16932,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('modalDomDetalleContenido');
     if (!el) return;
     const estado = p.estado || 'pendiente';
-    const total  = (p.items || []).reduce((s, i) => s + (i.precio||0)*(i.cantidad||1), 0) + (p.costoEnvio || 0); // BUG 5 fix
+    const total  = (p.items || []).reduce((s, i) => s + (i.precio||0)*(i.cantidad||1), 0) + (p.costoEnvio || 0);
     const esAdmin = esPuedeGestionarDomicilios();
     const hora = p.timestamp ? new Date(p.timestamp).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
 
@@ -16655,56 +16944,110 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>`;
     }).join('');
 
-    // Datos FE si aplica
+    // Datos FE
     let feHtml = '';
-    if (p.tipoDocumento === 'fe') {
+    if (p.tipoRecibo === 'fe' || p.tipoDocumento === 'fe') {
       feHtml = `<div style="background:rgba(21,101,192,.06);border:1.5px solid rgba(21,101,192,.2);border-radius:var(--r-sm);padding:10px 12px;margin-top:8px;">
         <div style="font-size:11px;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">🧾 Datos Factura Electrónica</div>
         <div style="font-size:12px;line-height:1.7;color:var(--negro);">
-          <div><b>Nombre/Empresa:</b> ${domEsc(p.feNombre||'—')}</div>
-          <div><b>NIT/CC:</b> ${domEsc(p.feNit||'—')}</div>
-          ${p.feCorreo ? `<div><b>Correo:</b> ${domEsc(p.feCorreo)}</div>` : ''}
-          ${p.feDireccion ? `<div><b>Dirección:</b> ${domEsc(p.feDireccion)}</div>` : ''}
+          <div><b>NIT/CC:</b> ${domEsc(p.clienteNit||p.feNit||'—')}</div>
+          <div><b>Razón social:</b> ${domEsc(p.clienteRazon||p.feNombre||'—')}</div>
         </div>
       </div>`;
     }
 
-    // Progreso visual de estados
-    const PASOS = ['pendiente','verificando','confirmado','pago_revisando','cocina','listo','despachado','entregado'];
-    const idxActual = PASOS.indexOf(estado === 'pago_rechazado' ? 'pago_revisando' : estado);
-    const progresoBtns = PASOS.map((s, i) => {
-      const activo  = i === idxActual;
-      const pasado  = i < idxActual;
-      const color   = pasado ? '#00C853' : activo ? (estado === 'pago_rechazado' ? '#E53935' : '#1565C0') : 'var(--gris-cl)';
-      const textC   = (pasado || activo) ? '#fff' : 'var(--gris)';
-      const labels  = ['Recibido','Verificado','Confirmado','Pago','Cocina','Listo','Despachado','Entregado'];
+    // Efectivo: info de cambio
+    let efectivoHtml = '';
+    if (p.esEfectivo || (p.metodoPagoLabel||'').toLowerCase().includes('efectivo')) {
+      const billete = p.pagoConBillete || 0;
+      const cambio  = p.cambioADevolver || 0;
+      efectivoHtml = `<div style="background:rgba(245,124,0,.08);border:1.5px solid rgba(245,124,0,.3);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:800;color:#F57C00;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">💵 Pago en efectivo</div>
+        <div style="font-size:13px;color:var(--negro);line-height:1.7;">
+          <div>Total: <b style="color:var(--rappi);">${domFmt(total)}</b></div>
+          ${billete > 0 ? `<div>Paga con: <b>${domFmt(billete)}</b></div><div>Devuelta: <b style="color:#F57C00;">${domFmt(cambio)}</b></div>` : '<div>Pago exacto</div>'}
+        </div>
+      </div>`;
+    }
+
+    // Comprobante (si lo subió)
+    let comprobanteHtml = '';
+    if (p.comprobanteImg) {
+      comprobanteHtml = `<div style="background:rgba(21,101,192,.06);border:1.5px solid rgba(21,101,192,.25);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px;">
+        <div style="font-size:11px;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📎 Comprobante de pago</div>
+        <img src="${p.comprobanteImg}" style="width:100%;max-height:220px;object-fit:contain;border-radius:8px;border:1.5px solid rgba(21,101,192,.2);background:#000;cursor:pointer;"
+          onclick="this.style.maxHeight=this.style.maxHeight==='none'?'220px':'none'" title="Toca para ampliar">
+        <div style="font-size:10px;color:#888;text-align:center;margin-top:4px;">Toca para ampliar</div>
+      </div>`;
+    }
+
+    // Progreso visual
+    const PASOS_PROG = ['pendiente','verificando','confirmado','esperando_pago','comprobante_enviado','cocina','listo','despachado','entregado'];
+    const estadoNorm = estado === 'pago_rechazado' ? 'comprobante_enviado'
+                     : estado === 'no_disponible'  ? 'verificando'
+                     : estado;
+    const idxActual = PASOS_PROG.indexOf(estadoNorm);
+    const labProg   = ['Recibido','Verificado','Confirmado','Pago','Comprobante','Cocina','Listo','Camino','Entregado'];
+    const progresoBtns = PASOS_PROG.map((s, i) => {
+      const activo = i === idxActual;
+      const pasado = i < idxActual;
+      const color  = pasado ? '#00C853' : activo ? (estado === 'pago_rechazado' ? '#E53935' : '#1565C0') : 'var(--gris-cl)';
+      const textC  = (pasado || activo) ? '#fff' : 'var(--gris)';
       return `<div style="flex:1;text-align:center;">
-        <div style="width:28px;height:28px;border-radius:50%;background:${color};color:${textC};
-          display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;margin-bottom:3px;">
+        <div style="width:24px;height:24px;border-radius:50%;background:${color};color:${textC};
+          display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;margin-bottom:2px;">
           ${pasado ? '✓' : (i+1)}
         </div>
-        <div style="font-size:9px;font-weight:700;color:${activo?'#1565C0':'var(--gris)'};text-transform:uppercase;letter-spacing:.3px;">${labels[i]}</div>
+        <div style="font-size:8px;font-weight:700;color:${activo?'#1565C0':'var(--gris)'};text-transform:uppercase;">${labProg[i]}</div>
       </div>`;
-    }).join('<div style="flex:0 0 4px;height:2px;background:var(--gris-cl);margin-top:13px;border-radius:2px;"></div>');
+    }).join('<div style="flex:0 0 2px;height:2px;background:var(--gris-cl);margin-top:11px;"></div>');
+
+    // ── CHAT bidireccional ──
+    const mensajes = Array.isArray(p.mensajes) ? p.mensajes : [];
+    const chatMsgsHtml = mensajes.map(m => {
+      if (m.tipo === 'sistema') {
+        return `<div style="text-align:center;font-size:11px;font-weight:700;color:var(--gris);
+          background:var(--gris-cl);border-radius:999px;padding:4px 12px;margin:4px auto;max-width:85%;">${domEsc(m.texto)}</div>`;
+      }
+      const esCliente = m.autor === 'cliente';
+      const bkg  = esCliente ? '#EEF2FF' : 'var(--blanco)';
+      const bord = esCliente ? '#C7D2FE' : 'var(--borde)';
+      const hora2 = m.ts ? new Date(m.ts).toLocaleTimeString('es-CO',{hour:'2-digit',minute:'2-digit'}) : '';
+      return `<div style="display:flex;flex-direction:column;align-items:${esCliente?'flex-start':'flex-end'};margin-bottom:6px;">
+        <div style="max-width:82%;background:${bkg};border:1.5px solid ${bord};
+          border-radius:${esCliente?'4px 14px 14px 14px':'14px 4px 14px 14px'};
+          padding:8px 12px;font-size:13px;font-weight:600;color:var(--negro);line-height:1.45;">
+          ${domEsc(m.texto)}
+        </div>
+        <div style="font-size:10px;color:var(--gris);margin-top:2px;font-family:var(--font-num);">
+          ${esCliente?'Cliente':'Tú'} · ${hora2}
+        </div>
+      </div>`;
+    }).join('');
 
     el.innerHTML = `
       <!-- Header -->
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div>
-          <div style="font-size:18px;font-weight:900;color:var(--negro);">🛵 Detalle del domicilio</div>
-          <div style="font-size:11px;color:var(--gris);margin-top:2px;">${hora} · ID: ${domEsc((p.sessionId||'').substring(0,8))}</div>
+          <div style="font-size:18px;font-weight:900;color:var(--negro);">🛵 Domicilio</div>
+          <div style="font-size:11px;color:var(--gris);margin-top:2px;">${hora} · #${domEsc((p.sessionId||'').slice(-6).toUpperCase())}</div>
         </div>
-        <span class="dom-estado-badge ${estado}">${ESTADOS_LABEL[estado]||estado}</span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          ${p.clienteTelefono ? `<a href="https://wa.me/57${String(p.clienteTelefono).replace(/\D/g,'')}" target="_blank"
+            style="display:inline-flex;align-items:center;gap:5px;background:#25D366;color:#fff;border-radius:10px;
+            padding:7px 12px;font-size:12px;font-weight:800;text-decoration:none;">💬 WhatsApp</a>` : ''}
+          <span class="dom-estado-badge ${estado}">${ESTADOS_LABEL[estado]||estado}</span>
+        </div>
       </div>
 
       <!-- Progreso -->
-      <div style="display:flex;align-items:center;gap:0;margin-bottom:16px;padding:12px;background:var(--fondo);border-radius:var(--r-sm);">
+      <div style="display:flex;align-items:center;gap:0;margin-bottom:14px;padding:10px;background:var(--fondo);border-radius:var(--r-sm);overflow-x:auto;">
         ${progresoBtns}
       </div>
 
       <!-- Cliente -->
       <div style="background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">👤 Datos del cliente</div>
+        <div style="font-size:11px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;">👤 Cliente</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">
           <div><b>Nombre:</b> ${domEsc(p.clienteNombre||'—')}</div>
           <div><b>Teléfono:</b> ${domEsc(p.clienteTelefono||'—')}</div>
@@ -16713,18 +17056,19 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- Método de pago y documento -->
+      <!-- Pago + Documento -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;">
         <div style="background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);padding:10px 12px;">
           <div style="font-size:11px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">💳 Pago</div>
-          <div style="font-size:14px;font-weight:700;color:var(--negro);">${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
+          <div style="font-size:13px;font-weight:700;color:var(--negro);">${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
         </div>
         <div style="background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);padding:10px 12px;">
-          <div style="font-size:11px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">📄 Documento</div>
-          <div style="font-size:14px;font-weight:700;color:var(--negro);">${p.tipoDocumento === 'fe' ? '🧾 Factura electrónica' : '🗒️ Recibo POS'}</div>
+          <div style="font-size:11px;font-weight:800;color:var(--gris);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">📄 Recibo</div>
+          <div style="font-size:13px;font-weight:700;color:var(--negro);">${(p.tipoRecibo||p.tipoDocumento)==='fe' ? '🧾 Fact. electrónica' : '🗒️ POS'}</div>
         </div>
       </div>
       ${feHtml}
+      ${efectivoHtml}
 
       <!-- Items -->
       <div style="background:var(--blanco);border:1.5px solid var(--borde);border-radius:var(--r-sm);padding:10px 12px;margin-bottom:10px;">
@@ -16736,15 +17080,169 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       </div>
 
-      <!-- Responsable asignado -->
+      ${comprobanteHtml}
+
+      <!-- Responsable -->
       ${p.responsableNombre ? `<div style="font-size:12px;color:var(--gris);margin-bottom:10px;text-align:center;">👤 Responsable: <b style="color:var(--negro);">${domEsc(p.responsableNombre)}</b></div>` : ''}
 
       <!-- Acciones admin -->
       ${esAdmin ? domAccionesDetalle(p) : ''}
 
+      <!-- ══ CHAT BIDIRECCIONAL ══ -->
+      <div style="margin-top:14px;">
+        <div style="font-size:12px;font-weight:800;color:var(--negro);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;
+          padding-bottom:6px;border-bottom:1.5px solid var(--borde);">
+          💬 Chat con el cliente
+        </div>
+        <div id="domChatMsgs" style="background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);
+          padding:12px;min-height:80px;max-height:240px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
+          ${chatMsgsHtml || '<div style="text-align:center;color:var(--gris);font-size:12px;padding:12px;">Sin mensajes aún</div>'}
+        </div>
+        <!-- Respuestas rápidas -->
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px;" id="domRespRapidas">
+          ${[
+            '✅ Pedido recibido, estamos verificando existencias',
+            '⚠️ Algunos productos no están disponibles, ¿deseas cambiarlos?',
+            '✅ Todo disponible, confirmo tu pedido',
+            '💳 Por favor realiza el pago y sube el comprobante',
+            '✅ Pago recibido y confirmado, tu pedido va a cocina',
+            '❌ El comprobante no es válido, por favor verifica e intenta de nuevo',
+            '🍳 Tu pedido está siendo preparado',
+            '🛵 Tu pedido ya fue despachado, va en camino',
+            '🏠 ¿Puedes confirmar que recibiste tu pedido?'
+          ].map(txt => `<button onclick="domChatRespRapida(this,'${domEsc(p.sessionId)}')"
+            style="font-size:11px;font-weight:700;padding:5px 10px;border:1.5px solid var(--borde);
+            border-radius:999px;background:var(--blanco);cursor:pointer;color:var(--negro);
+            transition:background .15s;white-space:nowrap;"
+            onmouseover="this.style.background='var(--gris-cl)'" onmouseout="this.style.background='var(--blanco)'"
+            >${domEsc(txt)}</button>`).join('')}
+        </div>
+        <!-- Input libre -->
+        <div style="display:flex;gap:8px;align-items:center;">
+          <input id="domChatInput" type="text" placeholder="Escribe un mensaje al cliente…"
+            style="flex:1;padding:10px 13px;border:1.5px solid var(--borde);border-radius:999px;
+            font-size:14px;font-family:inherit;color:var(--negro);background:var(--blanco);outline:none;"
+            onfocus="this.style.borderColor='var(--rappi)'" onblur="this.style.borderColor='var(--borde)';domTypingStop('${domEsc(p.sessionId)}')"
+            oninput="domTypingStart('${domEsc(p.sessionId)}')"
+            onkeydown="if(event.key==='Enter')domChatEnviarAdmin('${domEsc(p.sessionId)}')">
+          <button onclick="domChatEnviarAdmin('${domEsc(p.sessionId)}')"
+            style="width:40px;height:40px;border-radius:50%;border:none;background:var(--rappi);color:#fff;
+            font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+            box-shadow:0 2px 8px rgba(255,68,26,.35);">➤</button>
+        </div>
+        <!-- ETA -->
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;">
+          <select id="domEtaSelect" style="flex:1;padding:9px 12px;border:1.5px solid var(--borde);border-radius:10px;font-size:13px;font-family:inherit;color:var(--negro);background:var(--blanco);outline:none;">
+            <option value="">⏱️ Enviar tiempo estimado…</option>
+            <option value="10">10 minutos</option>
+            <option value="15">15 minutos</option>
+            <option value="20">20 minutos</option>
+            <option value="25">25 minutos</option>
+            <option value="30">30 minutos</option>
+            <option value="40">40 minutos</option>
+            <option value="45">45 minutos</option>
+            <option value="60">60 minutos</option>
+          </select>
+          <button onclick="domEnviarETA('${domEsc(p.sessionId)}')"
+            style="padding:9px 14px;border:none;border-radius:10px;background:#0D47A1;color:#fff;
+            font-size:12px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;">Enviar ETA</button>
+        </div>
+      </div>
+
       <!-- Cerrar -->
-      <button class="btn-modal-close" onclick="cerrarModal('modalDomDetalle')" style="margin-top:8px;">Cerrar</button>`;
+      <button class="btn-modal-close" onclick="cerrarModal('modalDomDetalle')" style="margin-top:14px;">Cerrar</button>`;
+
+    // Auto-scroll del chat al fondo
+    const chatEl = document.getElementById('domChatMsgs');
+    if (chatEl) chatEl.scrollTop = chatEl.scrollHeight;
   }
+
+  // ── Chat admin: respuesta rápida ───────────────────────────────────────────
+  window.domChatRespRapida = function(btn, sessionId) {
+    const input = document.getElementById('domChatInput');
+    if (input) { input.value = btn.textContent.trim(); input.focus(); }
+  };
+
+  // ── Chat admin: enviar mensaje ─────────────────────────────────────────────
+  window.domChatEnviarAdmin = async function(sessionId) {
+    const input = document.getElementById('domChatInput');
+    const txt = (input?.value || '').trim();
+    if (!txt || !sessionId) return;
+    input.value = '';
+    domTypingStop(sessionId);
+    try {
+      const { db, ref, get, update } = window._FB;
+      const snap = await get(ref(db, `${DOM_PATH}/${sessionId}/mensajes`));
+      const arr  = Array.isArray(snap.val()) ? snap.val() : [];
+      arr.push({ autor: 'admin', texto: txt, tipo: 'chat', ts: Date.now() });
+      await update(ref(db, `${DOM_PATH}/${sessionId}`), { mensajes: arr, tsUltimoMensaje: Date.now() });
+    } catch(e) {
+      window.showToast('⚠️ Error al enviar mensaje: ' + e.message);
+    }
+  };
+
+  // ── Typing indicator: admin está escribiendo ──────────────────────────────
+  let _typingTimer = null;
+  window.domTypingStart = function(sessionId) {
+    if (!window._FB || !sessionId) return;
+    window._FB.update(window._FB.ref(window._FB.db, `${DOM_PATH}/${sessionId}`), { adminTyping: true }).catch(()=>{});
+    clearTimeout(_typingTimer);
+    _typingTimer = setTimeout(() => domTypingStop(sessionId), 3000);
+  };
+  window.domTypingStop = function(sessionId) {
+    clearTimeout(_typingTimer);
+    if (!window._FB || !sessionId) return;
+    window._FB.update(window._FB.ref(window._FB.db, `${DOM_PATH}/${sessionId}`), { adminTyping: false }).catch(()=>{});
+  };
+
+  // ── Enviar ETA al cliente ──────────────────────────────────────────────────
+  window.domEnviarETA = async function(sessionId) {
+    const sel = document.getElementById('domEtaSelect');
+    const min = parseInt(sel?.value || '');
+    if (!min) { window.showToast('⚠️ Selecciona un tiempo estimado'); return; }
+    const txt = `⏱️ Tu pedido llegará aproximadamente en ${min} minutos.`;
+    try {
+      const { db, ref, get, update } = window._FB;
+      const snap = await get(ref(db, `${DOM_PATH}/${sessionId}/mensajes`));
+      const arr  = Array.isArray(snap.val()) ? snap.val() : [];
+      arr.push({ autor: 'admin', texto: txt, tipo: 'chat', ts: Date.now() });
+      await update(ref(db, `${DOM_PATH}/${sessionId}`), {
+        mensajes: arr, tsUltimoMensaje: Date.now(),
+        etaMin: min, etaTs: Date.now(),
+      });
+      if (sel) sel.value = '';
+      window.showToast(`⏱️ Tiempo estimado de ${min} min enviado al cliente`);
+    } catch(e) { window.showToast('⚠️ Error: ' + e.message); }
+  };
+
+  // ── Chat admin: mandar métodos de pago al cliente (como mensaje del sistema) ──
+  window.domEnviarMetodosPagoAlCliente = async function(sessionId) {
+    const p = _domPedidos.find(x => x.sessionId === sessionId);
+    if (!p) return;
+    // Armar texto con los métodos de pago digitales disponibles
+    const methods = Array.isArray(window._menuSettingsCache?.paymentMethods)
+      ? window._menuSettingsCache.paymentMethods.filter(m => m.visibleDom !== false && !String(m.label||'').toLowerCase().includes('efectivo'))
+      : [];
+    const infoTxt = methods.length
+      ? methods.map(m => `• ${m.label}${m.info ? ': ' + m.info : ''}`).join('\n')
+      : '• Transferencia (consulta al restaurante)';
+    const totalFmt = '$ ' + Number(p.total||0).toLocaleString('es-CO');
+    const txt = `✅ Tu pedido está confirmado. Por favor realiza el pago de ${totalFmt} a:\n${infoTxt}\nLuego sube el comprobante en el chat.`;
+    try {
+      const { db, ref, get, update } = window._FB;
+      const snap = await get(ref(db, `${DOM_PATH}/${sessionId}/mensajes`));
+      const arr  = Array.isArray(snap.val()) ? snap.val() : [];
+      arr.push({ autor: 'admin', texto: txt, tipo: 'chat', ts: Date.now() });
+      await update(ref(db, `${DOM_PATH}/${sessionId}`), {
+        mensajes: arr,
+        tsUltimoMensaje: Date.now(),
+        estado: 'esperando_pago',
+      });
+      window.showToast('💳 Métodos de pago enviados al cliente');
+    } catch(e) {
+      window.showToast('⚠️ Error: ' + e.message);
+    }
+  };
 
   function domAccionesDetalle(p) {
     const estado = p.estado || 'pendiente';
@@ -16755,49 +17253,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="dom-btn danger" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         break;
       case 'verificando':
-        btns = `<button class="dom-btn blue" style="width:100%;padding:13px;margin-bottom:8px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPedido('${p.sessionId}')">✅ Confirmar pedido completo</button>
+      case 'no_disponible':
+        btns = `<button class="dom-btn blue" style="width:100%;padding:13px;margin-bottom:8px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPedido('${p.sessionId}')">✅ Confirmar — todo disponible</button>
+                <button class="dom-btn" style="width:100%;padding:11px;margin-bottom:8px;background:#FFF8E1;color:#E65100;border:1.5px solid #FFD54F;" onclick="cerrarModal('modalDomDetalle');domAbrirStock('${p.sessionId}')">⚠️ Hay productos sin stock</button>
                 <button class="dom-btn danger" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         break;
       case 'confirmado':
-        if (!p.metodoPago) {
-          // Cliente aún no ha elegido método de pago
-          btns = `
-            <div style="background:#FFF8E1;border:1.5px solid #FFD54F;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#5D4037;font-weight:700;">
-              ⏳ Esperando que el cliente elija su método de pago…
-            </div>
-            <button class="dom-btn danger" style="width:100%;padding:12px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
-        } else if (p.metodoPago && p.metodoPagoLabel && p.metodoPagoLabel.toLowerCase().includes('efectivo')) {
-          // Eligió efectivo — enviar a cocina directamente
+        if (p.esEfectivo || (p.metodoPagoLabel||'').toLowerCase().includes('efectivo')) {
           btns = `
             <div style="background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#2E7D32;font-weight:700;">
-              💵 Cliente pagará en efectivo${p.pagoConQue ? ` · Con: ${domFmt(p.pagoConQue)} · Cambio: ${domFmt(p.cambioADevolver||0)}` : ''}
+              💵 Cliente pagará en efectivo${p.pagoConBillete ? ` · Con: ${domFmt(p.pagoConBillete)} · Cambio: ${domFmt(p.cambioADevolver||0)}` : ' — pago exacto'}
             </div>
             <button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domEnviarACocina('${p.sessionId}')">🍳 Enviar a cocina</button>`;
         } else {
-          // Eligió método digital — esperando comprobante
           btns = `
             <div style="background:rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#1565C0;font-weight:700;">
-              💳 Método: ${domEsc(p.metodoPagoLabel||p.metodoPago)} · Esperando comprobante del cliente
+              ✅ Pedido confirmado · Método elegido: <b>${domEsc(p.metodoPagoLabel||'—')}</b><br>
+              Usa el chat para enviar los datos de pago al cliente.
             </div>
-            <button class="dom-btn danger" style="width:100%;padding:12px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+            <button class="dom-btn blue" style="width:100%;padding:13px;margin-bottom:8px;" onclick="domEnviarMetodosPagoAlCliente('${p.sessionId}')">💳 Enviar datos de pago al cliente</button>
+            <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         }
         break;
-      case 'pago_revisando': {
-        const totalR = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0); // BUG 5 fix
+      // Estado: admin confirmó y está esperando que el cliente suba el comprobante
+      case 'esperando_pago':
+        if (p.esEfectivo || (p.metodoPagoLabel||'').toLowerCase().includes('efectivo')) {
+          btns = `
+            <div style="background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#2E7D32;font-weight:700;">
+              💵 Pago en efectivo${p.pagoConBillete ? ` · Con: ${domFmt(p.pagoConBillete)} · Cambio: ${domFmt(p.cambioADevolver||0)}` : ' — exacto'}
+            </div>
+            <button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domEnviarACocina('${p.sessionId}')">🍳 Enviar a cocina</button>`;
+        } else {
+          btns = `
+            <div style="background:rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#1565C0;font-weight:700;">
+              ⏳ Esperando que el cliente suba el comprobante de pago…
+            </div>
+            <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+        }
+        break;
+      // Estado: cliente subió el comprobante — admin debe revisar
+      case 'comprobante_enviado': {
+        const totalC = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0);
         btns = `
           <div style="background:rgba(21,101,192,.08);border:2px solid rgba(21,101,192,.35);border-radius:14px;padding:14px 16px;margin-bottom:12px;">
-            <div style="font-size:12px;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">🔍 Comprobante de pago recibido</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;color:var(--negro);margin-bottom:10px;">
-              <div><b>👤 Cliente:</b><br>${domEsc(p.clienteNombre||'—')}</div>
-              <div><b>📱 Teléfono:</b><br>${domEsc(p.clienteTelefono||'—')}</div>
-              <div><b>💳 Método:</b><br>${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
-              <div><b>💰 Monto:</b><br><span style="color:var(--rappi);font-weight:900;font-size:16px;">${domFmt(totalR)}</span></div>
+            <div style="font-size:12px;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">📎 Comprobante recibido — revisa la imagen arriba</div>
+            <div style="font-size:13px;color:var(--negro);">
+              <b>Método:</b> ${domEsc(p.metodoPagoLabel||'—')} · <b>Monto:</b> <span style="color:var(--rappi);font-weight:900;">${domFmt(totalC)}</span>
             </div>
-            ${p.comprobanteImg ? `
-              <div style="border-radius:10px;overflow:hidden;margin-bottom:10px;border:2px solid rgba(21,101,192,.3);">
-                <img src="${p.comprobanteImg}" style="width:100%;max-height:260px;object-fit:contain;display:block;background:#000;" onclick="this.style.maxHeight=this.style.maxHeight==='none'?'260px':'none'">
-                <div style="font-size:11px;color:#888;text-align:center;padding:4px;">Toca la imagen para ampliar</div>
-              </div>` : '<div style="font-size:12px;color:#888;margin-bottom:10px;">Sin imagen de comprobante</div>'}
           </div>
           <div style="margin-bottom:10px;">
             <div style="font-size:11px;color:var(--gris);font-weight:700;margin-bottom:6px;">Motivo de rechazo (opcional):</div>
@@ -16817,15 +17319,21 @@ document.addEventListener('DOMContentLoaded', () => {
           <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         break;
       }
-      case 'pago_pendiente': { // BUG 4 fix: estado faltante — cliente eligió método pero no ha subido comprobante
-        const totalPP = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0);
+      // Estados legacy (compatibilidad)
+      case 'pago_revisando': {
+        const totalR = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0);
         btns = `
-          <div style="background:rgba(230,81,0,.08);border:1.5px solid rgba(230,81,0,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--negro);">
-            ⏳ El cliente eligió <b>${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</b> y debe subir el comprobante de <b>${domFmt(totalPP)}</b>.
+          <div style="background:rgba(21,101,192,.08);border:2px solid rgba(21,101,192,.35);border-radius:14px;padding:14px 16px;margin-bottom:12px;">
+            <div style="font-size:12px;font-weight:800;color:#1565C0;margin-bottom:8px;">🔍 Comprobante recibido · ${domFmt(totalR)}</div>
           </div>
-          <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+          <div style="margin-bottom:10px;">
+            <input id="motivoRechazoInput" style="width:100%;background:var(--fondo);border:1.5px solid var(--borde);border-radius:10px;padding:10px;font-size:13px;color:var(--negro);font-family:inherit;box-sizing:border-box;" placeholder="Motivo de rechazo (opcional)">
+          </div>
+          <button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domAprobarPago('${p.sessionId}')">✅ Pago válido — a cocina</button>
+          <button class="dom-btn danger" style="width:100%;padding:11px;margin-top:8px;" onclick="domRechazarPago('${p.sessionId}')">❌ Rechazar</button>`;
         break;
       }
+      case 'pago_pendiente':
       case 'pago':
         btns = `<button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domPagoRecibido('${p.sessionId}')">✅ Pago recibido — enviar a cocina</button>`;
         break;
@@ -16881,21 +17389,48 @@ document.addEventListener('DOMContentLoaded', () => {
     _domStockId = sessionId;
     const list = document.getElementById('domStockList');
     if (!list) return;
-    list.innerHTML = (p.items || []).map(item => {
+    list.innerHTML = (p.items || []).map((item, idx) => {
       const sinStock = (p.sinStock || []).includes(item.nombre);
-      return `<label style="display:flex;align-items:center;gap:10px;padding:10px 12px;
-        background:var(--fondo);border:1.5px solid var(--borde);border-radius:10px;cursor:pointer;">
-        <input type="checkbox" value="${domEsc(item.nombre)}" ${sinStock ? 'checked' : ''}
-          style="width:18px;height:18px;accent-color:#E53935;cursor:pointer;">
-        <div style="flex:1;">
-          <div style="font-size:14px;font-weight:700;color:var(--negro);">${domEsc(item.nombre)}</div>
-          <div style="font-size:11px;color:var(--gris);">${item.cantidad}× ${domFmt(item.precio)}</div>
-        </div>
-      </label>`;
+      return `<div style="display:flex;align-items:center;gap:10px;padding:10px 12px;
+        background:var(--fondo);border:1.5px solid var(--borde);border-radius:10px;margin-bottom:6px;">
+        <label style="display:flex;align-items:center;gap:10px;flex:1;cursor:pointer;">
+          <input type="checkbox" value="${domEsc(item.nombre)}" ${sinStock ? 'checked' : ''}
+            style="width:18px;height:18px;accent-color:#E53935;cursor:pointer;">
+          <div style="flex:1;">
+            <div style="font-size:14px;font-weight:700;color:var(--negro);">${domEsc(item.nombre)}</div>
+            <div style="font-size:11px;color:var(--gris);">${item.cantidad}× ${domFmt(item.precio)}</div>
+          </div>
+        </label>
+        <button onclick="domQuitarItem(${idx})"
+          style="border:none;background:#E53935;color:#fff;border-radius:8px;
+          padding:6px 10px;font-size:11px;font-weight:800;cursor:pointer;font-family:inherit;white-space:nowrap;"
+          title="Quitar del pedido">✕ Quitar</button>
+      </div>`;
     }).join('');
     // Cambiar estado a verificando
     domSetEstado(sessionId, 'verificando');
     document.getElementById('modalDomStock').classList.add('show');
+  };
+
+  // Quitar un item del pedido (edición antes de confirmar)
+  window.domQuitarItem = async function(idx) {
+    const p = _domPedidos.find(x => x.sessionId === _domStockId);
+    if (!p || !p.items) return;
+    const items = [...p.items];
+    const removed = items.splice(idx, 1)[0];
+    if (!removed) return;
+    if (!confirm(`¿Quitar "${removed.nombre}" del pedido?`)) return;
+    const newTotal = items.reduce((s, i) => s + (i.precio||0)*(i.cantidad||1), 0) + (p.costoEnvio||0);
+    try {
+      const { db, ref, get, update } = window._FB;
+      const snap = await get(ref(db, `${DOM_PATH}/${_domStockId}/mensajes`));
+      const arr = Array.isArray(snap.val()) ? snap.val() : [];
+      arr.push({ autor: 'admin', texto: `✏️ Se eliminó "${removed.nombre}" del pedido. Total actualizado: ${domFmt(newTotal)}.`, tipo: 'chat', ts: Date.now() });
+      await update(ref(db, `${DOM_PATH}/${_domStockId}`), { items, total: newTotal, mensajes: arr, tsUltimoMensaje: Date.now() });
+      window.showToast(`✅ "${removed.nombre}" eliminado del pedido`);
+      // Re-render del modal de stock
+      window.domAbrirStock(_domStockId);
+    } catch(e) { window.showToast('⚠️ Error: ' + e.message); }
   };
 
   window.domEnviarNotifStock = function() {
@@ -16911,8 +17446,11 @@ document.addEventListener('DOMContentLoaded', () => {
       window.showToast('✅ Todo disponible — puedes confirmar el pedido');
       return;
     }
-    // Notificar al cliente que debe cambiar productos
-    domSetEstado(_domStockId, 'cambio', { sinStock, notifCliente: { tipo: 'cambio', items: sinStock, ts: Date.now() } });
+    // Notificar al cliente que hay productos sin stock
+    const listaSinStock = sinStock.map(s => `• ${s}`).join('\n');
+    const msgCliente = `⚠️ Lo sentimos, los siguientes productos no están disponibles en este momento:\n${listaSinStock}\nPor favor escríbenos para elegir una alternativa.`;
+    domSetEstado(_domStockId, 'no_disponible', { sinStock, notifCliente: { tipo: 'no_disponible', items: sinStock, ts: Date.now() } });
+    window._domAdminMsg && window._domAdminMsg(_domStockId, msgCliente);
     cerrarModal('modalDomStock');
     window.showToast('📢 Cliente notificado sobre productos sin stock');
   };
@@ -16927,9 +17465,16 @@ document.addEventListener('DOMContentLoaded', () => {
       callback() {
         const p = _domPedidos.find(x => x.sessionId === sessionId);
         if (!p) return;
-        // Si requiere pago digital: pasar a confirmado con flag para que cliente adjunte comprobante
-        domSetEstado(sessionId, 'confirmado');
-        window.showToast('✅ Pedido confirmado' + (p.requierePago ? ' — esperando comprobante de pago' : ''));
+        const esEfectivo = p.esEfectivo || (p.metodoPagoLabel||'').toLowerCase().includes('efectivo');
+        if (esEfectivo) {
+          // Efectivo: confirmar y pasar a esperando_pago directamente
+          domSetEstado(sessionId, 'esperando_pago');
+          window.showToast('✅ Pedido confirmado — pago en efectivo al entregar');
+        } else {
+          // Digital: confirmar y admin envía métodos de pago
+          domSetEstado(sessionId, 'confirmado');
+          window.showToast('✅ Pedido confirmado — envía los datos de pago al cliente');
+        }
       }
     });
   };
@@ -16972,16 +17517,27 @@ document.addEventListener('DOMContentLoaded', () => {
         domSetEstado(sessionId, 'cocina', {
           pagoConfirmado: true, pagoConfirmadoTs: Date.now(),
         });
+        // Avisar al cliente por chat
+        window._domAdminMsg(sessionId, '✅ Tu pago fue confirmado. ¡Tu pedido está en preparación! 🍳');
         domEnviarACocinaInterno(sessionId);
         window.showToast('✅ Pago aprobado — pedido a cocina');
       }
     });
   };
 
+  // Helper: enviar mensaje admin sin abrir modal
+  window._domAdminMsg = async function(sessionId, texto) {
+    try {
+      const { db, ref, get, update } = window._FB;
+      const snap = await get(ref(db, `${DOM_PATH}/${sessionId}/mensajes`));
+      const arr  = Array.isArray(snap.val()) ? snap.val() : [];
+      arr.push({ autor: 'admin', texto, tipo: 'chat', ts: Date.now() });
+      await update(ref(db, `${DOM_PATH}/${sessionId}`), { mensajes: arr, tsUltimoMensaje: Date.now() });
+    } catch(e) { console.warn('_domAdminMsg error:', e); }
+  };
+
   // Rechazar comprobante → cliente debe reenviar
   window.domRechazarPago = function(sessionId) {
-    // BUG 6 fix: leer el valor del campo AHORA para construir el mensaje del modal,
-    // y volver a leerlo DENTRO del callback para capturar el valor definitivo
     const motivoPreview = document.getElementById('motivoRechazoInput')?.value?.trim() || '';
     window.confirmar({
       icono: '❌',
@@ -16989,12 +17545,16 @@ document.addEventListener('DOMContentLoaded', () => {
       mensaje: motivoPreview ? `¿Rechazar con motivo: "${motivoPreview}"?` : '¿Rechazar este comprobante? El cliente deberá enviar uno nuevo.',
       textoOk: '❌ Sí, rechazar',
       callback() {
-        // Re-leer el campo en el momento de confirmar (valor definitivo)
         const motivo = document.getElementById('motivoRechazoInput')?.value?.trim() || '';
         domSetEstado(sessionId, 'pago_rechazado', {
           motivoRechazo: motivo || 'Comprobante no válido',
           comprobanteRechazadoTs: Date.now(),
         });
+        // Avisar al cliente por chat
+        const msgCliente = motivo
+          ? `❌ Tu comprobante no fue aceptado. Motivo: ${motivo}. Por favor intenta de nuevo.`
+          : '❌ Tu comprobante no fue aceptado. Por favor verifica el pago e intenta de nuevo.';
+        window._domAdminMsg(sessionId, msgCliente);
         cerrarModal('modalDomDetalle');
         window.showToast('❌ Comprobante rechazado — cliente notificado');
       }
@@ -17037,6 +17597,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!p) return;
 
     domSetEstado(sessionId, 'cocina', { notifCliente: { tipo: 'cocina', ts: Date.now() } });
+    window._domAdminMsg && window._domAdminMsg(sessionId, '🍳 ¡Tu pedido está siendo preparado en la cocina! Te avisaremos cuando esté listo.');
 
     if (window._FB && window._FB.db) {
       window._FB.get(window._FB.ref(window._FB.db, 'restaurante/ordenes')).then(snap => {
@@ -17099,13 +17660,14 @@ document.addEventListener('DOMContentLoaded', () => {
     window.confirmar({
       icono: '🛵',
       titulo: 'Despachar pedido',
-      mensaje: '¿El pedido ya fue entregado al repartidor? El cliente recibirá una notificación para confirmar la entrega.',
+      mensaje: '¿El pedido ya fue entregado al repartidor? El cliente recibirá una notificación.',
       textoOk: '🛵 Sí, despachar',
       callback() {
         domSetEstado(sessionId, 'despachado', {
           clienteConfirmo: false,
           notifCliente: { tipo: 'despachado', ts: Date.now() }
         });
+        window._domAdminMsg && window._domAdminMsg(sessionId, '🛵 ¡Tu pedido ya está en camino! El repartidor está yendo a tu dirección.');
         window.showToast('🛵 Pedido despachado — esperando confirmación del cliente');
       }
     });
@@ -17250,6 +17812,7 @@ document.addEventListener('DOMContentLoaded', () => {
         domSetEstado(sessionId, 'cancelado', {
           notifCliente: { tipo: 'cancelado', ts: Date.now() }
         });
+        window._domAdminMsg(sessionId, '❌ Lo sentimos, tu pedido ha sido cancelado. Puedes hacer un nuevo pedido cuando quieras.');
         domGuardarEnHistorial(sessionId, 'cancelado');
         window.showToast('❌ Pedido cancelado');
       }
@@ -17585,6 +18148,14 @@ function renderPedido(p) {
     domEscucharRespuestasCliente();
     domActualizarBadges();
   }
+
+  // Detiene todos los listeners activos del módulo de domicilios (llamado desde cerrarSesion).
+  window._domDetener = function() {
+    if (_domUnsub)            { _domUnsub();            _domUnsub            = null; }
+    if (_domUnsubKDS)         { _domUnsubKDS();         _domUnsubKDS         = null; }
+    if (_domUnsubRespuestas)  { _domUnsubRespuestas();  _domUnsubRespuestas  = null; }
+    _domInicializado = false;
+  };
 
   // Permite re-inicializar el módulo DESPUÉS del login, cuando usuarioActivo ya está disponible.
   // Resetea el flag para que _domInit pueda volver a correr con el rol correcto.
