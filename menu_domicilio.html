@@ -742,7 +742,7 @@ body{
 <div class="screen" id="screenCarrito">
   <div class="hdr">
     <div class="hdr-inner">
-      <button class="hdr-back" onclick="showScreen('menu');actualizarFab()">←</button>
+      <button class="hdr-back" onclick="showScreen('menu')">←</button>
       <div class="hdr-texts">
         <div class="hdr-nombre">🛒 Tu pedido</div>
         <div class="hdr-sub" id="carritoSubtitle">0 productos</div>
@@ -751,7 +751,7 @@ body{
   </div>
   <div class="carrito-body" id="carritoBody"></div>
   <div class="btn-continuar">
-    <button class="btn-big secondary" onclick="showScreen('menu');actualizarFab()">← Seguir</button>
+    <button class="btn-big secondary" onclick="showScreen('menu')">← Seguir</button>
     <button class="btn-big primary" id="btnIrFormulario" onclick="irAFormulario()">Continuar →</button>
   </div>
 </div>
@@ -863,20 +863,11 @@ body{
 <div class="screen" id="screenChat" style="min-height:100dvh;">
   <div class="chat-header">
     <div class="chat-header-top">
-      <div>
-        <div class="chat-resto-name" id="chatRestoName">Restaurante</div>
-        <div class="chat-pedido-id" id="chatPedidoId">#------</div>
-      </div>
-      <button onclick="showScreen('menu');actualizarFab()"
-        style="background:rgba(255,255,255,.15);border:none;border-radius:999px;
-               padding:7px 14px;color:#fff;font-size:13px;font-weight:800;
-               font-family:var(--font);cursor:pointer;display:flex;align-items:center;gap:6px;
-               flex-shrink:0;">
-        🏠 Menú
-      </button>
+      <div class="chat-resto-name" id="chatRestoName">Restaurante</div>
+      <div class="chat-pedido-id" id="chatPedidoId">#------</div>
     </div>
     <div style="font-size:11px;color:rgba(255,255,255,.65);font-weight:600;margin-top:2px;">
-      💬 Chat con el restaurante · Tu pedido sigue activo
+      💬 Chat con el restaurante
     </div>
   </div>
   <div class="chat-estado-bar">
@@ -1222,7 +1213,6 @@ function irACarrito(){
   if(!cartCount()){showToast('⚠️ Tu carrito está vacío');return;}
   renderCarrito();
   showScreen('carrito');
-  document.getElementById('fabCarrito').classList.remove('show');
 }
 
 function renderCarrito(){
