@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net; frame-src https://www.google.com https://www.grecaptcha.net;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net; frame-src https://www.google.com https://www.grecaptcha.net;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mi Restaurante · POS</title>
 <meta name="theme-color" content="#FF441A">
@@ -15,7 +15,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=DM+Mono:wght@400;500&family=Caveat:wght@600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script src="https://unpkg.com/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.6.0-rc.1/lib/qr-code-styling.js"></script>
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -2725,7 +2726,7 @@
   .qr2-gen-btn.menu-btn { background: linear-gradient(135deg,#2d5a27,#4a8c3f); color: #fff; }
   .qr2-gen-btn.dom-btn  { background: linear-gradient(135deg,#1565C0,#1976D2); color: #fff; }
   .qr2-canvas-wrap { display: flex; justify-content: center; margin: 14px 0 10px; min-height: 40px; }
-  .qr2-canvas-wrap canvas { border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.12); width: 160px !important; height: 160px !important; }
+  .qr2-canvas-wrap canvas, .qr2-canvas-wrap svg { border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.12); max-width: 100%; }
   .qr2-link-row {
     display: flex; align-items: center; gap: 8px;
     background: var(--fondo); border: 1.5px solid var(--borde);
@@ -19152,19 +19153,18 @@ window.meGetPreviewUrl = meGetPreviewUrl;
 <script>
 // ════════════════════════════════════════════════════════════
 // QR DOBLE — Menú Restaurante + Domicilios
-// URLs guardadas indefinidamente en localStorage
+// Usa QRCodeStyling para finder patterns en color + logo circular
 // Logo tomado de window.logoBase64 (variable global del POS)
 // ════════════════════════════════════════════════════════════
 
 const QR2_KEY_MENU = 'qr2_url_menu';
 const QR2_KEY_DOM  = 'qr2_url_dom';
 
-// Instancias de QRCodeStyling
+// Instancias de QRCodeStyling (para poder llamar .download())
 const _qr2 = { menu: null, dom: null };
 
 // ── Inicializar al abrir el accordion ───────────────────────
 function qr2Init() {
-  // Cargar URLs guardadas
   const urlMenu = localStorage.getItem(QR2_KEY_MENU) || '';
   const urlDom  = localStorage.getItem(QR2_KEY_DOM)  || '';
 
@@ -19173,11 +19173,9 @@ function qr2Init() {
   if (inputMenu && urlMenu) inputMenu.value = urlMenu;
   if (inputDom  && urlDom)  inputDom.value  = urlDom;
 
-  // Mostrar aviso si no hay logo
   const noLogo = document.getElementById('qr2NoLogo');
   if (noLogo) noLogo.classList.toggle('show', !window.logoBase64);
 
-  // Si ya había URL guardada, regenerar automáticamente
   if (urlMenu) qr2Generar('menu');
   if (urlDom)  qr2Generar('dom');
 }
@@ -19200,7 +19198,6 @@ function qr2AutoSaveUrl(tipo) {
     const saved = document.getElementById(tipo === 'menu' ? 'qr2SavedMenu' : 'qr2SavedDom');
     if (!input) return;
     localStorage.setItem(key, input.value.trim());
-    // Animación guardado
     if (saved) {
       saved.classList.add('show');
       setTimeout(() => saved.classList.remove('show'), 1800);
@@ -19208,47 +19205,34 @@ function qr2AutoSaveUrl(tipo) {
   }, 800);
 }
 
-// ── Hacer logo circular ──────────────────────────────────────
+// ── Hacer logo circular (transparente, sin fondo negro) ──────
 function qr2HacerLogoRedondo(base64, callback) {
   const img = new Image();
+  img.crossOrigin = 'anonymous';
   img.onload = function() {
-    const size   = 500;
-    const pad    = 30; // anillo blanco alrededor
+    const size = 500;
     const canvas = document.createElement('canvas');
     canvas.width = canvas.height = size;
     const ctx = canvas.getContext('2d');
-
-    // Fondo blanco circular (borde)
-    ctx.beginPath();
-    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
-    ctx.fillStyle = '#ffffff';
-    ctx.fill();
-
-    // Clip circular para la imagen (con padding)
+    ctx.clearRect(0, 0, size, size);
     ctx.save();
     ctx.beginPath();
-    ctx.arc(size/2, size/2, size/2 - pad, 0, Math.PI * 2);
+    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
     ctx.closePath();
     ctx.clip();
-
-    // Dibujar imagen centrada y cubriendo el círculo interior
-    const r = size/2 - pad;
-    ctx.drawImage(img, size/2 - r, size/2 - r, r*2, r*2);
+    ctx.drawImage(img, 0, 0, size, size);
     ctx.restore();
-
     callback(canvas.toDataURL('image/png'));
   };
+  img.onerror = () => callback(base64);
   img.src = base64;
 }
 
-// ── Generar QR ───────────────────────────────────────────────
+// ── Generar QR con QRCodeStyling ─────────────────────────────
 function qr2Generar(tipo) {
-  const inputId   = tipo === 'menu' ? 'qr2UrlMenu'    : 'qr2UrlDom';
-  const canvasId  = tipo === 'menu' ? 'qr2CanvasMenu' : 'qr2CanvasDom';
-  const linkRowId = tipo === 'menu' ? 'qr2LinkRowMenu': 'qr2LinkRowDom';
-  const linkTxtId = tipo === 'menu' ? 'qr2LinkTextMenu':'qr2LinkTextDom';
-  const dlBtnId   = tipo === 'menu' ? 'qr2DlMenu'     : 'qr2DlDom';
-  const color     = tipo === 'menu' ? '#2d5a27'        : '#1565C0';
+  const inputId     = tipo === 'menu' ? 'qr2UrlMenu'    : 'qr2UrlDom';
+  const canvasId    = tipo === 'menu' ? 'qr2CanvasMenu' : 'qr2CanvasDom';
+  const finderColor = tipo === 'menu' ? '#2d8a4e'        : '#1565C0';
 
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -19258,60 +19242,82 @@ function qr2Generar(tipo) {
     return;
   }
 
-  // Guardar URL definitivamente
   localStorage.setItem(tipo === 'menu' ? QR2_KEY_MENU : QR2_KEY_DOM, url);
 
-  const doGenerar = (logoSrc) => {
-    const wrap = document.getElementById(canvasId);
-    if (!wrap) return;
-    wrap.innerHTML = '';
+  const wrap = document.getElementById(canvasId);
+  if (!wrap) return;
+  wrap.innerHTML = '';
 
-    const opts = {
-      width: 1000, height: 1000,
-      data: url,
-      dotsOptions:          { color: '#000000', type: 'rounded' },
-      cornersSquareOptions: { color: color,     type: 'extra-rounded' },
-      cornersDotOptions:    { color: color },
-      backgroundOptions:    { color: '#ffffff' },
-      qrOptions:            { errorCorrectionLevel: 'H' },
-    };
+  const construirQR = (logoDataUrl) => {
+    try {
+      if (typeof QRCodeStyling === 'undefined') {
+        if (typeof showToast === 'function') showToast('⚠️ Librería QR no cargada, reintentando…');
+        setTimeout(() => construirQR(logoDataUrl), 1500);
+        return;
+      }
+      const qr = new QRCodeStyling({
+        width:  1000,
+        height: 1000,
+        data:   url,
+        image:  logoDataUrl || undefined,
 
-    if (logoSrc) {
-      opts.image = logoSrc;
-      opts.imageOptions = { margin: 6, imageSize: 0.28, hideBackgroundDots: true, crossOrigin: 'anonymous' };
+        dotsOptions: {
+          color: '#111111',
+          type:  'rounded'
+        },
+        cornersSquareOptions: {
+          color: finderColor,
+          type:  'extra-rounded'
+        },
+        cornersDotOptions: {
+          color: finderColor
+        },
+        backgroundOptions: {
+          color: '#ffffff'
+        },
+        imageOptions: {
+          crossOrigin:  'anonymous',
+          margin:       8,
+          imageSize:    0.22
+        },
+        qrOptions: {
+          errorCorrectionLevel: 'H'
+        }
+      });
+
+      qr.append(wrap);
+      _qr2[tipo] = qr;
+      _mostrarControlesQR(tipo, url);
+    } catch(e) {
+      if (typeof showToast === 'function') showToast('⚠️ Error generando QR: ' + e.message);
     }
-
-    _qr2[tipo] = new QRCodeStyling(opts);
-    _qr2[tipo].append(wrap);
-
-    // Mostrar link + botón descarga
-    const linkRow = document.getElementById(linkRowId);
-    const linkTxt = document.getElementById(linkTxtId);
-    const dlBtn   = document.getElementById(dlBtnId);
-    if (linkRow) { linkRow.style.display = 'flex'; linkTxt.textContent = url; }
-    if (dlBtn)   dlBtn.style.display = 'flex';
-
-    if (typeof showToast === 'function') showToast('✅ QR generado');
   };
 
-  // Usar logo del restaurante si existe
+  // Si hay logo, hacerlo circular primero; si no, generar sin logo
   if (window.logoBase64) {
-    qr2HacerLogoRedondo(window.logoBase64, doGenerar);
+    qr2HacerLogoRedondo(window.logoBase64, construirQR);
   } else {
-    doGenerar(null);
+    construirQR(null);
   }
+}
+
+// ── Helper: mostrar link + botón descarga + toast ─────────────
+function _mostrarControlesQR(tipo, url) {
+  const linkRow = document.getElementById(tipo === 'menu' ? 'qr2LinkRowMenu' : 'qr2LinkRowDom');
+  const linkTxt = document.getElementById(tipo === 'menu' ? 'qr2LinkTextMenu': 'qr2LinkTextDom');
+  const dlBtn   = document.getElementById(tipo === 'menu' ? 'qr2DlMenu'      : 'qr2DlDom');
+  if (linkRow) { linkRow.style.display = 'flex'; if (linkTxt) linkTxt.textContent = url; }
+  if (dlBtn)   dlBtn.style.display = 'flex';
+  if (typeof showToast === 'function') showToast('✅ QR generado');
 }
 
 // ── Copiar URL ───────────────────────────────────────────────
 function qr2CopiarUrl(tipo) {
-  const txtId = tipo === 'menu' ? 'qr2LinkTextMenu' : 'qr2LinkTextDom';
-  const el    = document.getElementById(txtId);
+  const el = document.getElementById(tipo === 'menu' ? 'qr2LinkTextMenu' : 'qr2LinkTextDom');
   if (!el || !el.textContent) return;
   navigator.clipboard.writeText(el.textContent).then(() => {
     if (typeof showToast === 'function') showToast('📋 Link copiado');
   }).catch(() => {
-    // BUG 10 fix: execCommand('copy') está deprecado y falla en iOS Safari 16.4+.
-    // Fallback: mostrar el texto en un prompt para que el usuario lo copie manualmente.
     try {
       window.prompt('Copia este enlace:', el.textContent);
       if (typeof showToast === 'function') showToast('📋 Copia el enlace del cuadro');
@@ -19321,7 +19327,7 @@ function qr2CopiarUrl(tipo) {
   });
 }
 
-// ── Descargar QR HD ──────────────────────────────────────────
+// ── Descargar QR HD (vía QRCodeStyling nativo) ───────────────
 function qr2Descargar(tipo) {
   const qr = _qr2[tipo];
   if (!qr) { if (typeof showToast === 'function') showToast('⚠️ Primero genera el QR'); return; }
