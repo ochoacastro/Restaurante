@@ -15111,7 +15111,8 @@ function abrirModalCobro() {
     descMonto = descuentoTipo === 'pct' ? Math.round(subtotal * descuentoValor / 100) : Math.min(descuentoValor, subtotal);
     descMonto = Math.min(descMonto, subtotal);
   }
-  const total = subtotal - descMonto;
+  const costoEnvioModal = (tipoOrden === 'domicilio' && config.cobrarEnvio && config.costoEnvio > 0) ? config.costoEnvio : 0;
+  const total = subtotal - descMonto + costoEnvioModal;
   _cobroActual = null;
   _pagosSeleccionados = {};
   // No preseleccionar monto — el cajero lo ingresa manualmente para poder calcular cambio
