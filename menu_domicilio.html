@@ -742,7 +742,7 @@ body{
 <div class="screen" id="screenCarrito">
   <div class="hdr">
     <div class="hdr-inner">
-      <button class="hdr-back" onclick="showScreen('menu')">←</button>
+      <button class="hdr-back" onclick="showScreen('menu');actualizarFab()">←</button>
       <div class="hdr-texts">
         <div class="hdr-nombre">🛒 Tu pedido</div>
         <div class="hdr-sub" id="carritoSubtitle">0 productos</div>
@@ -751,7 +751,7 @@ body{
   </div>
   <div class="carrito-body" id="carritoBody"></div>
   <div class="btn-continuar">
-    <button class="btn-big secondary" onclick="showScreen('menu')">← Seguir</button>
+    <button class="btn-big secondary" onclick="showScreen('menu');actualizarFab()">← Seguir</button>
     <button class="btn-big primary" id="btnIrFormulario" onclick="irAFormulario()">Continuar →</button>
   </div>
 </div>
@@ -1213,6 +1213,7 @@ function irACarrito(){
   if(!cartCount()){showToast('⚠️ Tu carrito está vacío');return;}
   renderCarrito();
   showScreen('carrito');
+  document.getElementById('fabCarrito').classList.remove('show');
 }
 
 function renderCarrito(){
