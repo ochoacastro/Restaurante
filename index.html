@@ -6251,8 +6251,8 @@ async function pinEnter() {
     actualizarHeaderUsuario();
     (window._posDBReady || Promise.resolve()).then(() => {
       init();
-      // Refrescar badges de domicilios ahora que usuarioActivo está disponible
-      setTimeout(() => { if (typeof domActualizarBadges === 'function') domActualizarBadges(); }, 1200);
+      // Re-inicializar domicilios ahora que usuarioActivo está disponible con su rol correcto
+      setTimeout(() => { if (typeof window._domReiniciar === 'function') window._domReiniciar(); }, 800);
     });
     // Firebase en segundo plano: verificar sesión y registrar sin bloquear la UI
     fbVerificarSesion(loginTargetUser.id).then(sesionOcupada => {
@@ -12818,7 +12818,11 @@ async function forzarAccesoSesion() {
   document.getElementById('loginScreen').style.display = 'none';
   aplicarRolUI();
   actualizarHeaderUsuario();
-  (window._posDBReady || Promise.resolve()).then(() => init());
+  (window._posDBReady || Promise.resolve()).then(() => {
+    init();
+    // Re-inicializar domicilios ahora que usuarioActivo está disponible con su rol correcto
+    setTimeout(() => { if (typeof window._domReiniciar === 'function') window._domReiniciar(); }, 800);
+  });
   // Firebase en segundo plano
   fbLiberarSesion(loginTargetUser.id).then(() => fbRegistrarSesion(loginTargetUser.id));
 }
@@ -17581,6 +17585,15 @@ function renderPedido(p) {
     domEscucharRespuestasCliente();
     domActualizarBadges();
   }
+
+  // Permite re-inicializar el módulo DESPUÉS del login, cuando usuarioActivo ya está disponible.
+  // Resetea el flag para que _domInit pueda volver a correr con el rol correcto.
+  window._domReiniciar = function() {
+    if (!window._FB || !window._FB.db) return;
+    _domInicializado = false;
+    _domPrimerCarga  = true;   // reactivar alertas de pedidos pendientes al login
+    _domInit();
+  };
 
   window.addEventListener('firebase-ready', () => {
     setTimeout(_domInit, 600);
