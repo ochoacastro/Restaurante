@@ -1003,68 +1003,35 @@ function ocultarLoader(){
 // ═══════════════════════════════════════════
 // CARGAR MENÚ DESDE FIREBASE
 // ═══════════════════════════════════════════
-const CACHE_KEY = 'dom_menu_cache_v1';
-
-function aplicarDatosMenu(menuVal, cfgVal, msRaw, miRaw){
-  menu = Array.isArray(menuVal) ? menuVal : [];
-  cfg  = cfgVal || {};
-  ms   = {...msRaw, ...miRaw};
-  if(msRaw.hiddenCategories !== undefined) ms.hiddenCategories = msRaw.hiddenCategories;
-
-  payMethods = Array.isArray(ms.paymentMethods)
-    ? ms.paymentMethods.filter(m => m.visibleDom !== false)
-    : [
-        {id:'p1', label:'Efectivo',     img:null, info:''},
-        {id:'p2', label:'Transferencia', img:null, info:''},
-      ];
-
-  envioHabilitado = !!cfg.cobrarEnvio;
-  costoEnvio = envioHabilitado ? (parseFloat(String(cfg.costoEnvio||'').replace(/\D/g,''))||0) : 0;
-}
-
 async function cargarMenu(){
-  const{db,ref,get,auth}=window._FB;
-
-  // ── 1. Mostrar caché local al instante si existe ─────────────────────
+  const{db,ref,get}=window._FB;
   try{
-    const cached = localStorage.getItem(CACHE_KEY);
-    if(cached){
-      const {menuVal,cfgVal,msRaw,miRaw} = JSON.parse(cached);
-      aplicarDatosMenu(menuVal, cfgVal, msRaw, miRaw);
-      aplicarDiseno();
-      renderMenu();
-      ocultarLoader();
-      showScreen('menu');
-    }
-  }catch(_){}
-
-  // ── 2. Esperar auth antes de hacer lecturas (evita retraso por Rules) ─
-  if(!auth.currentUser){
-    const _signIn = window._FB.signInAnonymously;
-    try{ await _signIn(auth); }catch(_){}
-  }
-
-  // ── 3. Leer Firebase: menu + config + settings en paralelo ───────────
-  // menuImages se omite como nodo separado: sus campos relevantes
-  // (headerLogo, businessLogo) ya viven dentro de menuSettings.
-  try{
-    const[snapMenu,snapCfg,snapMs]=await Promise.all([
+    const[snapMenu,snapCfg,snapMs,snapMi]=await Promise.all([
       get(ref(db,'restaurante/menu')),
       get(ref(db,'restaurante/config')),
       get(ref(db,'restaurante/menuSettings')),
+      get(ref(db,'restaurante/menuImages')),
     ]);
+    menu = snapMenu.exists() ? snapMenu.val() : [];
+    cfg  = snapCfg.exists()  ? snapCfg.val()  : {};
+    const msRaw  = snapMs.exists() ? snapMs.val() : {};
+    const miRaw  = snapMi.exists() ? snapMi.val() : {};
 
-    const menuVal = snapMenu.exists() ? snapMenu.val() : [];
-    const cfgVal  = snapCfg.exists()  ? snapCfg.val()  : {};
-    const msRaw   = snapMs.exists()   ? snapMs.val()   : {};
-    const miRaw   = {};   // ya no se necesita como nodo separado
+    // Merge settings igual que menu_restaurante.html
+    ms = {...msRaw,...miRaw};
+    if(msRaw.hiddenCategories!==undefined) ms.hiddenCategories=msRaw.hiddenCategories;
 
-    aplicarDatosMenu(menuVal, cfgVal, msRaw, miRaw);
+    // Métodos de pago visibles en domicilio
+    payMethods = Array.isArray(ms.paymentMethods)
+      ? ms.paymentMethods.filter(m=>m.visibleDom!==false)
+      : [
+          {id:'p1',label:'Efectivo',img:null,info:''},
+          {id:'p2',label:'Transferencia',img:null,info:''},
+        ];
 
-    // ── 4. Guardar en caché para la próxima visita ───────────────────
-    try{
-      localStorage.setItem(CACHE_KEY, JSON.stringify({menuVal, cfgVal, msRaw, miRaw}));
-    }catch(_){}
+    // Envío
+    envioHabilitado = !!cfg.cobrarEnvio;
+    costoEnvio = envioHabilitado ? (parseFloat(String(cfg.costoEnvio||'').replace(/\D/g,''))||0) : 0;
 
     aplicarDiseno();
     renderMenu();
@@ -1073,11 +1040,8 @@ async function cargarMenu(){
 
   }catch(e){
     console.error(e);
-    // Si ya mostramos caché, no pisar con el error
-    if(!menu.length){
-      document.getElementById('screenLoader').innerHTML=
-        '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">⚠️</div><div style="font-size:15px;font-weight:700;color:#c0392b;">Error al cargar el menú.<br>Verifica tu conexión.</div></div>';
-    }
+    document.getElementById('screenLoader').innerHTML=
+      '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">⚠️</div><div style="font-size:15px;font-weight:700;color:#c0392b;">Error al cargar el menú.<br>Verifica tu conexión.</div></div>';
   }
 }
 
