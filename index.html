@@ -13016,10 +13016,8 @@ async function forzarAccesoSesion() {
 
 // ── Cancelar todos los listeners ──────────────────────────────────────
 function fbDetenerListeners() {
-  if (!window._FB) return;
-  const { db, ref, off } = window._FB;
-  Object.keys(_fbListeners).forEach(path => {
-    try { off(ref(db, path)); } catch(_) {}
+  Object.values(_fbListeners).forEach(unsub => {
+    try { if (typeof unsub === 'function') unsub(); } catch(_) {}
   });
   _fbListeners = {};
 }
@@ -13299,10 +13297,10 @@ function fbEscucharCambios() {
   ];
 
   campos.forEach(({ path, handler }) => {
-    _fbListeners[path] = true;
-    onValue(ref(db, path), (snap) => {
+    const unsub = onValue(ref(db, path), (snap) => {
       handler(snap.val());
     });
+    _fbListeners[path] = unsub;
   });
 }
 
