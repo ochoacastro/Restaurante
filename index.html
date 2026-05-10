@@ -16551,10 +16551,12 @@ document.addEventListener('DOMContentLoaded', () => {
         btns += `<span style="font-size:11px;color:#E65100;font-weight:700;">Esperando al cliente…</span>`;
         break;
       case 'confirmado':
-        if (p.metodoPago === 'efectivo') {
+        if (!p.metodoPago) {
+          btns += `<span style="font-size:11px;color:#F57C00;font-weight:800;">⏳ Esperando método de pago…</span>`;
+        } else if (p.metodoPagoLabel && p.metodoPagoLabel.toLowerCase().includes('efectivo')) {
           btns += `<button class="dom-btn green" onclick="event.stopPropagation();domEnviarACocina('${p.sessionId}')">🍳 Enviar a cocina</button>`;
         } else {
-          btns += `<button class="dom-btn primary" onclick="event.stopPropagation();domConfirmarPago('${p.sessionId}')">💳 Confirmar pago</button>`;
+          btns += `<span style="font-size:11px;color:#1565C0;font-weight:800;">⏳ Esperando comprobante…</span>`;
         }
         break;
       case 'pago_revisando':
@@ -16725,10 +16727,27 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="dom-btn danger" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         break;
       case 'confirmado':
-        if (p.metodoPago === 'efectivo') {
-          btns = `<button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domEnviarACocina('${p.sessionId}')">🍳 Enviar a cocina</button>`;
+        if (!p.metodoPago) {
+          // Cliente aún no ha elegido método de pago
+          btns = `
+            <div style="background:#FFF8E1;border:1.5px solid #FFD54F;border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:#5D4037;font-weight:700;">
+              ⏳ Esperando que el cliente elija su método de pago…
+            </div>
+            <button class="dom-btn danger" style="width:100%;padding:12px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+        } else if (p.metodoPago && p.metodoPagoLabel && p.metodoPagoLabel.toLowerCase().includes('efectivo')) {
+          // Eligió efectivo — enviar a cocina directamente
+          btns = `
+            <div style="background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.3);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#2E7D32;font-weight:700;">
+              💵 Cliente pagará en efectivo${p.pagoConQue ? ` · Con: ${domFmt(p.pagoConQue)} · Cambio: ${domFmt(p.cambioADevolver||0)}` : ''}
+            </div>
+            <button class="dom-btn green" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domEnviarACocina('${p.sessionId}')">🍳 Enviar a cocina</button>`;
         } else {
-          btns = `<button class="dom-btn primary" style="width:100%;padding:13px;" onclick="cerrarModal('modalDomDetalle');domConfirmarPago('${p.sessionId}')">💳 Confirmar pago del cliente</button>`;
+          // Eligió método digital — esperando comprobante
+          btns = `
+            <div style="background:rgba(21,101,192,.08);border:1px solid rgba(21,101,192,.25);border-radius:12px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#1565C0;font-weight:700;">
+              💳 Método: ${domEsc(p.metodoPagoLabel||p.metodoPago)} · Esperando comprobante del cliente
+            </div>
+            <button class="dom-btn danger" style="width:100%;padding:12px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         }
         break;
       case 'pago_revisando': {
