@@ -150,7 +150,7 @@ body{
   border-bottom:1px solid var(--borde);
   overflow-x:auto; white-space:nowrap;
   scrollbar-width:none;
-  position:sticky; top:66px; z-index:90;
+  position:sticky; top:0; z-index:90;
   padding:0 8px;
 }
 .cats-bar::-webkit-scrollbar{ display:none; }
@@ -510,6 +510,10 @@ textarea.form-input{ min-height:72px; resize:none; }
 .paso.current .paso-dot{
   background:var(--brand-sf); border-color:var(--brand);
   animation:pulso 1.4s ease-in-out infinite;
+}
+/* El paso activo (done+current) mantiene fondo brand sólido — especificidad mayor */
+.paso.done.current .paso-dot{
+  background:var(--brand); border-color:var(--brand); color:#fff;
 }
 @keyframes pulso{
   0%,100%{ box-shadow:0 0 0 0 rgba(255,68,26,.4); }
@@ -1018,14 +1022,21 @@ function renderApp() {
   }
 
   // Scroll del menú → mostrar/ocultar header sticky
-  const menuHdr = document.getElementById('menuHdr');
-  const hero    = document.getElementById('menuHero');
-  const screenM = document.getElementById('screenMenu');
+  // El scroll ocurre en window (el div no tiene overflow), no en #screenMenu
+  const menuHdr  = document.getElementById('menuHdr');
+  const hero     = document.getElementById('menuHero');
+  const catsBar  = document.getElementById('catsBar');
   if (menuHdr && hero) {
-    screenM.addEventListener('scroll', () => {
+    // Cancelar listener anterior si renderApp se llamara de nuevo
+    if (window._scrollCtrl) window._scrollCtrl.abort();
+    window._scrollCtrl = new AbortController();
+    window.addEventListener('scroll', () => {
       const heroBottom = hero.getBoundingClientRect().bottom;
-      menuHdr.style.display = heroBottom < 0 ? '' : 'none';
-    }, { passive:true });
+      const hdrVisible = heroBottom < 0;
+      menuHdr.style.display = hdrVisible ? '' : 'none';
+      // Ajustar top de cats-bar según si el header ocupa espacio
+      if (catsBar) catsBar.style.top = hdrVisible ? (menuHdr.offsetHeight + 'px') : '0px';
+    }, { passive:true, signal: window._scrollCtrl.signal });
   }
 
   // Aplicar colores personalizados
@@ -1046,9 +1057,11 @@ function renderApp() {
 // RENDER MENÚ
 // ════════════════════════════════════════════════════════════════
 function getPrice(item) {
-  return (menuSettings && menuSettings.mostrarPrecioDomicilio !== false && item.precioDomicilio && item.precioDomicilio > 0)
-    ? item.precioDomicilio
-    : item.precio;
+  return Number(
+    (menuSettings && menuSettings.mostrarPrecioDomicilio !== false && item.precioDomicilio && item.precioDomicilio > 0)
+      ? item.precioDomicilio
+      : item.precio
+  ) || 0;
 }
 
 function renderCategorias() {
@@ -1071,10 +1084,36 @@ function renderCategorias() {
     pill.addEventListener('click', function() {
       bar.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
       this.classList.add('active');
+      // Centrar la pill seleccionada dentro de la barra
+      const pillLeft   = this.offsetLeft;
+      const pillWidth  = this.offsetWidth;
+      const barWidth   = bar.offsetWidth;
+      bar.scrollTo({ left: pillLeft - (barWidth / 2) + (pillWidth / 2), behavior: 'smooth' });
       const sec = document.getElementById('cat-' + this.dataset.cat.replace(/\s+/g,'_'));
       if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
     });
   });
+
+  // Actualizar pill activa al hacer scroll manual por el menú
+  if (window._catObserver) window._catObserver.disconnect();
+  window._catObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      // Leer el nombre original desde data-cat del elemento, no reconstruirlo desde el ID
+      const catName = entry.target.dataset.cat;
+      if (!catName) return;
+      const pill = bar.querySelector(`.cat-pill[data-cat="${catName}"]`);
+      if (!pill) return;
+      bar.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      const pillLeft  = pill.offsetLeft;
+      const pillWidth = pill.offsetWidth;
+      const barWidth  = bar.offsetWidth;
+      bar.scrollTo({ left: pillLeft - (barWidth / 2) + (pillWidth / 2), behavior: 'smooth' });
+    });
+  }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+
+  document.querySelectorAll('.cat-section').forEach(sec => window._catObserver.observe(sec));
 }
 
 function renderMenu() {
@@ -1097,7 +1136,7 @@ function renderMenu() {
     const items = visibles.filter(i => i.categoria === cat);
     if (!items.length) return '';
     return `
-      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}" style="scroll-margin-top:114px;">
+      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}" data-cat="${esc(cat)}" style="scroll-margin-top:50px;">
         <div class="cat-title">${esc(cat)}</div>
         <div class="items-grid">
           ${items.map(item => renderItemCard(item)).join('')}
@@ -1447,7 +1486,16 @@ function renderSeguimiento(p) {
   }
 
   // Calcular posición en los pasos
-  const idxActual = PASOS.findIndex(x => x.k === estado);
+  // Estados intermedios que no están en PASOS se mapean al paso visualmente equivalente
+  const ESTADO_A_PASO = {
+    'cambio':         'verificando',  // El admin está ajustando → sigue en verificación
+    'pago':           'confirmado',   // Esperando pago → pedido confirmado
+    'pago_pendiente': 'confirmado',   // Cliente eligió método, pendiente de comprobante
+    'pago_revisando': 'confirmado',   // Revisando comprobante → sigue en confirmado
+    'pago_rechazado': 'confirmado',   // Comprobante rechazado → sigue en confirmado
+  };
+  const estadoPaso = ESTADO_A_PASO[estado] || estado;
+  const idxActual = PASOS.findIndex(x => x.k === estadoPaso);
 
   // Barra de pasos
   const pasosHtml = PASOS.map((paso, idx) => {
@@ -1480,8 +1528,12 @@ function renderSeguimiento(p) {
   // El admin confirmó disponibilidad → el cliente elige cómo pagar
   let pagoHtml = '';
   if (estado === 'confirmado' && !p.metodoPago) {
+    // Aún no eligió método → selector
     pagoHtml = renderBloqueSeleccionPago(p, total);
-  } else if (['pago_revisando','pago_rechazado'].includes(estado) || (p.metodoPago && !esEfectivoLabel(p.metodoPagoLabel) && !['cocina','listo','despachado','entregado'].includes(estado))) {
+  } else if (estado === 'confirmado' && p.metodoPago && !esEfectivoLabel(p.metodoPagoLabel)) {
+    // Ya eligió método digital pero el estado no avanzó aún → pedir comprobante
+    pagoHtml = renderBloqueComprobante(p, total);
+  } else if (['pago_pendiente','pago_revisando','pago_rechazado'].includes(estado) || (p.metodoPago && !esEfectivoLabel(p.metodoPagoLabel) && !['cocina','listo','despachado','entregado'].includes(estado))) {
     pagoHtml = renderBloqueComprobante(p, total);
   }
 
@@ -1644,12 +1696,14 @@ window.segSelPago = async function(metodoPagoId, metodoPagoLabel, sessionId, tot
       showToast('✅ Método de pago guardado — tu pedido va a cocina');
     } catch(e) { showToast('❌ Error al guardar. Intenta de nuevo.'); }
   } else {
-    // Pago digital: guardar método y pedir comprobante
+    // Pago digital: guardar método y esperar comprobante
+    // Estado 'pago_pendiente': el cliente eligió método pero aún no ha subido el comprobante
+    // Solo subirComprobante() cambia a 'pago_revisando' cuando ya hay imagen
     try {
       await update(ref(db, `restaurante/domicilios/${sessionId}`), {
         metodoPago:      metodoPagoId,
         metodoPagoLabel: metodoPagoLabel,
-        estado:          'pago_revisando',
+        estado:          'pago_pendiente',
         comprobanteImg:  null,
         tsPagoSeleccionado: Date.now(),
       });
@@ -1667,6 +1721,10 @@ window.subirComprobante = async function(sessionId) {
     return;
   }
   const file = fileInput.files[0];
+  if (!file.type.startsWith('image/')) {
+    showToast('⚠️ Solo se aceptan imágenes (JPG, PNG, WebP…)');
+    return;
+  }
   if (file.size > 3 * 1024 * 1024) {
     showToast('⚠️ La imagen es muy grande. Máximo 3MB.');
     return;
