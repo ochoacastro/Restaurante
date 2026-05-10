@@ -742,7 +742,7 @@ body{
 <div class="screen" id="screenCarrito">
   <div class="hdr">
     <div class="hdr-inner">
-      <button class="hdr-back" onclick="showScreen('menu');actualizarFab()">←</button>
+      <button class="hdr-back" onclick="showScreen('menu')">←</button>
       <div class="hdr-texts">
         <div class="hdr-nombre">🛒 Tu pedido</div>
         <div class="hdr-sub" id="carritoSubtitle">0 productos</div>
@@ -751,7 +751,7 @@ body{
   </div>
   <div class="carrito-body" id="carritoBody"></div>
   <div class="btn-continuar">
-    <button class="btn-big secondary" onclick="showScreen('menu');actualizarFab()">← Seguir</button>
+    <button class="btn-big secondary" onclick="showScreen('menu')">← Seguir</button>
     <button class="btn-big primary" id="btnIrFormulario" onclick="irAFormulario()">Continuar →</button>
   </div>
 </div>
@@ -1003,35 +1003,68 @@ function ocultarLoader(){
 // ═══════════════════════════════════════════
 // CARGAR MENÚ DESDE FIREBASE
 // ═══════════════════════════════════════════
+const CACHE_KEY = 'dom_menu_cache_v1';
+
+function aplicarDatosMenu(menuVal, cfgVal, msRaw, miRaw){
+  menu = Array.isArray(menuVal) ? menuVal : [];
+  cfg  = cfgVal || {};
+  ms   = {...msRaw, ...miRaw};
+  if(msRaw.hiddenCategories !== undefined) ms.hiddenCategories = msRaw.hiddenCategories;
+
+  payMethods = Array.isArray(ms.paymentMethods)
+    ? ms.paymentMethods.filter(m => m.visibleDom !== false)
+    : [
+        {id:'p1', label:'Efectivo',     img:null, info:''},
+        {id:'p2', label:'Transferencia', img:null, info:''},
+      ];
+
+  envioHabilitado = !!cfg.cobrarEnvio;
+  costoEnvio = envioHabilitado ? (parseFloat(String(cfg.costoEnvio||'').replace(/\D/g,''))||0) : 0;
+}
+
 async function cargarMenu(){
-  const{db,ref,get}=window._FB;
+  const{db,ref,get,auth}=window._FB;
+
+  // ── 1. Mostrar caché local al instante si existe ─────────────────────
   try{
-    const[snapMenu,snapCfg,snapMs,snapMi]=await Promise.all([
+    const cached = localStorage.getItem(CACHE_KEY);
+    if(cached){
+      const {menuVal,cfgVal,msRaw,miRaw} = JSON.parse(cached);
+      aplicarDatosMenu(menuVal, cfgVal, msRaw, miRaw);
+      aplicarDiseno();
+      renderMenu();
+      ocultarLoader();
+      showScreen('menu');
+    }
+  }catch(_){}
+
+  // ── 2. Esperar auth antes de hacer lecturas (evita retraso por Rules) ─
+  if(!auth.currentUser){
+    const _signIn = window._FB.signInAnonymously;
+    try{ await _signIn(auth); }catch(_){}
+  }
+
+  // ── 3. Leer Firebase: menu + config + settings en paralelo ───────────
+  // menuImages se omite como nodo separado: sus campos relevantes
+  // (headerLogo, businessLogo) ya viven dentro de menuSettings.
+  try{
+    const[snapMenu,snapCfg,snapMs]=await Promise.all([
       get(ref(db,'restaurante/menu')),
       get(ref(db,'restaurante/config')),
       get(ref(db,'restaurante/menuSettings')),
-      get(ref(db,'restaurante/menuImages')),
     ]);
-    menu = snapMenu.exists() ? snapMenu.val() : [];
-    cfg  = snapCfg.exists()  ? snapCfg.val()  : {};
-    const msRaw  = snapMs.exists() ? snapMs.val() : {};
-    const miRaw  = snapMi.exists() ? snapMi.val() : {};
 
-    // Merge settings igual que menu_restaurante.html
-    ms = {...msRaw,...miRaw};
-    if(msRaw.hiddenCategories!==undefined) ms.hiddenCategories=msRaw.hiddenCategories;
+    const menuVal = snapMenu.exists() ? snapMenu.val() : [];
+    const cfgVal  = snapCfg.exists()  ? snapCfg.val()  : {};
+    const msRaw   = snapMs.exists()   ? snapMs.val()   : {};
+    const miRaw   = {};   // ya no se necesita como nodo separado
 
-    // Métodos de pago visibles en domicilio
-    payMethods = Array.isArray(ms.paymentMethods)
-      ? ms.paymentMethods.filter(m=>m.visibleDom!==false)
-      : [
-          {id:'p1',label:'Efectivo',img:null,info:''},
-          {id:'p2',label:'Transferencia',img:null,info:''},
-        ];
+    aplicarDatosMenu(menuVal, cfgVal, msRaw, miRaw);
 
-    // Envío
-    envioHabilitado = !!cfg.cobrarEnvio;
-    costoEnvio = envioHabilitado ? (parseFloat(String(cfg.costoEnvio||'').replace(/\D/g,''))||0) : 0;
+    // ── 4. Guardar en caché para la próxima visita ───────────────────
+    try{
+      localStorage.setItem(CACHE_KEY, JSON.stringify({menuVal, cfgVal, msRaw, miRaw}));
+    }catch(_){}
 
     aplicarDiseno();
     renderMenu();
@@ -1040,8 +1073,11 @@ async function cargarMenu(){
 
   }catch(e){
     console.error(e);
-    document.getElementById('screenLoader').innerHTML=
-      '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">⚠️</div><div style="font-size:15px;font-weight:700;color:#c0392b;">Error al cargar el menú.<br>Verifica tu conexión.</div></div>';
+    // Si ya mostramos caché, no pisar con el error
+    if(!menu.length){
+      document.getElementById('screenLoader').innerHTML=
+        '<div style="text-align:center;padding:40px;"><div style="font-size:40px;margin-bottom:12px;">⚠️</div><div style="font-size:15px;font-weight:700;color:#c0392b;">Error al cargar el menú.<br>Verifica tu conexión.</div></div>';
+    }
   }
 }
 
@@ -1213,7 +1249,6 @@ function irACarrito(){
   if(!cartCount()){showToast('⚠️ Tu carrito está vacío');return;}
   renderCarrito();
   showScreen('carrito');
-  document.getElementById('fabCarrito').classList.remove('show');
 }
 
 function renderCarrito(){
@@ -1367,8 +1402,13 @@ async function enviarPedido(){
 
   try{
     const{db,ref,set,auth}=window._FB;
-    // Fix 5: asegurar auth anónimo antes de crear el pedido
-    if(!auth.currentUser) await signInAnonymously(auth).catch(()=>{});
+    // Auth anónimo robusto: hasta 3 intentos antes de rendirse
+    if(!auth.currentUser){
+      const _signIn=window._FB.signInAnonymously;
+      for(let _i=0;_i<3;_i++){
+        try{ await _signIn(auth); break; }catch(_e){ await new Promise(r=>setTimeout(r,600)); }
+      }
+    }
     const uid = auth.currentUser?.uid || null;
     const sid=genId();
     const items=cartItems().map(c=>({
@@ -1380,9 +1420,12 @@ async function enviarPedido(){
       foto:c.item.foto||null,
     }));
 
+    // Info del método de pago seleccionado (para pantalla de comprobante)
+    const pagoMetodo=payMethods.find(m=>m.id===pagoSelId)||{};
+
     const pedido={
       sessionId: sid,
-      uid,       // Fix 5: UID del cliente para Security Rules
+      uid,
       estado:    'pendiente',
       timestamp: Date.now(),
       // Datos cliente
@@ -1397,6 +1440,7 @@ async function enviarPedido(){
       // Pago inicial
       metodoPagoId:    pagoSelId,
       metodoPagoLabel: pagoSelLabel,
+      metodoPagoInfo:  pagoMetodo.info||null,
       esEfectivo:      esEfectivo,
       pagoConBillete:  esEfectivo&&billete>0?billete:null,
       cambioADevolver: esEfectivo&&billete>total?(billete-total):null,
