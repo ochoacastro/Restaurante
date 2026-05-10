@@ -421,6 +421,22 @@ textarea.form-input{ min-height:72px; resize:none; }
   font-size:13px;
 }
 
+/* Campo devuelta efectivo */
+.devuelta-box{
+  margin-top:12px;
+  background:var(--fondo);
+  border:1.5px solid var(--borde);
+  border-radius:var(--r-sm);
+  padding:12px 14px;
+  display:none;
+}
+.devuelta-box.show{ display:block; }
+.devuelta-label{
+  font-size:12px; font-weight:800; color:var(--gris-osc);
+  margin-bottom:8px; display:block;
+}
+.devuelta-hint{ font-size:11px; color:var(--gris); margin-top:6px; }
+
 /* Costo envío */
 .envio-info{
   background:var(--brand-sf);
@@ -585,6 +601,92 @@ textarea.form-input{ min-height:72px; resize:none; }
   font-size:15px; font-weight:900; font-family:var(--font);
   cursor:pointer; margin-top:8px;
 }
+
+/* ── BLOQUE PAGO EN SEGUIMIENTO ─────────────────────────────── */
+.pago-seg-box{
+  background:var(--blanco);
+  border:2px solid var(--brand);
+  border-radius:var(--r);
+  padding:18px 16px;
+  margin-bottom:14px;
+  box-shadow:0 4px 18px rgba(255,68,26,.13);
+}
+.pago-seg-title{
+  font-size:13px; font-weight:900;
+  color:var(--brand); text-transform:uppercase;
+  letter-spacing:.5px; margin-bottom:14px;
+  display:flex; align-items:center; gap:6px;
+}
+.pago-metodo-sel{
+  border:1.5px solid var(--borde); border-radius:var(--r-sm);
+  padding:11px 13px; display:flex; align-items:center; gap:10px;
+  cursor:pointer; margin-bottom:8px; transition:border-color .15s, background .15s;
+}
+.pago-metodo-sel.selected{ border-color:var(--brand); background:var(--brand-sf); }
+.pago-metodo-ico{ font-size:22px; flex-shrink:0; }
+.pago-metodo-nombre{ font-size:14px; font-weight:800; flex:1; }
+.pago-metodo-info{ font-size:11px; color:var(--gris); margin-top:2px; }
+.pago-metodo-radio{
+  width:20px; height:20px; border-radius:50%;
+  border:2px solid var(--borde); flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; transition:all .15s;
+}
+.pago-metodo-sel.selected .pago-metodo-radio{
+  background:var(--brand); border-color:var(--brand); color:#fff;
+}
+
+/* Instrucciones pago digital */
+.pago-instrucciones{
+  background:#FFF8E1; border:1px solid #FFD54F;
+  border-radius:var(--r-sm); padding:12px 14px;
+  font-size:13px; color:#5D4037;
+  font-weight:600; line-height:1.5; margin:12px 0;
+}
+.pago-instrucciones strong{ color:#E65100; }
+
+/* Uploader comprobante */
+.comprobante-box{ margin-top:12px; }
+.comprobante-label{ font-size:12px; font-weight:800; color:var(--gris-osc); margin-bottom:8px; display:block; }
+.comprobante-upload{
+  border:2px dashed var(--borde); border-radius:var(--r-sm);
+  padding:20px; text-align:center; cursor:pointer;
+  transition:border-color .15s, background .15s;
+  position:relative;
+}
+.comprobante-upload:hover{ border-color:var(--brand); background:var(--brand-sf); }
+.comprobante-upload input[type=file]{ position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%; }
+.comprobante-upload-ico{ font-size:28px; margin-bottom:6px; }
+.comprobante-upload-txt{ font-size:13px; color:var(--gris); font-weight:600; }
+.comprobante-preview{
+  width:100%; border-radius:var(--r-sm); margin-top:10px;
+  max-height:200px; object-fit:contain; display:none;
+  border:1px solid var(--borde); background:#000;
+}
+.comprobante-preview.show{ display:block; }
+.btn-enviar-comprobante{
+  background:var(--verde); color:#fff;
+  border:none; border-radius:var(--r); padding:14px 20px;
+  font-size:15px; font-weight:900; font-family:var(--font);
+  width:100%; cursor:pointer; margin-top:12px;
+  display:flex; align-items:center; justify-content:center; gap:8px;
+  box-shadow:0 3px 12px rgba(0,200,83,.3);
+  transition:transform .15s;
+}
+.btn-enviar-comprobante:active{ transform:scale(.98); }
+.btn-enviar-comprobante:disabled{ opacity:.5; pointer-events:none; }
+.comprobante-enviado{
+  background:rgba(0,200,83,.08); border:1px solid rgba(0,200,83,.3);
+  border-radius:var(--r-sm); padding:12px 14px; margin-top:10px;
+  font-size:13px; color:#2E7D32; font-weight:700;
+  display:flex; align-items:center; gap:8px;
+}
+.rechazo-motivo{
+  background:rgba(229,57,53,.07); border:1px solid rgba(229,57,53,.25);
+  border-radius:var(--r-sm); padding:12px 14px; margin-bottom:10px;
+  font-size:13px; color:var(--rojo); font-weight:700;
+  line-height:1.5;
+}
 </style>
 </head>
 <body>
@@ -697,12 +799,9 @@ textarea.form-input{ min-height:72px; resize:none; }
       </div>
     </div>
 
-    <!-- Método de pago -->
-    <div class="form-section" id="pagoSection">
-      <div class="form-section-title">💳 Método de pago</div>
-      <div class="pago-grid" id="pagoGrid">
-        <!-- se llena dinámicamente -->
-      </div>
+    <!-- Nota informativa -->
+    <div class="envio-info" style="background:rgba(21,101,192,.08);border-color:rgba(21,101,192,.2);color:#1565C0;">
+      ℹ️ El método de pago lo elegirás una vez el restaurante confirme tu pedido.
     </div>
   </div>
 
@@ -1165,6 +1264,7 @@ window.irADatos = function() {
   }
 
   showScreen('datos');
+  actualizarDevuelta();
 };
 
 function renderDatosResumen() {
@@ -1207,7 +1307,48 @@ function renderPagoGrid() {
 window.selPago = function(id) {
   paySelected = id;
   renderPagoGrid();
+  actualizarDevuelta();
 };
+
+function esEfectivo() {
+  const m = payMethods.find(m => m.id === paySelected);
+  return m && m.label.toLowerCase().includes('efectivo');
+}
+
+function actualizarDevuelta() {
+  const box = document.getElementById('devueltaBox');
+  if (!box) return;
+  if (esEfectivo()) {
+    box.classList.add('show');
+    calcularCambio();
+  } else {
+    box.classList.remove('show');
+  }
+}
+
+function calcularCambio() {
+  const hint = document.getElementById('devueltaHint');
+  const inp  = document.getElementById('fDevuelta');
+  if (!hint || !inp) return;
+  const total = cartTotal() + costoEnvio;
+  const raw   = inp.value.replace(/\D/g,'');
+  const conQue = raw ? parseInt(raw, 10) : 0;
+  if (conQue >= total) {
+    hint.textContent = `Cambio a devolver: ${fmt(conQue - total)}`;
+    hint.style.color = 'var(--verde)';
+  } else if (conQue > 0) {
+    hint.textContent = `⚠️ El valor es menor al total (${fmt(total)})`;
+    hint.style.color = 'var(--rojo)';
+  } else {
+    hint.textContent = 'El repartidor llevará el cambio exacto.';
+    hint.style.color = 'var(--gris)';
+  }
+}
+
+// Listener para recalcular en tiempo real mientras escribe
+document.addEventListener('input', function(e) {
+  if (e.target.id === 'fDevuelta') calcularCambio();
+});
 
 // ════════════════════════════════════════════════════════════════
 // ENVIAR PEDIDO
@@ -1227,7 +1368,6 @@ window.enviarPedido = async function() {
   });
   if (!ok) { showToast('⚠️ Completa los campos obligatorios'); return; }
   if (!cartCount()) { showToast('⚠️ Tu carrito está vacío'); return; }
-  if (!paySelected && payMethods.length) { showToast('⚠️ Selecciona un método de pago'); return; }
 
   const btn = document.getElementById('btnEnviar');
   btn.disabled = true;
@@ -1235,7 +1375,6 @@ window.enviarPedido = async function() {
 
   try {
     const sessionId = genId();
-    const payMethod = payMethods.find(m => m.id === paySelected) || null;
     const items = cartItems().map(c => ({
       nombre:    c.item.nombre,
       cantidad:  c.qty,
@@ -1253,8 +1392,8 @@ window.enviarPedido = async function() {
       clienteNotas:     notas,
       items,
       costoEnvio:       costoEnvio,
-      metodoPago:       paySelected || 'efectivo',
-      metodoPagoLabel:  payMethod?.label || 'Efectivo',
+      metodoPago:       null,       // se elige después de confirmación del admin
+      metodoPagoLabel:  null,
       tipoDocumento:    'sin_fe',
       sinStock:         [],
       requierePago:     false,
@@ -1365,13 +1504,13 @@ function renderSeguimiento(p) {
     return;
   }
 
-  // Calcular posición en los pasos (ignorar estados fuera del flujo normal)
+  // Calcular posición en los pasos
   const idxActual = PASOS.findIndex(x => x.k === estado);
 
-  // Barra de pasos (solo estados del flujo principal)
+  // Barra de pasos
   const pasosHtml = PASOS.map((paso, idx) => {
     let cls = '';
-    if (idxActual < 0) cls = '';          // estado especial
+    if (idxActual < 0) cls = '';
     else if (idx < idxActual)  cls = 'done';
     else if (idx === idxActual) cls = 'done current';
     return `
@@ -1384,7 +1523,7 @@ function renderSeguimiento(p) {
       </div>`;
   }).join('');
 
-  // ¿Se puede cancelar? Solo en estados tempranos
+  // ¿Se puede cancelar?
   const puedeCancelar = ['pendiente','verificando'].includes(estado);
 
   // Items del pedido
@@ -1395,6 +1534,21 @@ function renderSeguimiento(p) {
       <span class="seg-item-precio">${fmt((i.precio||0)*(i.cantidad||1))}</span>
     </div>`).join('');
 
+  // ── BLOQUE DE PAGO: solo aparece en estado 'confirmado' ──────
+  // El admin confirmó disponibilidad → el cliente elige cómo pagar
+  let pagoHtml = '';
+  if (estado === 'confirmado' && !p.metodoPago) {
+    pagoHtml = renderBloqueSeleccionPago(p, total);
+  } else if (['pago_revisando','pago_rechazado'].includes(estado) || (p.metodoPago && !esEfectivoLabel(p.metodoPagoLabel) && !['cocina','listo','despachado','entregado'].includes(estado))) {
+    pagoHtml = renderBloqueComprobante(p, total);
+  }
+
+  // Info pago (ya seleccionado)
+  const infoMetodoPago = p.metodoPago
+    ? `<div class="seg-info-row"><span class="seg-info-ico">💳</span><span class="seg-info-txt">${esc(p.metodoPagoLabel||p.metodoPago)}</span></div>
+       ${p.pagoConQue ? `<div class="seg-info-row"><span class="seg-info-ico">💵</span><span class="seg-info-txt">Paga con: ${fmt(p.pagoConQue)} · Cambio: ${fmt(p.cambioADevolver||0)}</span></div>` : ''}`
+    : `<div class="seg-info-row"><span class="seg-info-ico">💳</span><span class="seg-info-txt" style="color:var(--gris);">Pago pendiente de selección</span></div>`;
+
   body.innerHTML = `
     <!-- Estado hero -->
     <div class="estado-hero" style="background:${info.color};">
@@ -1402,6 +1556,8 @@ function renderSeguimiento(p) {
       <div class="estado-hero-label">${info.label}</div>
       <div class="estado-hero-sub">${info.sub}</div>
     </div>
+
+    ${pagoHtml}
 
     <!-- Progreso -->
     <div class="pasos-bar">
@@ -1427,7 +1583,7 @@ function renderSeguimiento(p) {
       <div class="seg-info-row"><span class="seg-info-ico">📞</span><span class="seg-info-txt">${esc(p.clienteTelefono||'')}</span></div>
       <div class="seg-info-row"><span class="seg-info-ico">🏠</span><span class="seg-info-txt">${esc(p.clienteDireccion||'')}</span></div>
       ${p.clienteNotas ? `<div class="seg-info-row"><span class="seg-info-ico">📝</span><span class="seg-info-txt">${esc(p.clienteNotas)}</span></div>` : ''}
-      <div class="seg-info-row"><span class="seg-info-ico">💳</span><span class="seg-info-txt">${esc(p.metodoPagoLabel||'')}</span></div>
+      ${infoMetodoPago}
     </div>
 
     <!-- Botón cancelar -->
@@ -1436,7 +1592,164 @@ function renderSeguimiento(p) {
       ✕ Cancelar mi pedido
     </button>` : ''}
   `;
+
+  // Listener preview imagen tras render
+  const fileInput = document.getElementById('comprobanteFile');
+  if (fileInput) {
+    fileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        const prev = document.getElementById('comprobantePrev');
+        if (prev) { prev.src = e.target.result; prev.classList.add('show'); }
+      };
+      reader.readAsDataURL(file);
+    });
+  }
 }
+
+// ── Helpers bloque pago ─────────────────────────────────────────
+function esEfectivoLabel(label) {
+  return label && label.toLowerCase().includes('efectivo');
+}
+
+function renderBloqueSeleccionPago(p, total) {
+  const metodosHtml = payMethods.map(m => `
+    <div class="pago-metodo-sel" onclick="segSelPago('${esc(m.id)}','${esc(m.label)}','${esc(p.sessionId)}',${total})" id="pm-${esc(m.id)}">
+      <div class="pago-metodo-ico">${m.img ? `<img src="${m.img}" style="width:28px;height:28px;border-radius:6px;object-fit:cover;">` : '💳'}</div>
+      <div style="flex:1;">
+        <div class="pago-metodo-nombre">${esc(m.label)}</div>
+        ${m.info ? `<div class="pago-metodo-info">${esc(m.info)}</div>` : ''}
+      </div>
+      <div class="pago-metodo-radio"></div>
+    </div>`).join('');
+
+  return `
+    <div class="pago-seg-box">
+      <div class="pago-seg-title">💳 Elige cómo pagar</div>
+      <p style="font-size:13px;color:var(--gris-osc);margin-bottom:12px;font-weight:600;">
+        Tu pedido fue confirmado. Total a pagar: <strong style="color:var(--brand);">${fmt(total)}</strong>
+      </p>
+      ${metodosHtml}
+    </div>`;
+}
+
+function renderBloqueComprobante(p, total) {
+  const rechazado  = p.estado === 'pago_rechazado';
+  const revisando  = p.estado === 'pago_revisando';
+  const yaEnviado  = !!p.comprobanteImg;
+  const efectivo   = esEfectivoLabel(p.metodoPagoLabel);
+
+  if (efectivo) return ''; // Efectivo no necesita comprobante
+
+  const instrInfo = payMethods.find(m => m.id === p.metodoPago);
+  const instrTxt  = instrInfo?.info || 'Realiza tu pago por el medio seleccionado.';
+
+  return `
+    <div class="pago-seg-box">
+      <div class="pago-seg-title">💳 Comprobante de pago</div>
+      ${rechazado ? `<div class="rechazo-motivo">❌ Comprobante rechazado: ${esc(p.motivoRechazo||'No válido')}.<br>Por favor sube uno nuevo.</div>` : ''}
+      ${revisando && yaEnviado ? `<div class="comprobante-enviado">✅ Comprobante recibido — el restaurante lo está revisando.</div>` : ''}
+      ${!revisando || !yaEnviado || rechazado ? `
+        <div class="pago-instrucciones">
+          <strong>Método:</strong> ${esc(p.metodoPagoLabel||'')} · <strong>Total:</strong> ${fmt(total)}<br>
+          ${esc(instrTxt)}<br>
+          Luego descarga el comprobante y súbelo aquí.
+        </div>
+        <div class="comprobante-box">
+          <span class="comprobante-label">📎 Subir comprobante de pago</span>
+          <div class="comprobante-upload">
+            <input type="file" id="comprobanteFile" accept="image/*" capture="environment">
+            <div class="comprobante-upload-ico">📷</div>
+            <div class="comprobante-upload-txt">Toca para seleccionar o tomar foto</div>
+          </div>
+          <img class="comprobante-preview" id="comprobantePrev" src="" alt="Comprobante">
+          <button class="btn-enviar-comprobante" id="btnSubirComprobante" onclick="subirComprobante('${esc(p.sessionId)}')">
+            📤 Enviar comprobante al restaurante
+          </button>
+        </div>` : ''}
+    </div>`;
+}
+
+// ── Cliente selecciona método de pago (en estado 'confirmado') ──
+window.segSelPago = async function(metodoPagoId, metodoPagoLabel, sessionId, total) {
+  // Resaltar selección visualmente
+  document.querySelectorAll('.pago-metodo-sel').forEach(el => el.classList.remove('selected'));
+  const el = document.getElementById('pm-' + metodoPagoId);
+  if (el) { el.classList.add('selected'); el.querySelector('.pago-metodo-radio').textContent = '✓'; }
+
+  const esEfectivo = metodoPagoLabel.toLowerCase().includes('efectivo');
+
+  if (esEfectivo) {
+    // Efectivo: pedir devuelta y confirmar
+    const conQueStr = prompt(`💵 ¿Con cuánto vas a pagar?\nTotal del pedido: ${fmt(total)}\n\nEscribe el valor (ej: 50000) o deja vacío si es exacto:`);
+    const conQue = conQueStr ? parseInt(conQueStr.replace(/\D/g,''), 10) : 0;
+    if (conQue > 0 && conQue < total) {
+      alert('⚠️ El valor ingresado es menor al total del pedido.');
+      return;
+    }
+    try {
+      await update(ref(db, `restaurante/domicilios/${sessionId}`), {
+        metodoPago:      metodoPagoId,
+        metodoPagoLabel: metodoPagoLabel,
+        pagoConQue:      conQue > 0 ? conQue : null,
+        cambioADevolver: (conQue > 0 && conQue > total) ? (conQue - total) : null,
+        estado:          'cocina',  // efectivo: va directo a cocina
+        pagoConfirmado:  false,
+        tsPagoSeleccionado: Date.now(),
+      });
+      showToast('✅ Método de pago guardado — tu pedido va a cocina');
+    } catch(e) { showToast('❌ Error al guardar. Intenta de nuevo.'); }
+  } else {
+    // Pago digital: guardar método y pedir comprobante
+    try {
+      await update(ref(db, `restaurante/domicilios/${sessionId}`), {
+        metodoPago:      metodoPagoId,
+        metodoPagoLabel: metodoPagoLabel,
+        estado:          'pago_revisando',
+        comprobanteImg:  null,
+        tsPagoSeleccionado: Date.now(),
+      });
+      showToast('💳 Ahora sube el comprobante de pago');
+    } catch(e) { showToast('❌ Error al guardar. Intenta de nuevo.'); }
+  }
+};
+
+// ── Cliente sube comprobante ────────────────────────────────────
+window.subirComprobante = async function(sessionId) {
+  const fileInput = document.getElementById('comprobanteFile');
+  const btn       = document.getElementById('btnSubirComprobante');
+  if (!fileInput || !fileInput.files[0]) {
+    showToast('⚠️ Selecciona primero una imagen del comprobante');
+    return;
+  }
+  const file = fileInput.files[0];
+  if (file.size > 3 * 1024 * 1024) {
+    showToast('⚠️ La imagen es muy grande. Máximo 3MB.');
+    return;
+  }
+  btn.disabled = true;
+  btn.textContent = '⏳ Subiendo comprobante…';
+  try {
+    const base64 = await new Promise((res, rej) => {
+      const r = new FileReader();
+      r.onload  = () => res(r.result);
+      r.onerror = () => rej(new Error('Error leyendo archivo'));
+      r.readAsDataURL(file);
+    });
+    await update(ref(db, `restaurante/domicilios/${sessionId}`), {
+      comprobanteImg:   base64,
+      tsComprobante:    Date.now(),
+      estado:           'pago_revisando',
+    });
+    showToast('✅ Comprobante enviado — el restaurante lo está revisando');
+  } catch(e) {
+    showToast('❌ Error al subir el comprobante. Intenta de nuevo.');
+    btn.disabled = false;
+    btn.textContent = '📤 Enviar comprobante al restaurante';
+  }
+};
 
 window.cancelarPedido = async function(sessionId) {
   if (!confirm('¿Seguro que quieres cancelar tu pedido?')) return;
