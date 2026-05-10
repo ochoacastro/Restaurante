@@ -6379,7 +6379,7 @@ async function pinEnter() {
 }
 
 function actualizarPinDots() {
-  const maxLen = loginTargetUser ? loginTargetUser.pin.length : 4;
+  const maxLen = loginTargetUser ? (loginTargetUser.pinLen || loginTargetUser.pin?.length || 4) : 4;
   const container = document.getElementById('pinDots');
   // Re-render dots if count changed
   if (container.children.length !== maxLen) {
@@ -6545,6 +6545,7 @@ async function cerrarSesion() {
   esFacturaElectronica = false;
   feNombre = ''; feNit = ''; feCorreo = ''; feTipoDoc = 'CC'; feDireccion = ''; feTelefono = '';
   document.getElementById('loginForm').classList.remove('visible');
+  document.getElementById('loginForm').style.display = '';
   document.getElementById('userSelector').style.display = 'block';
   document.getElementById('cocinaPanel').style.display = 'none';
   document.getElementById('loginScreen').style.display = 'flex';
@@ -8115,8 +8116,9 @@ function abrirPedidosPanel() {
   } else {
     body.innerHTML = lista.map(o => {
       const esActiva  = o.id === ordenActivaId;
-      const nItems    = o.items.reduce((s, i) => s + i.cantidad, 0);
-      const total     = o.items.reduce((s, i) => s + i.precio * i.cantidad, 0);
+      const _items2   = o.items || [];
+      const nItems    = _items2.reduce((s, i) => s + i.cantidad, 0);
+      const total     = _items2.reduce((s, i) => s + i.precio * i.cantidad, 0);
       const tipoIcon  = o.tipoOrden === 'domicilio' ? '🛵' : '🍽️';
       const hora = (() => {
         if (!o.timestamp) return '';
@@ -8128,9 +8130,9 @@ function abrirPedidosPanel() {
       const usuarioDueno = usuarios.find(u => u.id === o.usuarioId);
       const userColor = ensureVibrante((usuarioDueno && usuarioDueno.color) || (o.usuarioColor && o.usuarioColor !== '#888888' ? o.usuarioColor : null) || usuarioActivo?.color || '#FF441A');
 
-      const itemsPreview = o.items.slice(0, 3).map(i =>
+      const itemsPreview = _items2.slice(0, 3).map(i =>
         `<span style="display:inline-block;background:rgba(255,255,255,0.22);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:4px;margin-top:4px;">${i.cantidad}× ${i.nombre}</span>`
-      ).join('') + (o.items.length > 3 ? `<span style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;display:inline-block;font-weight:600;">+${o.items.length - 3} más</span>` : '');
+      ).join('') + (_items2.length > 3 ? `<span style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;display:inline-block;font-weight:600;">+${_items2.length - 3} más</span>` : '');
 
       const creadoPor = o.usuarioNombre
         ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;border-radius:20px;padding:3px 10px;font-weight:700;white-space:nowrap;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.35);">👤 ${esc(o.usuarioNombre)}</span>`
@@ -8372,8 +8374,9 @@ function renderPedidos() {
     const esActiva  = o.id === ordenActivaId;
     const esMia     = o.usuarioId === miId || o.usuarioId == null;
     const puedoEditar = esMia || esAdmin;
-    const nItems    = o.items.reduce((s, i) => s + i.cantidad, 0);
-    const total     = o.items.reduce((s, i) => s + i.precio * i.cantidad, 0);
+    const _items    = o.items || [];
+    const nItems    = _items.reduce((s, i) => s + i.cantidad, 0);
+    const total     = _items.reduce((s, i) => s + i.precio * i.cantidad, 0);
     const tipoIcon  = o.tipoOrden === 'domicilio' ? '🛵' : '🍽️';
     const tipoLabel = o.tipoOrden === 'domicilio' ? 'Domicilio' : 'Restaurante';
     const hora = (() => {
@@ -8389,9 +8392,9 @@ function renderPedidos() {
     const usuarioDueno = usuarios.find(u => u.id === o.usuarioId);
     const userColor = ensureVibrante((usuarioDueno && usuarioDueno.color) || (o.usuarioColor && o.usuarioColor !== '#888888' ? o.usuarioColor : null) || usuarioActivo?.color || '#FF441A');
 
-    const itemsPreview = o.items.slice(0, 3).map(i =>
+    const itemsPreview = _items.slice(0, 3).map(i =>
       `<span style="display:inline-block;background:rgba(255,255,255,0.22);color:#fff;border-radius:6px;padding:2px 8px;font-size:11px;font-weight:700;margin-right:4px;margin-top:4px;">${i.cantidad}× ${i.nombre}</span>`
-    ).join('') + (o.items.length > 3 ? `<span style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;display:inline-block;font-weight:600;">+${o.items.length - 3} más</span>` : '');
+    ).join('') + (_items.length > 3 ? `<span style="font-size:11px;color:rgba(255,255,255,0.7);margin-top:4px;display:inline-block;font-weight:600;">+${_items.length - 3} más</span>` : '');
 
     const creadoPor = o.usuarioNombre
       ? `<span style="display:inline-flex;align-items:center;gap:4px;font-size:12px;border-radius:20px;padding:3px 10px;font-weight:700;white-space:nowrap;background:rgba(255,255,255,0.22);color:#fff;border:1px solid rgba(255,255,255,0.35);">👤 ${esc(o.usuarioNombre)}</span>`
@@ -8771,7 +8774,7 @@ function actualizarBadge() {
   const miId = usuarioActivo?.id ?? null;
   // Filtrar órdenes visibles según rol
   const ordenesPropias = esAdmin ? ordenes : ordenes.filter(o => o.usuarioId === miId || o.usuarioId == null);
-  const totalOrdenes = ordenesPropias.reduce((s, o) => s + o.items.reduce((ss, i) => ss + i.cantidad, 0), 0);
+  const totalOrdenes = ordenesPropias.reduce((s, o) => s + (o.items || []).reduce((ss, i) => ss + i.cantidad, 0), 0);
   const total = totalOrdenes || carrito.reduce((s, i) => s + i.cantidad, 0);
   const badge = document.getElementById('badgeCarrito');
   if (badge) {
@@ -9584,7 +9587,7 @@ function cobrarTodo() {
 
   const itemsMap = {};
   ordenes.forEach(o => {
-    o.items.forEach(item => {
+    (o.items || []).forEach(item => {
       // BUG 4 fix: incluir tipoOrden en la key para no fusionar ítems de mesa y domicilio aunque el precio coincida
       const key = item.nombre + '_' + item.precio + '_' + (o.tipoOrden || 'mesa');
       if (itemsMap[key]) itemsMap[key].cantidad += item.cantidad;
@@ -9610,7 +9613,7 @@ function getOrdenActiva() {
 function sincronizarCarritoDesdeOrden() {
   const o = getOrdenActiva();
   if (o) {
-    carrito = o.items.map(i => ({ ...i }));
+    carrito = (o.items || []).map(i => ({ ...i }));
     tipoOrden = o.tipoOrden || tipoOrden;
     mesaNumero = o.mesa;
     clienteNombre = o.clienteNombre || '';
@@ -13040,6 +13043,7 @@ function fbEscucharCambios() {
         if (!val) return;
         config = { ...config, ...val };
         localStorage.setItem('pos_config', JSON.stringify(config));
+        if (!usuarioActivo) return;
         renderHeader();
         actualizarConsecDisplay();
         document.getElementById('cfgNombre').value = config.nombre || '';
@@ -13080,6 +13084,7 @@ function fbEscucharCambios() {
         });
         posStore.setItem('pos_menu', JSON.stringify(MENU));
         try { posStore.setItem('pos_menu_custom_v3', JSON.stringify(MENU)); } catch(_) {}
+        if (!usuarioActivo) return;
         // Actualizar precios en carrito si cambiaron desde otro dispositivo
         carrito.forEach(ci => {
           const found = MENU.find(m => m.nombre === ci.nombre);
@@ -13110,6 +13115,7 @@ function fbEscucharCambios() {
         });
         historial = merged;
         posStore.setItem('pos_historial', JSON.stringify(historial));
+        if (!usuarioActivo) return;
         actualizarBadgeHistorial(); renderHistorial();
       }
     },
@@ -13135,6 +13141,7 @@ function fbEscucharCambios() {
             return na - nb;
           });
           posStore.setItem('pos_historial', JSON.stringify(historial));
+          if (!usuarioActivo) return;
           actualizarBadgeHistorial(); renderHistorial();
         }
       }
@@ -13148,6 +13155,7 @@ function fbEscucharCambios() {
           usuarios.unshift(masterLocal);
         }
         localStorage.setItem('pos_usuarios', JSON.stringify(usuarios));
+        if (!usuarioActivo) { renderLoginUserList(); return; }
         renderUsuariosConfig();
         renderLoginUserList();
       }
