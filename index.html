@@ -6251,8 +6251,8 @@ async function pinEnter() {
     actualizarHeaderUsuario();
     (window._posDBReady || Promise.resolve()).then(() => {
       init();
-      // Refrescar badges de domicilios ahora que usuarioActivo está disponible
-      setTimeout(() => { if (typeof domActualizarBadges === 'function') domActualizarBadges(); }, 1200);
+      // Notificar al módulo domicilios que ya hay usuario disponible
+      setTimeout(() => window.dispatchEvent(new Event('dom-usuario-listo')), 400);
     });
     // Firebase en segundo plano: verificar sesión y registrar sin bloquear la UI
     fbVerificarSesion(loginTargetUser.id).then(sesionOcupada => {
@@ -6808,6 +6808,8 @@ document.addEventListener('DOMContentLoaded', function() {
       init();
       // Reconectar Firebase en segundo plano
       if (usuarioActivo) fbRegistrarSesion(usuarioActivo.id);
+      // Notificar al módulo domicilios que ya hay usuario disponible
+      setTimeout(() => window.dispatchEvent(new Event('dom-usuario-listo')), 400);
     });
   }
 });
@@ -16374,6 +16376,49 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   // ── Iniciar escucha Firebase ─────────────────────────────────────────────
+  // ── Revisar pendientes una vez que el usuario esté disponible ───────────
+  function _domRevisarPendientesAlLogin() {
+    const rol = window.usuarioActivo?.rol;
+    if (rol === 'admin' || rol === 'master') {
+      // Ya hay usuario: alertar ahora
+      _domAlertarPendientesExistentes();
+    } else {
+      // Sin usuario aún: esperar al evento 'dom-usuario-listo' que se dispara después del login
+      window.addEventListener('dom-usuario-listo', _domAlertarPendientesExistentes, { once: true });
+    }
+  }
+
+  function _domAlertarPendientesExistentes() {
+    const rol = window.usuarioActivo?.rol;
+    if (rol !== 'admin' && rol !== 'master') return;
+    const pendientes = _domPedidos.filter(p => p.estado === 'pendiente');
+    if (pendientes.length === 0) return;
+    const n = pendientes.length;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      [880, 1100].forEach((freq, i) => {
+        const osc = ctx.createOscillator(), gain = ctx.createGain();
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.frequency.value = freq; osc.type = 'square';
+        gain.gain.setValueAtTime(0.15, ctx.currentTime + i * 0.25);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.25 + 0.2);
+        osc.start(ctx.currentTime + i * 0.25);
+        osc.stop(ctx.currentTime + i * 0.25 + 0.2);
+      });
+    } catch(_) {}
+    if (typeof showToast === 'function') {
+      showToast('🛵 ' + n + ' pedido' + (n > 1 ? 's' : '') + ' de domicilio pendiente' + (n > 1 ? 's' : '') + ' — revisa Domicilios', 8000);
+    }
+    domActualizarBadges();
+    // Navegar al tab domicilios
+    setTimeout(() => {
+      const panelDom = document.getElementById('panel-domicilios');
+      if (panelDom && !panelDom.classList.contains('active')) {
+        if (typeof showTab === 'function') showTab('domicilios');
+      }
+    }, 500);
+  }
+
   function domArrancar() {
     if (!window._FB || !window._FB.db) {
       window.addEventListener('firebase-ready', domArrancar, { once: true });
@@ -16394,28 +16439,10 @@ document.addEventListener('DOMContentLoaded', () => {
       // Detectar pedidos nuevos con estado 'pendiente'
       if (_domPrimerCarga) {
         _domPrimerCarga = false;
-        // Primera carga: registrar IDs y alertar si hay pendientes sin atender
-        const pendientesAbiertos = [];
-        _domPedidos.forEach(p => {
-          if (p.sessionId) {
-            _domSeenIds.add(p.sessionId);
-            if (p.estado === 'pendiente') pendientesAbiertos.push(p);
-          }
-        });
-        if (pendientesAbiertos.length > 0) {
-          const rol = window.usuarioActivo?.rol;
-          if (rol === 'admin' || rol === 'master') {
-            const n = pendientesAbiertos.length;
-            if (typeof showToast === 'function') {
-              showToast('🛵 ' + n + ' pedido' + (n>1?'s':'') + ' de domicilio pendiente' + (n>1?'s':'') + ' esperando atención', 7000);
-            }
-            // Navegar automáticamente al tab domicilios
-            const panelDom = document.getElementById('panel-domicilios');
-            if (panelDom && !panelDom.classList.contains('active')) {
-              setTimeout(() => { if (typeof showTab === 'function') showTab('domicilios'); }, 800);
-            }
-          }
-        }
+        _domPedidos.forEach(p => { if (p.sessionId) _domSeenIds.add(p.sessionId); });
+        // Si ya hay usuario logueado, revisar pendientes inmediatamente
+        // Si NO hay usuario aún (login manual), _domRevisarPendientesAlLogin() lo hará después
+        _domRevisarPendientesAlLogin();
       } else {
         _domPedidos.forEach(p => {
           if (p.sessionId && !_domSeenIds.has(p.sessionId) && p.estado === 'pendiente') {
