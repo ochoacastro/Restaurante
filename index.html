@@ -10588,7 +10588,7 @@ function imprimirResumenFiltradoDirecto() {
   if (!texto) { showToast('Sin facturas para imprimir'); return; }
   var win = window.open('', '_blank', 'width=320,height=800');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
-  var logoHTML = window.logoBase64 ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + window.logoBase64 + '" style="max-width:36mm;max-height:60px;"></div>' : '';
+  var logoHTML = window.logoBase64 ? '<div style="text-align:center;margin-bottom:6px;"><img src="' + window.logoBase64 + '" style="max-width:36mm;max-height:60px;background:#fff;mix-blend-mode:multiply;"></div>' : '';
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:58mm auto;margin:0;}body{font-family:\'Courier New\',monospace;font-size:10px;margin:0;padding:2px 2px;width:58mm;}pre{white-space:pre;margin:0;width:100%;}@media print{body{margin:0;padding:1px;}}</style></head><body>' + logoHTML + '<pre>' + texto + '</pre><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');
   win.document.close();
   setTimeout(function(){ showToast('🖨️ Imprimiendo resumen filtrado'); }, 600);
@@ -11305,7 +11305,7 @@ function reimprimirDirecto(f) {
   const win = window.open('', '_blank', 'width=320,height=600');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
   const texto = generarTextoDesdeFactura(f, false);
-  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:36mm;max-height:60px;"></div>` : '';
+  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:36mm;max-height:60px;background:#fff;mix-blend-mode:multiply;"></div>` : '';
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:58mm auto;margin:0;}body{font-family:\'Courier New\',monospace;font-size:10px;margin:0;padding:2px 2px;width:58mm;}pre{white-space:pre;margin:0;width:100%;}@media print{body{margin:0;padding:1px;}}</style></head><body>' + logoHTML + '<pre>' + texto + '</pre><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');
   win.document.close();
 }
@@ -11516,7 +11516,7 @@ async function imprimirBluetooth() {
 
 function imprimirDirecto() {
   const texto = generarTextoTicket();
-  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:100px;max-height:60px;"></div>` : '';
+  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:100px;max-height:60px;background:#fff;mix-blend-mode:multiply;"></div>` : '';
   const win = window.open('', '_blank', 'width=320,height=600');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
 
@@ -12093,7 +12093,7 @@ function imprimirCierreDiaDirecto() {
   const win = window.open('', '_blank', 'width=320,height=800');
   if (!win) { showToast('⚠️ Permite ventanas emergentes para imprimir'); return; }
   const texto = generarTextoCierre(false);
-  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:36mm;max-height:60px;"></div>` : '';
+  const logoHTML = window.logoBase64 ? `<div style="text-align:center;margin-bottom:6px;"><img src="${window.logoBase64}" style="max-width:36mm;max-height:60px;background:#fff;mix-blend-mode:multiply;"></div>` : '';
   win.document.write('<!DOCTYPE html><html><head><meta charset="UTF-8"><style>@page{size:58mm auto;margin:0;}body{font-family:\'Courier New\',monospace;font-size:10px;margin:0;padding:2px 2px;width:58mm;}pre{white-space:pre;margin:0;width:100%;}@media print{body{margin:0;padding:1px;}}</style></head><body>' + logoHTML + '<pre>' + texto + '</pre><script>window.onload=function(){window.print();setTimeout(function(){window.close();},1500);};<\/script></body></html>');
   win.document.close();
   // BUG 13 fix: esperar a que la ventana de impresión se abra antes de cerrar el modal,
