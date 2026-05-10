@@ -582,6 +582,14 @@ function fmt(n) {
   return '$' + Number(n).toLocaleString('es-CO');
 }
 
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function slugCat(cat) {
+  return cat.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]/g,'_');
+}
+
 function renderMenu(menu, settings) {
   document.getElementById('loadingState').remove();
 
@@ -637,7 +645,7 @@ function renderMenu(menu, settings) {
         ? `<img class="cat-foto-banner" src="${catFotos[cat]}" alt="${cat}" loading="lazy">`
         : '';
       return `
-        <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
+        <div class="cat-section" id="cat-${slugCat(cat)}">
           <div class="cat-title">${cat}</div>
           <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
           ${bannerHtml}
@@ -656,7 +664,7 @@ function renderMenu(menu, settings) {
         ? `<img class="cat-foto-banner" src="${catFotos[cat]}" alt="${cat}" loading="lazy">`
         : '';
       return `
-        <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}">
+        <div class="cat-section" id="cat-${slugCat(cat)}">
           <div class="cat-title">${cat}</div>
           <div class="items-grid">${items.map(item => itemCard(item, settings)).join('')}</div>
           ${bannerHtml}
@@ -684,7 +692,7 @@ function itemCard(item, settings) {
         <div class="item-info">
           <div class="item-nombre-wrap">
             ${leafHtml}
-            <span class="item-nombre">${item.nombre}</span>
+            <span class="item-nombre">${esc(item.nombre)}</span>
             <span class="item-dots"></span>
           </div>
           <div class="item-precio">${fmt(item.precio)}</div>
@@ -693,14 +701,14 @@ function itemCard(item, settings) {
   }
 
   const imgHtml = item.foto
-    ? `<img src="${item.foto}" alt="${item.nombre}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=item-no-img>🍽️</span>'">`
+    ? `<img src="${item.foto}" alt="${esc(item.nombre)}" loading="lazy" onerror="this.parentElement.innerHTML='<span class=item-no-img>🍽️</span>'">`
     : `<span class="item-no-img">🍽️</span>`;
   return `
     <div class="item-card">
       <div class="item-img-wrap">${imgHtml}</div>
       <div class="item-info">
-        <div class="item-nombre">${item.nombre}</div>
-        ${item.descripcion && settings.mostrarDescripcion !== false ? `<div class="item-desc">${item.descripcion}</div>` : ''}
+        <div class="item-nombre">${esc(item.nombre)}</div>
+        ${item.descripcion && settings.mostrarDescripcion !== false ? `<div class="item-desc">${esc(item.descripcion)}</div>` : ''}
         <div class="item-precio">${fmt(item.precio)}
           ${showDom ? `<span class="item-precio-dom"> · Dom: ${fmt(item.precioDomicilio)}</span>` : ''}
         </div>
@@ -711,7 +719,7 @@ function itemCard(item, settings) {
 window.scrollToCat = function(cat, el) {
   document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
   el.classList.add('active');
-  const sec = document.getElementById('cat-' + cat.replace(/\s+/g,'_'));
+  const sec = document.getElementById('cat-' + slugCat(cat));
   if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
 
