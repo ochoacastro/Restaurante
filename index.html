@@ -16523,7 +16523,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function domRenderCard(p) {
     const estado = p.estado || 'pendiente';
     const labelEstado = ESTADOS_LABEL[estado] || estado;
-    const total = (p.items || []).reduce((s, i) => s + (i.precio || 0) * (i.cantidad || 1), 0);
+    const total = (p.items || []).reduce((s, i) => s + (i.precio || 0) * (i.cantidad || 1), 0) + (p.costoEnvio || 0); // BUG 5 fix: incluir costoEnvio
     const hora = p.timestamp ? new Date(p.timestamp).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }) : '';
     const tipoDoc = p.tipoDocumento === 'fe' ? '🧾 F.E.' : '🗒️ Recibo';
     const responsable = p.responsableNombre ? `<span class="dom-responsable-badge">👤 ${domEsc(p.responsableNombre)}</span>` : '';
@@ -16588,6 +16588,9 @@ document.addEventListener('DOMContentLoaded', () => {
         btns += `<div style="font-size:11px;color:#1565C0;font-weight:800;">🔍 Revisando comprobante</div>`;
         btns += `<button class="dom-btn green" onclick="event.stopPropagation();domVerComprobante('${p.sessionId}')">📋 Ver y decidir</button>`;
         break;
+      case 'pago_pendiente': // BUG 4 fix: estado faltante — cliente eligió método pero no ha subido comprobante
+        btns += `<span style="font-size:11px;color:#E65100;font-weight:800;">⏳ Cliente seleccionó pago — esperando comprobante…</span>`;
+        break;
       case 'pago_rechazado':
         btns += `<div style="font-size:11px;color:#E53935;font-weight:800;">❌ Pago rechazado — esperando nuevo comprobante</div>`;
         break;
@@ -16636,7 +16639,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const el = document.getElementById('modalDomDetalleContenido');
     if (!el) return;
     const estado = p.estado || 'pendiente';
-    const total  = (p.items || []).reduce((s, i) => s + (i.precio||0)*(i.cantidad||1), 0);
+    const total  = (p.items || []).reduce((s, i) => s + (i.precio||0)*(i.cantidad||1), 0) + (p.costoEnvio || 0); // BUG 5 fix
     const esAdmin = esPuedeGestionarDomicilios();
     const hora = p.timestamp ? new Date(p.timestamp).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
 
@@ -16776,7 +16779,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         break;
       case 'pago_revisando': {
-        const totalR = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0);
+        const totalR = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0); // BUG 5 fix
         btns = `
           <div style="background:rgba(21,101,192,.08);border:2px solid rgba(21,101,192,.35);border-radius:14px;padding:14px 16px;margin-bottom:12px;">
             <div style="font-size:12px;font-weight:800;color:#1565C0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;">🔍 Comprobante de pago recibido</div>
@@ -16806,6 +16809,15 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="background:rgba(229,57,53,.08);border:1.5px solid rgba(229,57,53,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--negro);">
             ❌ Comprobante rechazado — esperando nuevo comprobante del cliente.
             ${p.motivoRechazo ? `<br><b>Motivo:</b> ${domEsc(p.motivoRechazo)}` : ''}
+          </div>
+          <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
+        break;
+      }
+      case 'pago_pendiente': { // BUG 4 fix: estado faltante — cliente eligió método pero no ha subido comprobante
+        const totalPP = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0);
+        btns = `
+          <div style="background:rgba(230,81,0,.08);border:1.5px solid rgba(230,81,0,.3);border-radius:12px;padding:12px 14px;margin-bottom:12px;font-size:13px;color:var(--negro);">
+            ⏳ El cliente eligió <b>${domEsc(p.metodoPagoLabel||p.metodoPago||'—')}</b> y debe subir el comprobante de <b>${domFmt(totalPP)}</b>.
           </div>
           <button class="dom-btn danger" style="width:100%;padding:11px;" onclick="cerrarModal('modalDomDetalle');domCancelar('${p.sessionId}')">✕ Cancelar pedido</button>`;
         break;
@@ -16964,13 +16976,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Rechazar comprobante → cliente debe reenviar
   window.domRechazarPago = function(sessionId) {
-    const motivo = document.getElementById('motivoRechazoInput')?.value?.trim() || '';
+    // BUG 6 fix: leer el valor del campo AHORA para construir el mensaje del modal,
+    // y volver a leerlo DENTRO del callback para capturar el valor definitivo
+    const motivoPreview = document.getElementById('motivoRechazoInput')?.value?.trim() || '';
     window.confirmar({
       icono: '❌',
       titulo: 'Rechazar comprobante',
-      mensaje: motivo ? `¿Rechazar con motivo: "${motivo}"?` : '¿Rechazar este comprobante? El cliente deberá enviar uno nuevo.',
+      mensaje: motivoPreview ? `¿Rechazar con motivo: "${motivoPreview}"?` : '¿Rechazar este comprobante? El cliente deberá enviar uno nuevo.',
       textoOk: '❌ Sí, rechazar',
       callback() {
+        // Re-leer el campo en el momento de confirmar (valor definitivo)
+        const motivo = document.getElementById('motivoRechazoInput')?.value?.trim() || '';
         domSetEstado(sessionId, 'pago_rechazado', {
           motivoRechazo: motivo || 'Comprobante no válido',
           comprobanteRechazadoTs: Date.now(),
@@ -16984,7 +17000,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Abrir modal de detalle directamente en el comprobante
   window.domVerComprobante = function(sessionId) {
     const p = _domPedidos.find(x => x.sessionId === sessionId);
-    if (p) domRenderDetalle(p);
+    if (!p) return;
+    _domPedidoActual = sessionId;
+    domRenderDetalle(p);
+    // BUG 9 fix: abrir el modal además de renderizar el contenido
+    document.getElementById('modalDomDetalle')?.classList.add('show');
   };
 
   window.domPagoRecibido = function(sessionId) {
@@ -17018,6 +17038,8 @@ document.addEventListener('DOMContentLoaded', () => {
       window._FB.get(window._FB.ref(window._FB.db, 'restaurante/ordenes')).then(snap => {
         const existentes = snap.val();
         let arr = Array.isArray(existentes) ? existentes.filter(Boolean) : [];
+        // BUG 1 fix: evitar duplicar la orden en KDS si ya fue enviada antes
+        if (arr.some(o => o.domSessionId === sessionId)) return;
         const nuevaOrden = {
           id: Date.now(),
           mesa: `Dom. ${(p.clienteNombre||'Cliente').split(' ')[0]}`,
@@ -17046,16 +17068,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 5. Marcar listo (escucha automática desde KDS ya actualiza el estado del domicilio)
   // KDS marca la orden como lista → este listener actualiza el domicilio
+  let _domUnsubKDS = null; // BUG 2 fix: guardar referencia para evitar listeners acumulados
   function domEscucharListoKDS() {
     if (!window._FB || !window._FB.db) return;
-    window._FB.onValue(window._FB.ref(window._FB.db, 'restaurante/ordenes'), snap => {
+    // BUG 2 fix: cancelar listener anterior si existe antes de registrar uno nuevo
+    if (_domUnsubKDS) { _domUnsubKDS(); _domUnsubKDS = null; }
+    const _domKdsYaNotificados = new Set(); // evitar escrituras repetidas del mismo sessionId
+    _domUnsubKDS = window._FB.onValue(window._FB.ref(window._FB.db, 'restaurante/ordenes'), snap => {
       const val = snap.val();
       if (!val) return;
       const arr = Array.isArray(val) ? val.filter(Boolean) : Object.values(val);
       arr.forEach(o => {
         if (!o.domSessionId || !o.listo) return;
+        if (_domKdsYaNotificados.has(o.domSessionId)) return; // BUG 2 fix: no repetir
         const p = _domPedidos.find(x => x.sessionId === o.domSessionId);
         if (p && p.estado === 'cocina') {
+          _domKdsYaNotificados.add(o.domSessionId);
           domSetEstado(o.domSessionId, 'listo', { notifCliente: { tipo: 'listo', ts: Date.now() } });
         }
       });
@@ -17103,10 +17131,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const totalImpuestos = Object.values(ivaResumen).reduce((s, v) => s + v.impuesto, 0);
 
     // Usar consecutivo local para domicilios (prefijo DOM-)
+    // BUG 3 fix: sincronizar con Firebase para evitar numeración duplicada en multidispositivo
     const cfg = (() => { try { return JSON.parse(localStorage.getItem('pos_config') || '{}'); } catch(e) { return {}; } })();
     cfg.consecutivoDom = (cfg.consecutivoDom || 0) + 1;
     const numDom = 'DOM-' + String(cfg.consecutivoDom).padStart(6, '0');
     try { localStorage.setItem('pos_config', JSON.stringify(cfg)); } catch(e) {}
+    // Sincronizar con Firebase para que otros dispositivos no reutilicen el mismo número
+    if (window._FB && window._FB.db) {
+      try { window._FB.set(window._FB.ref(window._FB.db, 'restaurante/consecutivoDom'), cfg.consecutivoDom); } catch(_) {}
+    }
 
     const registro = {
       numero:           numDom,
@@ -17351,15 +17384,18 @@ const db  = getDatabase(app);
 const sessionId = '${sessionId}';
 const domRef = ref(db, 'restaurante/domicilios/' + sessionId);
 const ESTADOS = {
-  pendiente:  {label:'🕐 Pendiente', color:'#FF9800'},
-  verificando:{label:'🔍 Verificando disponibilidad', color:'#1565C0'},
-  cambio:     {label:'⚠️ Cambio requerido', color:'#E53935'},
-  confirmado: {label:'✅ Pedido confirmado', color:'#2E7D32'},
-  pago:       {label:'💳 Procesando pago', color:'#F4511E'},
-  cocina:     {label:'🍳 Preparando tu pedido', color:'#FF9800'},
-  listo:      {label:'📦 Listo para envío', color:'#2E7D32'},
-  despachado: {label:'🛵 En camino a tu puerta', color:'#0D47A1'},
-  cancelado:  {label:'❌ Pedido cancelado', color:'#888'},
+  pendiente:      {label:'🕐 Pendiente', color:'#FF9800'},
+  verificando:    {label:'🔍 Verificando disponibilidad', color:'#1565C0'},
+  cambio:         {label:'⚠️ Cambio requerido', color:'#E53935'},
+  confirmado:     {label:'✅ Pedido confirmado', color:'#2E7D32'},
+  pago:           {label:'💳 Procesando pago', color:'#F4511E'},
+  pago_pendiente: {label:'💳 Elige tu método de pago', color:'#F57C00'}, // BUG 8 fix
+  pago_revisando: {label:'🔍 Revisando tu comprobante', color:'#1565C0'}, // BUG 8 fix
+  pago_rechazado: {label:'❌ Comprobante rechazado', color:'#E53935'}, // BUG 8 fix
+  cocina:         {label:'🍳 Preparando tu pedido', color:'#FF9800'},
+  listo:          {label:'📦 Listo para envío', color:'#2E7D32'},
+  despachado:     {label:'🛵 En camino a tu puerta', color:'#0D47A1'},
+  cancelado:      {label:'❌ Pedido cancelado', color:'#888'},
 };
 
 const PASOS = [
@@ -17391,7 +17427,7 @@ onValue(domRef, snap => {
 function renderPedido(p) {
   const estado = p.estado || 'pendiente';
   const info   = ESTADOS[estado] || ESTADOS.pendiente;
-  const total  = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0);
+  const total  = (p.items||[]).reduce((s,i)=>s+(i.precio||0)*(i.cantidad||1),0) + (p.costoEnvio||0); // BUG 5 fix
   const idxActual = PASOS.findIndex(x=>x.k===estado);
 
   if (estado === 'despachado') {
