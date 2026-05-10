@@ -6507,6 +6507,7 @@ async function cerrarSesion() {
 
   // Paso 5: liberar sesión del usuario en Firebase
   if (usuarioActivo) {
+    window._lastLoggedOutUserId = usuarioActivo.id;
     await fbLiberarSesion(usuarioActivo.id);
   }
   // fix #12: detener el reloj del header al cerrar sesión
@@ -12938,6 +12939,12 @@ async function fbVerificarSesion(userId) {
     const sesion = snap.val();
     // Si es la misma pestaña, no bloquear (recarga de página)
     if (sesion.tabId === window._FB.SESSION_TAB_ID) return false;
+    // Si este usuario acaba de cerrar sesión en ESTE navegador, limpiar el nodo huérfano
+    if (window._lastLoggedOutUserId === userId) {
+      window._lastLoggedOutUserId = null;
+      try { const { remove } = window._FB; await remove(ref(db, 'restaurante/sesiones/u' + userId)); } catch(_) {}
+      return false;
+    }
     // Sesión huérfana: si el heartbeat tiene más de 25 minutos, ignorarla
     const TIMEOUT_MS = 25 * 60 * 1000;
     if (sesion.ts && (Date.now() - sesion.ts) > TIMEOUT_MS) {
