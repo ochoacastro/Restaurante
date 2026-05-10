@@ -18210,6 +18210,8 @@ function renderPedido(p) {
     if (!window._FB || !window._FB.db) return;
     _domInicializado = false;
     _domPrimerCarga  = true;   // reactivar alertas de pedidos pendientes al login
+    _domSeenIds.clear();       // limpiar IDs vistos para detectar pedidos nuevos correctamente
+    _domMsgCounts.clear();     // limpiar conteos de mensajes
     _domInit();
   };
 
