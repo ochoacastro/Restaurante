@@ -2205,13 +2205,9 @@
         <div class="v" id="cartTotal">$ 0</div>
       </div>
 
-      <!-- Botón principal: Enviar al sistema -->
-      <button class="wa" id="domBtn" style="background:linear-gradient(135deg,#0D47A1,#1976D2);color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px;">
-        <span>🛵</span><span>Enviar pedido al restaurante</span>
-      </button>
-      <!-- Botón WhatsApp secundario -->
-      <button class="wa" id="waBtn" style="background:#1DB954;margin-top:8px;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
-        <span>💬</span><span>Enviar también por WhatsApp</span>
+      <!-- Botón WhatsApp principal -->
+      <button class="wa" id="waBtn" style="background:linear-gradient(135deg,#25D366,#128C7E);font-size:16px;display:flex;align-items:center;justify-content:center;gap:10px;">
+        <span>💬</span><span>Enviar pedido por WhatsApp</span>
       </button>
       <button class="close" id="closeCart">Cerrar</button>
     </div>
@@ -4498,6 +4494,19 @@ $('#waBtn').addEventListener('click', () => {
   }
   if(!paymentLabel){ showAlertDialog('Selecciona una forma de pago.'); return; }
 
+  // Validar FE si corresponde
+  let _tipoDocWa = 'recibo';
+  try { if (typeof window._tipoDocActual !== 'undefined') _tipoDocWa = window._tipoDocActual; } catch(e){}
+  if (_tipoDocWa === 'fe') {
+    const feN = document.getElementById('feNombre')?.value?.trim();
+    const feD = document.getElementById('feNit')?.value?.trim();
+    const feC = document.getElementById('feCorreo')?.value?.trim();
+    if (!feN || !feD || !feC) {
+      showAlertDialog('Para factura electrónica completa: nombre, número de documento y correo.');
+      return;
+    }
+  }
+
   orderForm.name    = name;
   orderForm.phone   = phone;
   orderForm.address = address;
@@ -4514,15 +4523,37 @@ $('#waBtn').addEventListener('click', () => {
     try { const b = localStorage.getItem('pos_login_brand'); if (b) return b; } catch(e){}
     return 'Mi Restaurante';
   })();
+
+  // Datos de Factura Electrónica (si aplica)
+  let feLines = [];
+  if (_tipoDocWa === 'fe') {
+    const feNombreVal  = document.getElementById('feNombre')?.value?.trim() || '';
+    const feTipoDocVal = document.getElementById('feTipoDoc')?.value || '';
+    const feNitVal     = document.getElementById('feNit')?.value?.trim() || '';
+    const feCorreoVal  = document.getElementById('feCorreo')?.value?.trim() || '';
+    const feDirVal     = document.getElementById('feDireccion')?.value?.trim() || '';
+    feLines = [
+      '',
+      '🧾 FACTURA ELECTRÓNICA',
+      `  Nombre/Razón social: ${feNombreVal}`,
+      `  Tipo documento: ${feTipoDocVal}`,
+      `  Número: ${feNitVal}`,
+      `  Correo: ${feCorreoVal}`,
+      ...(feDirVal ? [`  Dirección facturación: ${feDirVal}`] : []),
+    ];
+  }
+
   const msg = [
     `🛵 Pedido ${typeTxt} - ${negocioNombre}`,
     '',
     `👤 Nombre: ${name}`,
     `📱 Teléfono: ${phone}`,
     `📍 Dirección: ${address}`,
+    `📄 Comprobante: ${_tipoDocWa === 'fe' ? 'Factura Electrónica' : 'Recibo POS'}`,
     `💳 Forma de pago: ${paymentLabel}`,
     ...(orderForm.notasPago ? [`💵 Pago: ${orderForm.notasPago}`] : []),
     ...(notes ? [`📝 Observaciones: ${notes}`] : []),
+    ...feLines,
     '',
     ...lines,
     '',
@@ -6341,15 +6372,17 @@ window.renderCategoryGridSafe = function() {
 
 
 // ══════════════════════════════════════════════════════════════════════════
-// 🛵 DOMICILIOS — envío a Firebase y seguimiento en tiempo real
+// 🛵 DOMICILIOS — tipo de documento (FE / Recibo)
 // ══════════════════════════════════════════════════════════════════════════
-(function initDomFirebase() {
+(function initTipoDoc() {
 
   // ── Tipo de documento ────────────────────────────────────────────────────
   let _tipoDoc = 'recibo'; // 'recibo' | 'fe'
+  window._tipoDocActual = _tipoDoc;
 
   window.seleccionarTipoDoc = function(tipo) {
     _tipoDoc = tipo;
+    window._tipoDocActual = tipo;
     const opts = document.querySelectorAll('.doc-opt');
     opts.forEach(o => o.classList.toggle('selected', o.dataset.tipo === tipo));
     document.getElementById('docCheckRecibo').style.opacity = tipo === 'recibo' ? '1' : '0';
@@ -6362,688 +6395,8 @@ window.renderCategoryGridSafe = function() {
     setTimeout(() => seleccionarTipoDoc('recibo'), 100);
   });
 
-  // ── Obtener config Firebase guardada ────────────────────────────────────
-  function getFBConfig() {
-    try {
-      // Intentar obtener config desde localStorage (guardada por index.html)
-      const raw = localStorage.getItem('pos_fb_config');
-      if (raw) return JSON.parse(raw);
-    } catch(e) {}
-    // Fallback: buscar en pos_config
-    try {
-      const cfg = JSON.parse(localStorage.getItem('pos_config') || '{}');
-      if (cfg.firebase) return cfg.firebase;
-    } catch(e) {}
-    return null;
-  }
-
-  // ── Generar session ID único para el cliente ─────────────────────────────
-  const DOM_SESSION_KEY = 'dom_seguimiento';
-  const DOM_SESSION_TTL = 3 * 60 * 60 * 1000; // 3 horas en ms
-
-  function getOrCreateSessionId() {
-    try {
-      const raw = localStorage.getItem(DOM_SESSION_KEY);
-      if (raw) {
-        const data = JSON.parse(raw);
-        const age  = Date.now() - (data.createdAt || 0);
-        if (age < DOM_SESSION_TTL && data.sessionId) {
-          return data.sessionId; // sesión vigente
-        }
-        // Expirada — limpiar
-        localStorage.removeItem(DOM_SESSION_KEY);
-      }
-    } catch(e) {}
-    // Crear nueva
-    const sessionId = 'dom_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-    guardarSesionLocal(sessionId);
-    return sessionId;
-  }
-
-  function guardarSesionLocal(sessionId) {
-    try {
-      localStorage.setItem(DOM_SESSION_KEY, JSON.stringify({
-        sessionId,
-        createdAt: Date.now(),
-      }));
-    } catch(e) {}
-  }
-
-  function obtenerSesionActiva() {
-    // Devuelve el sessionId si existe y no ha expirado
-    try {
-      const raw = localStorage.getItem(DOM_SESSION_KEY);
-      if (!raw) return null;
-      const data = JSON.parse(raw);
-      const age  = Date.now() - (data.createdAt || 0);
-      if (age < DOM_SESSION_TTL && data.sessionId) return data.sessionId;
-    } catch(e) {}
-    return null;
-  }
-
-  // ── Botón enviar al sistema ───────────────────────────────────────────────
-  const domBtnEl = document.getElementById('domBtn');
-  if (domBtnEl) {
-    domBtnEl.addEventListener('click', async () => {
-      const nameEl    = document.getElementById('customerName');
-      const phoneEl   = document.getElementById('customerPhone');
-      const addressEl = document.getElementById('customerAddress');
-      const notesEl   = document.getElementById('customerNotes');
-
-      const name    = (nameEl?.value    || '').trim();
-      const phone   = (phoneEl?.value   || '').trim();
-      const address = (addressEl?.value || '').trim();
-      const notes   = (notesEl?.value   || '').trim();
-
-      // Validar campos base
-      [nameEl, phoneEl, addressEl].forEach(el => el?.classList.remove('error'));
-      let err = false;
-      if (!name)    { nameEl?.classList.add('error');    err = true; }
-      if (!phone)   { phoneEl?.classList.add('error');   err = true; }
-      if (!address) { addressEl?.classList.add('error'); err = true; }
-      if (err) { showAlertDialog('Completa los campos obligatorios (*)'); return; }
-
-      // Validar FE
-      if (_tipoDoc === 'fe') {
-        const feN = document.getElementById('feNombre')?.value?.trim();
-        const feD = document.getElementById('feNit')?.value?.trim();
-        const feC = document.getElementById('feCorreo')?.value?.trim();
-        if (!feN || !feD || !feC) {
-          showAlertDialog('Para factura electrónica completa: nombre, número de documento y correo.');
-          return;
-        }
-      }
-
-      // Pago
-      const paymentId    = typeof orderForm !== 'undefined' ? (orderForm.payment || selectedPaymentForMode(mode)) : selectedPaymentForMode(mode);
-      const paymentLabel = typeof paymentLabelById === 'function' ? paymentLabelById(mode, paymentId) : paymentId;
-      if (!paymentLabel) { showAlertDialog('Selecciona una forma de pago.'); return; }
-
-      // Carrito
-      const items = cart.map(i => ({
-        nombre:    i.nombre,
-        precio:    typeof getItemPrice === 'function' ? getItemPrice(i, mode) : (i.precioDom || i.precio || 0),
-        cantidad:  i.cantidad,
-        categoria: i.categoria || '',
-      }));
-      if (!items.length) { showAlertDialog('No hay productos en el carrito.'); return; }
-
-      // ── Modal de confirmación de pago ──────────────────────────────────
-      const payMethod = (settings.paymentMethods || []).find(m => m.id === paymentId);
-      const totalVal  = typeof subtotal === 'function' ? subtotal() : 0;
-      const totalFmt  = '$ ' + Number(totalVal).toLocaleString('es-CO');
-      const isEfectivo = paymentId === 'efectivo' || (payMethod && payMethod.label && payMethod.label.toLowerCase().includes('efectivo'));
-      const isWallet   = payMethod && payMethod.needsInfo && payMethod.info;
-
-      let cashNotes = ''; // notas de vuelto que se añaden al pedido
-
-      if (isEfectivo || isWallet) {
-        const confirmed = await new Promise(resolve => {
-          const modal        = document.getElementById('payConfirmModal');
-          const iconEl       = document.getElementById('payConfirmIcon');
-          const titleEl      = document.getElementById('payConfirmTitle');
-          const subEl        = document.getElementById('payConfirmSub');
-          const totalEl      = document.getElementById('payConfirmTotal');
-          const cashSection  = document.getElementById('payConfirmCashSection');
-          const walletSection= document.getElementById('payConfirmWalletSection');
-          const walletNum    = document.getElementById('walletNumber');
-          const walletCopy   = document.getElementById('walletCopyBtn');
-          const cashOptExact = document.getElementById('cashOptExact');
-          const cashOptChange= document.getElementById('cashOptChange');
-          const changeWrap   = document.getElementById('cashChangeWrap');
-          const amountInput  = document.getElementById('cashAmountInput');
-          const vueltoLine   = document.getElementById('cashVueltoLine');
-          const vueltoVal    = document.getElementById('cashVueltoVal');
-          const okBtn        = document.getElementById('payConfirmOk');
-          const cancelBtn    = document.getElementById('payConfirmCancel');
-
-          totalEl.textContent = totalFmt;
-          cashNotes = '';
-          let cashMode = ''; // 'exact' | 'change'
-
-          if (isEfectivo) {
-            iconEl.textContent  = '💵';
-            titleEl.textContent = 'Pago en efectivo';
-            subEl.textContent   = '¿Cómo vas a pagar tu pedido?';
-            cashSection.style.display  = '';
-            walletSection.style.display= 'none';
-            okBtn.textContent   = 'Confirmar pedido';
-            okBtn.disabled      = true;
-            // reset estado
-            cashOptExact.classList.remove('selected');
-            cashOptChange.classList.remove('selected');
-            changeWrap.style.display = 'none';
-            vueltoLine.style.display = 'none';
-            amountInput.value = '';
-
-            cashOptExact.onclick = () => {
-              cashMode = 'exact';
-              cashOptExact.classList.add('selected');
-              cashOptChange.classList.remove('selected');
-              changeWrap.style.display = 'none';
-              vueltoLine.style.display = 'none';
-              cashNotes = 'Pago exacto en efectivo';
-              okBtn.disabled = false;
-            };
-            cashOptChange.onclick = () => {
-              cashMode = 'change';
-              cashOptChange.classList.add('selected');
-              cashOptExact.classList.remove('selected');
-              changeWrap.style.display = '';
-              amountInput.focus();
-              okBtn.disabled = !amountInput.value;
-            };
-            amountInput.oninput = () => {
-              const paid  = Number(amountInput.value) || 0;
-              const vuelto= paid - totalVal;
-              if (paid > 0 && vuelto >= 0) {
-                vueltoLine.style.display = '';
-                vueltoVal.textContent = '$ ' + vuelto.toLocaleString('es-CO');
-                cashNotes = `Paga con $${paid.toLocaleString('es-CO')} — vuelto $${vuelto.toLocaleString('es-CO')}`;
-                okBtn.disabled = false;
-              } else if (paid > 0 && vuelto < 0) {
-                vueltoLine.style.display = '';
-                vueltoVal.textContent = '⚠️ Monto menor al total';
-                vueltoVal.style.color = '#FF5252';
-                cashNotes = '';
-                okBtn.disabled = true;
-              } else {
-                vueltoLine.style.display = 'none';
-                okBtn.disabled = true;
-              }
-            };
-
-          } else if (isWallet) {
-            const imgHtml = payMethod.img
-              ? `<img src="${payMethod.img}" style="width:32px;height:32px;object-fit:cover;border-radius:8px;display:inline-block;vertical-align:middle;margin-right:6px;">`
-              : '';
-            iconEl.innerHTML    = imgHtml || (payMethod.emoji ? `<span>${payMethod.emoji}</span>` : '💳');
-            titleEl.textContent = `Pagar con ${payMethod.label}`;
-            subEl.textContent   = 'Realiza la transferencia antes de que llegue el domiciliario';
-            cashSection.style.display  = 'none';
-            walletSection.style.display= '';
-            walletNum.textContent = payMethod.info;
-            okBtn.textContent   = '✅ Ya transferí';
-            okBtn.disabled      = false;
-            cashNotes = `Pago vía ${payMethod.label} al ${payMethod.info}`;
-            walletCopy.onclick = () => {
-              navigator.clipboard.writeText(payMethod.info).then(() => {
-                walletCopy.textContent = '✅ Copiado';
-                setTimeout(() => { walletCopy.textContent = '📋 Copiar número'; }, 2000);
-              }).catch(() => {
-                window.prompt('Copia este número:', payMethod.info);
-              });
-            };
-          }
-
-          modal.setAttribute('aria-hidden','false');
-          modal.style.display = 'flex';
-
-          const close = (result) => {
-            modal.setAttribute('aria-hidden','true');
-            modal.style.display = 'none';
-            okBtn.onclick = null; cancelBtn.onclick = null;
-            resolve(result);
-          };
-          okBtn.onclick     = () => close(true);
-          cancelBtn.onclick = () => close(false);
-        });
-
-        if (!confirmed) return; // usuario canceló
-      }
-
-      const fbCfg = getFBConfig();
-      if (!fbCfg || !fbCfg.databaseURL) {
-        showAlertDialog('⚠️ El restaurante aún no tiene el sistema en línea configurado. Por favor usa WhatsApp para tu pedido.');
-        return;
-      }
-
-      const sessionId = getOrCreateSessionId();
-      if (typeof orderForm !== 'undefined') orderForm.notasPago = cashNotes || '';
-
-      // Armar pedido
-      const pedido = {
-        sessionId,
-        estado: isWallet ? 'pago_pendiente' : 'pendiente',
-        timestamp: Date.now(),
-        clienteNombre:    name,
-        clienteTelefono:  phone,
-        clienteDireccion: address,
-        clienteNotas:     notes,
-        notasPago:        cashNotes || '',
-        items,
-        metodoPago:      paymentId,
-        metodoPagoLabel: paymentLabel,
-        tipoDocumento:   _tipoDoc,
-        sinStock: [],
-      };
-
-      if (_tipoDoc === 'fe') {
-        pedido.feNombre    = document.getElementById('feNombre')?.value?.trim()   || '';
-        pedido.feNit       = document.getElementById('feNit')?.value?.trim()      || '';
-        pedido.feCorreo    = document.getElementById('feCorreo')?.value?.trim()   || '';
-        pedido.feDireccion = document.getElementById('feDireccion')?.value?.trim()|| '';
-        pedido.feTipoDoc   = document.getElementById('feTipoDoc')?.value          || 'CC';
-      }
-
-      // Enviar a Firebase
-      domBtnEl.disabled = true;
-      domBtnEl.innerHTML = '⏳ Enviando…';
-      try {
-        const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-        const { getDatabase, ref, set } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-
-        const app = getApps().length ? getApps()[0] : initializeApp(fbCfg);
-        const db  = getDatabase(app);
-
-        await set(ref(db, `restaurante/domicilios/${sessionId}`), pedido);
-
-        // Guardar sesión en localStorage para recuperar si cierran el tab
-        guardarSesionLocal(sessionId);
-        if (typeof cartByMode !== 'undefined') {
-          cartByMode[mode] = [];
-          cart = cartByMode[mode];
-          if (typeof saveCart === 'function') saveCart();
-        }
-        if (typeof render === 'function') render();
-
-        // Cerrar el cart sheet
-        document.getElementById('cartSheet')?.classList.remove('show');
-
-        // Mostrar overlay de seguimiento
-        _domSessionActual = sessionId;
-        _domFBConfig = fbCfg;
-        domAbrirSeguimiento(sessionId, db, ref);
-
-      } catch(e) {
-        showAlertDialog('❌ Error al enviar el pedido: ' + (e.message || 'inténtalo de nuevo'));
-        console.error('domicilios firebase error:', e);
-      } finally {
-        domBtnEl.disabled = false;
-        domBtnEl.innerHTML = '<span>🛵</span><span>Enviar pedido al restaurante</span>';
-      }
-    });
-  }
-
-  // ── Seguimiento en tiempo real (overlay dentro de menu.html) ─────────────
-  let _domSessionActual = null;
-  let _domFBConfig      = null;
-  let _domUnsub         = null;
-
-  function domAbrirSeguimiento(sessionId, db, ref) {
-    // Crear overlay si no existe
-    let overlay = document.getElementById('domSeguimientoOverlay');
-    if (!overlay) {
-      overlay = document.createElement('div');
-      overlay.id = 'domSeguimientoOverlay';
-      overlay.innerHTML = `<div id="domSeguimientoSheet">
-        <div class="handle" style="width:40px;height:4px;background:#ddd;border-radius:99px;margin:0 auto 14px;"></div>
-        <div id="domSegContenido"></div>
-      </div>`;
-      document.body.appendChild(overlay);
-    }
-    overlay.classList.add('show');
-
-    // Escuchar cambios en tiempo real
-    const { onValue } = window._domFBMod || {};
-    if (window._domFBMod) {
-      if (_domUnsub) _domUnsub();
-      _domUnsub = window._domFBMod.onValue(ref(db, `restaurante/domicilios/${sessionId}`), snap => {
-        const p = snap.val();
-        if (p) domRenderSeguimiento(p, db, ref);
-      });
-    } else {
-      // Cargar módulo onValue dinámicamente
-      import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js').then(mod => {
-        window._domFBMod = mod;
-        if (_domUnsub) _domUnsub();
-        _domUnsub = mod.onValue(ref(db, `restaurante/domicilios/${sessionId}`), snap => {
-          const p = snap.val();
-          if (p) domRenderSeguimiento(p, db, ref);
-        });
-      });
-    }
-  }
-
-  function domRenderSeguimiento(p, db, ref) {
-    const cont = document.getElementById('domSegContenido');
-    if (!cont) return;
-    const estado = p.estado || 'pendiente';
-    const total  = (p.items||[]).reduce((s,i) => s + (i.precio||0)*(i.cantidad||1), 0);
-    const fmt    = n => '$ ' + Number(n||0).toLocaleString('es-CO');
-    const esc    = s => String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-
-    const ESTADOS_INFO = {
-      pendiente:       { color:'#FF9800', label:'🕐 Recibiendo tu pedido…' },
-      verificando:     { color:'#1565C0', label:'🔍 Verificando disponibilidad' },
-      cambio:          { color:'#E53935', label:'⚠️ Necesitamos un cambio' },
-      confirmado:      { color:'#2E7D32', label:'✅ ¡Pedido confirmado!' },
-      pago_pendiente:  { color:'#E65100', label:'⏳ Esperando confirmación de pago…' },
-      pago:            { color:'#F4511E', label:'💳 Procesando tu pago' },
-      cocina:          { color:'#FF6F00', label: p.pagoConfirmado ? '✅ ¡Pago confirmado · Preparando tu pedido!' : '🍳 ¡Preparando tu pedido!' },
-      listo:           { color:'#00C853', label:'📦 Listo para enviar' },
-      despachado:      { color:'#0D47A1', label:'🛵 ¡Tu pedido va en camino!' },
-      entregado:       { color:'#00C853', label:'🏠 ¡Pedido entregado!' },
-      cancelado:       { color:'#888',    label:'❌ Pedido cancelado' },
-    };
-
-    const PASOS = [
-      { k:'pendiente',      icon:'📥', label:'Recibido',    sub:'Tu pedido fue recibido' },
-      { k:'verificando',    icon:'🔍', label:'Verificado',  sub:'Revisamos disponibilidad' },
-      { k:'confirmado',     icon:'✅', label:'Confirmado',  sub:'Pedido aceptado' },
-      { k:'pago_pendiente', icon:'💳', label:'Pago',        sub:'Confirmando tu pago' },
-      { k:'cocina',         icon:'🍳', label:'En cocina',   sub:'Preparando tu pedido' },
-      { k:'listo',          icon:'📦', label:'Listo',       sub:'Listo para el repartidor' },
-      { k:'despachado',     icon:'🛵', label:'En camino',   sub:'Tu pedido está en camino' },
-      { k:'entregado',      icon:'🏠', label:'Entregado',   sub:'¡Pedido recibido!' },
-    ];
-
-    const info   = ESTADOS_INFO[estado] || ESTADOS_INFO.pendiente;
-    const idxAct = PASOS.findIndex(x => x.k === estado);
-
-    // ── Estado: PAGO PENDIENTE — cliente espera confirmación ────────────────
-    if (estado === 'pago_pendiente') {
-      cont.innerHTML = `
-        <div style="text-align:center;padding:20px 16px 12px;">
-          <div style="font-size:64px;margin-bottom:12px;animation:pulse 1.5s ease-in-out infinite;">⏳</div>
-          <h2 style="font-size:20px;font-weight:900;color:#E65100;margin-bottom:6px;">Esperando confirmación de pago</h2>
-          <p style="font-size:13px;color:rgba(255,255,255,.6);line-height:1.6;margin-bottom:20px;">
-            El restaurante está verificando tu pago. En cuanto lo confirmen, tu pedido pasará a preparación.
-          </p>
-          <div style="background:rgba(230,81,0,.12);border:1.5px solid rgba(230,81,0,.35);border-radius:14px;padding:16px 14px;margin-bottom:20px;text-align:left;">
-            <div style="font-size:11px;font-weight:800;color:#E65100;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;">💳 Tu pago</div>
-            <div style="font-size:14px;font-weight:800;color:#fff;margin-bottom:4px;">${esc(p.metodoPagoLabel||p.metodoPago||'—')}</div>
-            <div style="font-size:22px;font-weight:900;color:#FF8A65;">${fmt(total)}</div>
-            ${p.notasPago ? `<div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:6px;">${esc(p.notasPago)}</div>` : ''}
-          </div>
-          <div style="font-size:12px;color:rgba(255,255,255,.4);line-height:1.5;">
-            🔔 Esta pantalla se actualiza automáticamente cuando el restaurante confirme tu pago.
-          </div>
-        </div>`;
-      return;
-    }
-
-    // ── Estado: PAGO CONFIRMADO → cocina (transición automática, no necesita pantalla propia) ──
-
-    // ── Estado: EN CAMINO — mostrar botón de confirmación ───────────────
-    if (estado === 'despachado') {
-      const yaConfirmo = p.clienteConfirmo === true;
-      cont.innerHTML = `
-        <div style="text-align:center;padding:20px 16px 12px;">
-          <div style="font-size:64px;margin-bottom:12px;animation:pulse 1.5s ease-in-out infinite;">🛵</div>
-          <h2 style="font-size:20px;font-weight:900;color:#0D47A1;margin-bottom:6px;">¡Tu pedido está en camino!</h2>
-          <p style="font-size:13px;color:#666;line-height:1.6;margin-bottom:20px;">El repartidor está llevando tu pedido. Prepárate para recibirlo.</p>
-          ${yaConfirmo
-            ? `<div style="background:rgba(0,200,83,.1);border:1.5px solid rgba(0,200,83,.3);border-radius:12px;padding:14px;font-size:14px;font-weight:800;color:#1B5E20;">
-                ✅ Ya confirmaste la recepción de tu pedido.<br>
-                <span style="font-size:12px;font-weight:500;color:#555;">El restaurante está cerrando tu pedido.</span>
-               </div>`
-            : `<div style="background:rgba(13,71,161,.06);border:1.5px solid rgba(13,71,161,.2);border-radius:12px;padding:14px;margin-bottom:14px;font-size:13px;color:#333;line-height:1.5;">
-                Cuando recibas tu pedido, toca el botón de abajo para confirmarlo.
-               </div>
-               <button class="seg-btn-confirmar" onclick="domConfirmarEntrega('${esc(p.sessionId)}')"
-                 style="background:linear-gradient(135deg,#1B5E20,#2E7D32);font-size:16px;padding:16px;border-radius:14px;display:flex;align-items:center;justify-content:center;gap:10px;">
-                 <span style="font-size:22px;">🏠</span> ¡Confirmar que recibí mi pedido!
-               </button>`
-          }
-          <div style="margin-top:16px;padding:12px;background:var(--fondo,#f5f5f5);border-radius:12px;text-align:left;font-size:12px;color:#888;">
-            <b style="color:#333;">📋 Tu pedido:</b><br>
-            ${(p.items||[]).map(i => `${esc(i.nombre)} ×${i.cantidad}`).join(', ')}
-            <br><b>Total: ${fmt(total)}</b>
-          </div>
-          <div style="margin-top:10px;font-size:11px;color:#bbb;">📍 ${esc(p.clienteDireccion||'—')}</div>
-        </div>`;
-      return;
-    }
-
-    // ── Estado: ENTREGADO ────────────────────────────────────────────────
-    if (estado === 'entregado') {
-      // Limpiar la sesión guardada — proceso terminado
-      try { localStorage.removeItem(DOM_SESSION_KEY); } catch(e) {}
-      const porCliente = p.cierrePor === 'cliente';
-      cont.innerHTML = `
-        <div class="seg-despachado">
-          <span class="big">🏠</span>
-          <h2 style="color:#1B5E20;">¡Pedido entregado!</h2>
-          <p>${porCliente
-            ? '¡Gracias por confirmar! Esperamos que lo hayas disfrutado.'
-            : 'Tu pedido fue entregado exitosamente. ¡Buen provecho!'}</p>
-          <div style="margin-top:20px;padding:14px;background:rgba(0,200,83,.08);border:1.5px solid rgba(0,200,83,.25);border-radius:12px;font-size:13px;color:#1B5E20;font-weight:700;">
-            ⭐ ¡Gracias por pedir con nosotros!
-          </div>
-          <button class="seg-btn-confirmar" style="margin-top:20px;background:#888;" onclick="domCerrarSeguimiento()">
-            Cerrar
-          </button>
-        </div>`;
-      return;
-    }
-
-    // ── Estado: CANCELADO ────────────────────────────────────────────────
-    if (estado === 'cancelado') {
-      try { localStorage.removeItem(DOM_SESSION_KEY); } catch(e) {}
-      cont.innerHTML = `
-        <div class="seg-despachado">
-          <span class="big">😔</span>
-          <h2 style="color:#E53935;">Pedido cancelado</h2>
-          <p>Lo sentimos, tu pedido fue cancelado. Si tienes preguntas, comunícate con el restaurante.</p>
-          <button class="seg-btn-confirmar" style="margin-top:20px;background:#888;" onclick="domCerrarSeguimiento()">Cerrar</button>
-        </div>`;
-      return;
-    }
-
-    // ── Estados intermedios: mostrar progreso ────────────────────────────
-    const pasosHtml = PASOS.map((paso, i) => {
-      const hecho  = i < idxAct;
-      const activo = i === idxAct;
-      const cls    = hecho ? 'hecho' : activo ? 'activo' : 'pend';
-      const dot    = hecho ? '✓' : paso.icon;
-      const pulse  = activo ? 'style="animation:pulse 1.5s ease-in-out infinite;"' : '';
-      const titColor = activo ? '#1565C0' : hecho ? '#00C853' : '#aaa';
-      return `<div class="seg-paso">
-        <div class="seg-dot ${cls}" ${pulse}>${dot}</div>
-        <div class="seg-info">
-          <div class="seg-titulo" style="color:${titColor};">${paso.label}</div>
-          <div class="seg-sub">${paso.sub}</div>
-        </div>
-      </div>`;
-    }).join('');
-
-    // Bloque de cambio requerido
-    let cambioHtml = '';
-    if (estado === 'cambio' && (p.sinStock||[]).length > 0) {
-      const sinStock   = p.sinStock || [];
-      const disponibles = (p.items||[]).filter(i => !sinStock.includes(i.nombre));
-      cambioHtml = `<div class="seg-cambio-box">
-        <div class="seg-cambio-title">⚠️ Productos sin stock: ${sinStock.map(esc).join(', ')}</div>
-        <p style="font-size:12px;color:#555;margin-bottom:10px;line-height:1.5;">
-          Puedes seleccionar productos adicionales para reemplazarlos, o cancelar tu pedido.
-        </p>
-        <div id="segReemplazosWrap">
-          ${disponibles.map(i => `
-            <label class="seg-item-check">
-              <input type="checkbox" value="${esc(i.nombre)}">
-              <div style="flex:1;">
-                <div style="font-size:13px;font-weight:700;">${esc(i.nombre)}</div>
-                <div style="font-size:11px;color:#888;">${i.cantidad}× ${fmt(i.precio)}</div>
-              </div>
-            </label>`).join('')}
-        </div>
-        <button class="seg-btn-confirmar" onclick="domEnviarCambio('${esc(p.sessionId)}')">✅ Confirmar cambio</button>
-        <button class="seg-btn-cancelar"  onclick="domCancelarDesdeCliente('${esc(p.sessionId)}')">✕ Cancelar mi pedido</button>
-      </div>`;
-    }
-
-    // Items
-    const itemsHtml = (p.items||[]).map(i => {
-      const sin = (p.sinStock||[]).includes(i.nombre);
-      return `<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #eee;font-size:13px;">
-        <span style="font-weight:600;${sin?'text-decoration:line-through;color:#aaa;':''}">${esc(i.nombre)}${sin?'<span style="font-size:10px;background:#E53935;color:#fff;border-radius:20px;padding:1px 6px;margin-left:4px;">sin stock</span>':''}</span>
-        <span style="font-weight:700;color:#FFD600;">${i.cantidad}× ${fmt(i.precio)}</span>
-      </div>`;
-    }).join('');
-
-    cont.innerHTML = `
-      <div style="text-align:center;padding:10px 0 16px;">
-        <div style="font-size:17px;font-weight:900;color:var(--negro,#111);margin-bottom:6px;">🛵 Seguimiento de tu pedido</div>
-        <div style="display:inline-block;padding:8px 18px;border-radius:999px;font-size:14px;font-weight:800;background:${info.color}22;color:${info.color};">${info.label}</div>
-      </div>
-
-      ${cambioHtml}
-
-      <div style="background:#f5f5f5;border-radius:14px;padding:12px;margin-bottom:14px;">
-        ${pasosHtml}
-      </div>
-
-      <div style="background:#fff;border:1.5px solid #eee;border-radius:14px;padding:12px;margin-bottom:10px;">
-        <div style="font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#888;margin-bottom:8px;">📋 Tu pedido</div>
-        ${itemsHtml}
-        <div style="display:flex;justify-content:space-between;align-items:center;padding-top:8px;margin-top:6px;border-top:1.5px solid #eee;">
-          <span style="font-size:13px;font-weight:700;">Total</span>
-          <span style="font-size:20px;font-weight:900;color:#FFD600;">${fmt(total)}</span>
-        </div>
-      </div>
-
-      <div style="font-size:12px;color:#888;text-align:center;">
-        📍 ${esc(p.clienteDireccion||'—')} · 💳 ${esc(p.metodoPagoLabel||'—')}
-      </div>`;
-
-    window._domCurrentDb  = db;
-    window._domCurrentRef = ref;
-  }
-
-  window.domEnviarCambio = async function(sessionId) {
-    const checks = document.querySelectorAll('#segReemplazosWrap input[type=checkbox]:checked');
-    const reemplazos = [...checks].map(c => c.value);
-    try {
-      const { getDatabase, ref, update } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-      const { getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-      const app = getApps()[0];
-      if (!app) return;
-      const db = getDatabase(app);
-      await update(ref(db, `restaurante/domicilios/${sessionId}`), {
-        reemplazos,
-        estado:          'verificando',
-        sinStock:        [],
-        clienteRespondio: true,
-        notifAdmin: { tipo: 'cliente_cambio', ts: Date.now(), reemplazos }
-      });
-      const cont = document.getElementById('domSegContenido');
-      if (cont) {
-        const box = cont.querySelector('.seg-cambio-box');
-        if (box) box.innerHTML = '<div style="text-align:center;padding:12px;color:#2E7D32;font-weight:800;">✅ ¡Gracias! Actualizamos tu pedido.</div>';
-      }
-    } catch(e) { console.error('domEnviarCambio error:', e); }
-  };
-
-  window.domCancelarDesdeCliente = async function(sessionId) {
-    if (!confirm('¿Seguro que quieres cancelar tu pedido?')) return;
-    try {
-      const { getDatabase, ref, update } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-      const { getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-      const app = getApps()[0];
-      if (!app) return;
-      const db = getDatabase(app);
-      await update(ref(db, `restaurante/domicilios/${sessionId}`), {
-        estado: 'cancelado',
-        notifAdmin: { tipo: 'cliente_cancela', ts: Date.now() }
-      });
-    } catch(e) { console.error('domCancelarDesdeCliente error:', e); }
-  };
-
-  // Confirmar recepción desde el cliente
-  window.domConfirmarEntrega = async function(sessionId) {
-    try {
-      const { getDatabase, ref, update } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-      const { getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-      const app = getApps()[0];
-      if (!app) return;
-      const db = getDatabase(app);
-      await update(ref(db, `restaurante/domicilios/${sessionId}`), {
-        clienteConfirmo:   true,
-        clienteConfirmoTs: Date.now(),
-        notifAdmin: { tipo: 'cliente_confirma', ts: Date.now() }
-      });
-      // Re-render muestra mensaje de confirmación enviada
-    } catch(e) {
-      console.error('domConfirmarEntrega error:', e);
-    }
-  };
-
-  // Cerrar overlay — solo se permite cuando el pedido está terminado (entregado/cancelado)
-  // o si no hay sesión activa
-  window.domCerrarSeguimiento = function() {
-    const overlay = document.getElementById('domSeguimientoOverlay');
-    if (overlay) overlay.classList.remove('show');
-    if (_domUnsub) { _domUnsub(); _domUnsub = null; }
-  };
-
-  // Interceptar el botón físico de atrás y la tecla Escape para bloquear cierre
-  // durante un pedido activo
-  const ESTADOS_TERMINADOS = ['entregado', 'cancelado'];
-
-  function domBloquearCierre(e) {
-    const overlay = document.getElementById('domSeguimientoOverlay');
-    if (!overlay || !overlay.classList.contains('show')) return;
-    // Si el pedido ya terminó, permitir cerrar
-    const sessionId = obtenerSesionActiva();
-    if (!sessionId) return; // no hay sesión, permitir
-    // Bloquear si el estado no es terminal
-    if (e.type === 'keydown' && e.key === 'Escape') {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    if (e.type === 'popstate') {
-      history.pushState(null, '', location.href); // re-push para bloquear atrás
-    }
-  }
-
-  document.addEventListener('keydown', domBloquearCierre);
-  window.addEventListener('popstate', domBloquearCierre);
-  // Push estado inicial para capturar el botón atrás
-  history.pushState(null, '', location.href);
-
-  // ── Recuperar sesión activa al cargar la página ───────────────────────
-  async function domRecuperarSesion() {
-    const sessionId = obtenerSesionActiva();
-    if (!sessionId) return;
-
-    const fbCfg = getFBConfig();
-    if (!fbCfg || !fbCfg.databaseURL) return;
-
-    try {
-      const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
-      const { getDatabase, ref, get }  = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
-      const app = getApps().length ? getApps()[0] : initializeApp(fbCfg);
-      const db  = getDatabase(app);
-
-      const snap = await get(ref(db, `restaurante/domicilios/${sessionId}`));
-      const p    = snap.val();
-
-      if (!p) {
-        // Pedido no existe — limpiar sesión
-        localStorage.removeItem(DOM_SESSION_KEY);
-        return;
-      }
-
-      // Si el pedido ya terminó, limpiar sesión
-      if (ESTADOS_TERMINADOS.includes(p.estado)) {
-        localStorage.removeItem(DOM_SESSION_KEY);
-        return;
-      }
-
-      // Hay un pedido activo — reabrir el overlay de seguimiento
-      _domSessionActual = sessionId;
-      domAbrirSeguimiento(sessionId, db, ref);
-
-    } catch(e) {
-      console.error('domRecuperarSesion error:', e);
-    }
-  }
-
-  // Intentar recuperar sesión 1.5s después de carga (da tiempo al DOM)
-  setTimeout(domRecuperarSesion, 1500);
-
 })();
+
 
 </script>
 
