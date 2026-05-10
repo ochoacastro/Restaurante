@@ -150,7 +150,7 @@ body{
   border-bottom:1px solid var(--borde);
   overflow-x:auto; white-space:nowrap;
   scrollbar-width:none;
-  position:sticky; top:0; z-index:90;
+  position:sticky; top:66px; z-index:90;
   padding:0 8px;
 }
 .cats-bar::-webkit-scrollbar{ display:none; }
@@ -1097,7 +1097,7 @@ function renderMenu() {
     const items = visibles.filter(i => i.categoria === cat);
     if (!items.length) return '';
     return `
-      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}" style="scroll-margin-top:50px;">
+      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}" style="scroll-margin-top:114px;">
         <div class="cat-title">${esc(cat)}</div>
         <div class="items-grid">
           ${items.map(item => renderItemCard(item)).join('')}
@@ -1127,7 +1127,7 @@ function renderItemCard(item) {
        </div>`;
 
   return `
-    <div class="item-card${inCart?' in-cart':''}" id="card-${esc(item.nombre.replace(/\s+/g,'_'))}">
+    <div class="item-card${inCart?' in-cart':''}" id="card-${item.nombre.replace(/\s+/g,'_')}">
       <div class="item-foto">${imgHtml}</div>
       <div class="item-info">
         <div class="item-nombre">${esc(item.nombre)}</div>
@@ -1718,6 +1718,11 @@ window.volverAlMenu = function() {
   sessionActiva = null;
   cart = {};
   actualizarFab();
+  // Limpiar campos del formulario para que no queden datos del pedido anterior
+  ['fNombre','fTelefono','fDireccion','fNotas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.value = ''; el.classList.remove('error'); }
+  });
   showScreen('menu');
 };
 
