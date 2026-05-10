@@ -12213,7 +12213,7 @@ function cargarLogo(input) {
   reader.onerror = () => mostrarErrorSubida('No se pudo leer el archivo. Intenta con otra imagen.');
   reader.onload = (e) => {
     // Redimensionar a máx 400×400 px manteniendo proporciones
-    redimensionarImagen(e.target.result, 200, 200, (b64) => {
+    redimensionarImagen(e.target.result, 400, 400, (b64) => {
       try {
         window.logoBase64 = b64;
         // Intentar guardar en localStorage, si falla por cuota solo usar Firebase
@@ -19288,9 +19288,11 @@ function qr2Generar(tipo) {
     if (!srcCanvas) { document.body.removeChild(tmp); return; }
 
     const SIZE = srcCanvas.width || 512;
+    const DPR  = Math.min(window.devicePixelRatio || 1, 3); // máx 3× para no exceder memoria
     const dest = document.createElement('canvas');
-    dest.width = dest.height = SIZE;
+    dest.width = dest.height = SIZE * DPR;
     const ctx = dest.getContext('2d');
+    ctx.scale(DPR, DPR);
 
     // Dibujar QR base
     ctx.fillStyle = '#ffffff';
@@ -19364,6 +19366,8 @@ function qr2Generar(tipo) {
         ctx.beginPath();
         ctx.arc(cx, cy, LOGO/2, 0, Math.PI*2);
         ctx.clip();
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
         ctx.drawImage(logo, cx-LOGO/2, cy-LOGO/2, LOGO, LOGO);
         ctx.restore();
         terminar();
