@@ -867,6 +867,8 @@ const SESSION_KEY = 'dom_session_v1';
 function fmt(n){ return '$ ' + Number(n||0).toLocaleString('es-CO'); }
 function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function genId(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+// Convierte cualquier nombre de categoría a un ID de DOM seguro (tildes, espacios, símbolos)
+function slugCat(cat){ return String(cat||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-zA-Z0-9]/g,'_'); }
 
 function showToast(msg, dur=3000){
   const t = document.getElementById('toast');
@@ -1048,8 +1050,8 @@ function renderApp() {
     document.documentElement.style.setProperty('--verde', menuSettings.colorAccent);
   }
 
-  renderCategorias();
-  renderMenu();
+  renderMenu();       // Primero crear los .cat-section en el DOM
+  renderCategorias(); // Luego registrar el IntersectionObserver sobre ellos
   showScreen('menu');
 }
 
@@ -1089,7 +1091,7 @@ function renderCategorias() {
       const pillWidth  = this.offsetWidth;
       const barWidth   = bar.offsetWidth;
       bar.scrollTo({ left: pillLeft - (barWidth / 2) + (pillWidth / 2), behavior: 'smooth' });
-      const sec = document.getElementById('cat-' + this.dataset.cat.replace(/\s+/g,'_'));
+      const sec = document.getElementById('cat-' + slugCat(this.dataset.cat));
       if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
     });
   });
@@ -1136,7 +1138,7 @@ function renderMenu() {
     const items = visibles.filter(i => i.categoria === cat);
     if (!items.length) return '';
     return `
-      <div class="cat-section" id="cat-${cat.replace(/\s+/g,'_')}" data-cat="${esc(cat)}" style="scroll-margin-top:50px;">
+      <div class="cat-section" id="cat-${slugCat(cat)}" data-cat="${esc(cat)}" style="scroll-margin-top:50px;">
         <div class="cat-title">${esc(cat)}</div>
         <div class="items-grid">
           ${items.map(item => renderItemCard(item)).join('')}
@@ -1166,7 +1168,7 @@ function renderItemCard(item) {
        </div>`;
 
   return `
-    <div class="item-card${inCart?' in-cart':''}" id="card-${item.nombre.replace(/\s+/g,'_')}">
+    <div class="item-card${inCart?' in-cart':''}" id="card-${slugCat(item.nombre)}">
       <div class="item-foto">${imgHtml}</div>
       <div class="item-info">
         <div class="item-nombre">${esc(item.nombre)}</div>
@@ -1193,7 +1195,7 @@ window.cambiarQty = function(nombre, delta) {
   if (cart[nombre].qty === 0) delete cart[nombre];
 
   // Refrescar solo la tarjeta tocada
-  const cardEl = document.getElementById('card-' + nombre.replace(/\s+/g,'_'));
+  const cardEl = document.getElementById('card-' + slugCat(nombre));
   if (cardEl) {
     const nuevo = renderItemCard(item);
     const tmp = document.createElement('div');
