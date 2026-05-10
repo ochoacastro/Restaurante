@@ -520,7 +520,7 @@ function aplicarSettings(cfg, settings) {
   // Columnas
   const body = document.body;
   const menuBody = document.getElementById('menuBody');
-  if (parseInt(settings.columnas) === 2) {
+  if (parseInt(settings.columnas, 10) === 2) {
     menuBody.classList.add('dos-columnas');
   } else {
     menuBody.classList.remove('dos-columnas');
@@ -579,7 +579,7 @@ function aplicarSettings(cfg, settings) {
 }
 
 function fmt(n) {
-  return '$' + Number(n).toLocaleString('es-CO');
+  return '$' + Number(n || 0).toLocaleString('es-CO');
 }
 
 function esc(s) {
@@ -613,7 +613,7 @@ function renderMenu(menu, settings) {
   // para evitar inyección HTML con nombres de categoría que tengan comillas dobles
   const catNav = document.getElementById('catNav');
   catNav.innerHTML = cats.map(c =>
-    `<span class="cat-pill" data-cat="${c.replace(/"/g,'&quot;')}">${c}</span>`
+    `<span class="cat-pill" data-cat="${c.replace(/"/g,'&quot;')}">${esc(c)}</span>`
   ).join('');
   catNav.querySelectorAll('.cat-pill').forEach(pill => {
     pill.addEventListener('click', function() {
@@ -626,10 +626,10 @@ function renderMenu(menu, settings) {
 
   if (esLista) {
     // Diseño lista clásica: N columnas según settings.columnas
-    const numCols = parseInt(settings.columnas) || 2;
+    const numCols = parseInt(settings.columnas, 10) || 2;
     const cols = [];
     for (let i = 0; i < numCols; i++) cols.push([]);
-    const catsEnCol1 = parseInt(settings.catsEnCol1);
+    const catsEnCol1 = parseInt(settings.catsEnCol1, 10);
     if (numCols === 2 && !isNaN(catsEnCol1) && catsEnCol1 > 0 && catsEnCol1 < cats.length) {
       cols[0] = cats.slice(0, catsEnCol1);
       cols[1] = cats.slice(catsEnCol1);
