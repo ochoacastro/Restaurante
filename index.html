@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net; frame-src https://www.google.com https://www.grecaptcha.net;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; worker-src blob: 'self'; child-src blob: 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; frame-src https://www.google.com https://www.grecaptcha.net;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mi Restaurante · POS</title>
 <meta name="theme-color" content="#FF441A">
@@ -2727,19 +2727,16 @@
   .qr2-gen-btn.dom-btn  { background: linear-gradient(135deg,#1565C0,#1976D2); color: #fff; }
   .qr2-canvas-wrap {
     display: flex; justify-content: center; align-items: center;
-    margin: 14px 0 10px; min-height: 270px;
-    overflow: visible;
+    margin: 14px 0 10px;
+    width: 100%;
+    min-height: 270px;
   }
-  .qr2-canvas-wrap > div {
-    width: 260px !important; height: 260px !important;
-    overflow: visible !important;
-  }
-  .qr2-canvas-wrap canvas, .qr2-canvas-wrap svg {
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
+  .qr2-canvas-wrap canvas {
+    display: block;
     width: 260px !important;
     height: 260px !important;
-    display: block !important;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.15);
   }
   .qr2-link-row {
     display: flex; align-items: center; gap: 8px;
@@ -19189,14 +19186,14 @@ window.meGetPreviewUrl = meGetPreviewUrl;
 <script>
 // ════════════════════════════════════════════════════════════
 // QR DOBLE — Menú Restaurante + Domicilios
-// Usa QRCodeStyling para finder patterns en color + logo circular
-// Logo tomado de window.logoBase64 (variable global del POS)
+// Canvas puro + qrcodejs (sin workers, sin CDN en runtime)
+// Funciona en content://, file://, https://
 // ════════════════════════════════════════════════════════════
 
 const QR2_KEY_MENU = 'qr2_url_menu';
 const QR2_KEY_DOM  = 'qr2_url_dom';
 
-// Instancias de QRCodeStyling (para poder llamar .download())
+// Referencias a los canvas generados (para descarga)
 const _qr2 = { menu: null, dom: null };
 
 // ── Inicializar al abrir el accordion ───────────────────────
@@ -19241,43 +19238,20 @@ function qr2AutoSaveUrl(tipo) {
   }, 800);
 }
 
-// ── Hacer logo circular (transparente, sin fondo negro) ──────
-function qr2HacerLogoRedondo(base64, callback) {
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = function() {
-    const size = 500;
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = size;
-    const ctx = canvas.getContext('2d');
-    ctx.clearRect(0, 0, size, size);
-    ctx.save();
-    ctx.beginPath();
-    ctx.arc(size/2, size/2, size/2, 0, Math.PI * 2);
-    ctx.closePath();
-    ctx.clip();
-    ctx.drawImage(img, 0, 0, size, size);
-    ctx.restore();
-    callback(canvas.toDataURL('image/png'));
-  };
-  img.onerror = () => callback(base64);
-  img.src = base64;
-}
+// ── QR PURO: canvas nativo sin workers ni CDN en runtime ─────
+// Usa qrcodejs (ya cargado desde cdnjs en <head>) + canvas API
+// Funciona en content://, file://, https:// sin restricciones CSP
 
-// ── Generar QR con QRCodeStyling ─────────────────────────────
 function qr2Generar(tipo) {
-  const inputId     = tipo === 'menu' ? 'qr2UrlMenu'    : 'qr2UrlDom';
-  const canvasId    = tipo === 'menu' ? 'qr2CanvasMenu' : 'qr2CanvasDom';
-  const colorInput  = document.getElementById(tipo === 'menu' ? 'qr2ColorMenu' : 'qr2ColorDom');
-  const finderColor = (colorInput && colorInput.value) ? colorInput.value : (tipo === 'menu' ? '#2d8a4e' : '#1565C0');
+  const inputId    = tipo === 'menu' ? 'qr2UrlMenu'    : 'qr2UrlDom';
+  const canvasId   = tipo === 'menu' ? 'qr2CanvasMenu' : 'qr2CanvasDom';
+  const colorInput = document.getElementById(tipo === 'menu' ? 'qr2ColorMenu' : 'qr2ColorDom');
+  const color      = (colorInput && colorInput.value) ? colorInput.value : (tipo === 'menu' ? '#2d8a4e' : '#1565C0');
 
   const input = document.getElementById(inputId);
   if (!input) return;
   const url = input.value.trim();
-  if (!url) {
-    if (typeof showToast === 'function') showToast('⚠️ Escribe la URL primero');
-    return;
-  }
+  if (!url) { if (typeof showToast === 'function') showToast('⚠️ Escribe la URL primero'); return; }
 
   localStorage.setItem(tipo === 'menu' ? QR2_KEY_MENU : QR2_KEY_DOM, url);
 
@@ -19285,57 +19259,121 @@ function qr2Generar(tipo) {
   if (!wrap) return;
   wrap.innerHTML = '';
 
-  const construirQR = (logoDataUrl) => {
-    try {
-      if (typeof QRCodeStyling === 'undefined') {
-        if (typeof showToast === 'function') showToast('⚠️ Librería QR no cargada, reintentando…');
-        setTimeout(() => construirQR(logoDataUrl), 1500);
-        return;
-      }
-      const qr = new QRCodeStyling({
-        width:  1000,
-        height: 1000,
-        data:   url,
-        image:  logoDataUrl || undefined,
-
-        dotsOptions: {
-          color: '#111111',
-          type:  'rounded'
-        },
-        cornersSquareOptions: {
-          color: finderColor,
-          type:  'extra-rounded'
-        },
-        cornersDotOptions: {
-          color: finderColor
-        },
-        backgroundOptions: {
-          color: '#ffffff'
-        },
-        imageOptions: {
-          crossOrigin:  'anonymous',
-          margin:       8,
-          imageSize:    0.22
-        },
-        qrOptions: {
-          errorCorrectionLevel: 'H'
-        }
-      });
-
-      qr.append(wrap);
-      _qr2[tipo] = qr;
-      _mostrarControlesQR(tipo, url);
-    } catch(e) {
-      if (typeof showToast === 'function') showToast('⚠️ Error generando QR: ' + e.message);
-    }
-  };
-
-  // Si hay logo, hacerlo circular primero; si no, generar sin logo
-  if (window.logoBase64) {
-    qr2HacerLogoRedondo(window.logoBase64, construirQR);
-  } else {
-    construirQR(null);
+  if (typeof QRCode === 'undefined') {
+    wrap.innerHTML = '<p style="color:#E53935;font-size:12px;text-align:center;padding:20px;">⚠️ Librería QR no disponible.</p>';
+    return;
   }
+
+  // Paso 1: generar QR base en div oculto
+  const tmp = document.createElement('div');
+  tmp.style.cssText = 'position:absolute;left:-9999px;top:-9999px;visibility:hidden;';
+  document.body.appendChild(tmp);
+
+  let qrObj;
+  try {
+    qrObj = new QRCode(tmp, {
+      text: url, width: 512, height: 512,
+      colorDark: '#111111', colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+  } catch(e) {
+    document.body.removeChild(tmp);
+    if (typeof showToast === 'function') showToast('⚠️ Error: ' + e.message);
+    return;
+  }
+
+  // Paso 2: componer canvas con colores de esquinas y logo
+  setTimeout(() => {
+    const srcCanvas = tmp.querySelector('canvas');
+    if (!srcCanvas) { document.body.removeChild(tmp); return; }
+
+    const SIZE = srcCanvas.width || 512;
+    const dest = document.createElement('canvas');
+    dest.width = dest.height = SIZE;
+    const ctx = dest.getContext('2d');
+
+    // Dibujar QR base
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, SIZE, SIZE);
+    ctx.drawImage(srcCanvas, 0, 0, SIZE, SIZE);
+
+    // Calcular modSize exacto desde la matriz interna de qrcodejs
+    // qrObj._oQRCode.moduleCount = número de módulos del QR (sin quiet zone)
+    // qrcodejs añade 8px de padding por defecto a cada lado
+    let modSize, moduleCount, QZ;
+    try {
+      moduleCount = qrObj._oQRCode.moduleCount; // ej: 29, 33, 37...
+      QZ = 8; // qrcodejs usa 8px de margen fijo en cada lado
+      modSize = Math.round((SIZE - QZ * 2) / moduleCount);
+    } catch(e) {
+      // Fallback por escaneo de píxeles: buscar primer pixel negro
+      const row = ctx.getImageData(0, 0, SIZE, 1).data;
+      QZ = 0;
+      for (let x = 0; x < SIZE; x++) {
+        if (row[x*4] < 50) { QZ = x; break; }
+      }
+      // Medir cuántos píxeles negros hay seguidos (= 1 módulo)
+      modSize = 0;
+      for (let x = QZ; x < SIZE; x++) {
+        if (row[x*4] < 50) modSize++;
+        else break;
+      }
+      if (modSize < 2) modSize = Math.round((SIZE - QZ*2) / 29);
+    }
+
+    const FP = modSize * 7; // finder pattern = 7 módulos
+
+    const fps = [
+      { x: QZ,              y: QZ },          // top-left
+      { x: SIZE - QZ - FP,  y: QZ },          // top-right
+      { x: QZ,              y: SIZE - QZ - FP } // bottom-left
+    ];
+
+    fps.forEach(({x, y}) => {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x, y, FP, FP);
+      ctx.fillStyle = color;
+      // Marco exterior 1 módulo de grosor
+      ctx.fillRect(x,            y,            FP,      modSize);           // top
+      ctx.fillRect(x,            y+FP-modSize, FP,      modSize);           // bottom
+      ctx.fillRect(x,            y+modSize,    modSize, FP - modSize*2);    // left
+      ctx.fillRect(x+FP-modSize, y+modSize,    modSize, FP - modSize*2);    // right
+      // Centro sólido 3×3
+      ctx.fillRect(x + modSize*2, y + modSize*2, modSize*3, modSize*3);
+    });
+
+    const terminar = () => {
+      document.body.removeChild(tmp);
+      dest.style.cssText = 'width:260px;height:260px;border-radius:10px;box-shadow:0 2px 10px rgba(0,0,0,0.15);display:block;';
+      wrap.appendChild(dest);
+      _qr2[tipo] = dest;
+      _mostrarControlesQR(tipo, url);
+    };
+
+    // Paso 3: logo circular encima si existe
+    if (window.logoBase64) {
+      const LOGO = Math.round(SIZE * 0.18);
+      const logo = new Image();
+      logo.onload = () => {
+        const cx = SIZE/2, cy = SIZE/2;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(cx, cy, LOGO/2+8, 0, Math.PI*2);
+        ctx.fill();
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, LOGO/2, 0, Math.PI*2);
+        ctx.clip();
+        ctx.drawImage(logo, cx-LOGO/2, cy-LOGO/2, LOGO, LOGO);
+        ctx.restore();
+        terminar();
+      };
+      logo.onerror = terminar;
+      logo.src = window.logoBase64;
+    } else {
+      terminar();
+    }
+  }, 150);
 }
 
 // ── Helper: mostrar link + botón descarga + toast ─────────────
@@ -19364,12 +19402,17 @@ function qr2CopiarUrl(tipo) {
   });
 }
 
-// ── Descargar QR HD (vía QRCodeStyling nativo) ───────────────
+// ── Descargar QR como PNG ─────────────────────────────────────
 function qr2Descargar(tipo) {
-  const qr = _qr2[tipo];
-  if (!qr) { if (typeof showToast === 'function') showToast('⚠️ Primero genera el QR'); return; }
-  const name = tipo === 'menu' ? 'qr_menu_restaurante' : 'qr_domicilios';
-  qr.download({ name, extension: 'png' });
+  const canvas = _qr2[tipo];
+  if (!canvas || typeof canvas.toDataURL !== 'function') {
+    if (typeof showToast === 'function') showToast('⚠️ Primero genera el QR');
+    return;
+  }
+  const a = document.createElement('a');
+  a.download = (tipo === 'menu' ? 'qr_menu_restaurante' : 'qr_domicilios') + '.png';
+  a.href = canvas.toDataURL('image/png');
+  a.click();
 }
 
 // Exponer globalmente
