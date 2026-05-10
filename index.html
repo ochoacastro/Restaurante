@@ -2755,6 +2755,18 @@
     display: none; margin-bottom: 10px;
   }
   .qr2-no-logo.show { display: block; }
+  .qr2-color-row {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--fondo); border: 1.5px solid var(--borde);
+    border-radius: 12px; padding: 10px 14px; margin-bottom: 10px;
+  }
+  .qr2-color-label {
+    font-size: 13px; font-weight: 600; color: var(--gris-osc);
+  }
+  .qr2-color-input {
+    width: 44px; height: 34px; border: none; border-radius: 8px;
+    padding: 2px; cursor: pointer; background: transparent;
+  }
 
   /* ── Cat manager ── */
   .cat-mgr-item { display: flex; align-items: center; gap: 10px; background: var(--fondo); border: 1.5px solid var(--borde); border-radius: 12px; padding: 10px 12px; }
@@ -4915,6 +4927,11 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
             <span class="qr2-url-saved" id="qr2SavedMenu">💾</span>
           </div>
 
+          <div class="qr2-color-row">
+            <label class="qr2-color-label">🎨 Color de esquinas</label>
+            <input type="color" class="qr2-color-input" id="qr2ColorMenu" value="#2d8a4e">
+          </div>
+
           <button class="qr2-gen-btn menu-btn" onclick="qr2Generar('menu')">
             ✨ Generar QR del menú
           </button>
@@ -4941,6 +4958,11 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
               placeholder="https://tusitio.com/domicilio.html"
               oninput="qr2AutoSaveUrl('dom')">
             <span class="qr2-url-saved" id="qr2SavedDom">💾</span>
+          </div>
+
+          <div class="qr2-color-row">
+            <label class="qr2-color-label">🎨 Color de esquinas</label>
+            <input type="color" class="qr2-color-input" id="qr2ColorDom" value="#1565C0">
           </div>
 
           <button class="qr2-gen-btn dom-btn" onclick="qr2Generar('dom')">
@@ -19232,7 +19254,8 @@ function qr2HacerLogoRedondo(base64, callback) {
 function qr2Generar(tipo) {
   const inputId     = tipo === 'menu' ? 'qr2UrlMenu'    : 'qr2UrlDom';
   const canvasId    = tipo === 'menu' ? 'qr2CanvasMenu' : 'qr2CanvasDom';
-  const finderColor = tipo === 'menu' ? '#2d8a4e'        : '#1565C0';
+  const colorInput  = document.getElementById(tipo === 'menu' ? 'qr2ColorMenu' : 'qr2ColorDom');
+  const finderColor = (colorInput && colorInput.value) ? colorInput.value : (tipo === 'menu' ? '#2d8a4e' : '#1565C0');
 
   const input = document.getElementById(inputId);
   if (!input) return;
