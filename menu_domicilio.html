@@ -1039,7 +1039,6 @@ function renderApp() {
 
   renderCategorias();
   renderMenu();
-  renderPagoGrid();
   showScreen('menu');
 }
 
@@ -1264,7 +1263,6 @@ window.irADatos = function() {
   }
 
   showScreen('datos');
-  actualizarDevuelta();
 };
 
 function renderDatosResumen() {
@@ -1282,73 +1280,17 @@ function renderDatosResumen() {
     <div class="resumen-row total"><span>Total</span><span class="resumen-val">${fmt(total)}</span></div>`;
 }
 
-function renderPagoGrid() {
-  const grid = document.getElementById('pagoGrid');
-  if (!payMethods.length) {
-    document.getElementById('pagoSection').style.display = 'none';
-    return;
-  }
-  grid.innerHTML = payMethods.map(m => {
-    const sel = m.id === paySelected;
-    return `
-      <div class="pago-opt${sel?' selected':''}" onclick="selPago('${esc(m.id)}')">
-        <div class="pago-opt-img">
-          ${m.img ? `<img src="${m.img}" alt="">` : '<span style="font-size:20px;">💳</span>'}
-        </div>
-        <div style="flex:1;">
-          <div class="pago-opt-nombre">${esc(m.label)}</div>
-          ${m.info ? `<div class="pago-opt-info">${esc(m.info)}</div>` : ''}
-        </div>
-        <div class="pago-check">${sel?'✓':''}</div>
-      </div>`;
-  }).join('');
-}
-
-window.selPago = function(id) {
-  paySelected = id;
-  renderPagoGrid();
-  actualizarDevuelta();
-};
-
+// renderPagoGrid, selPago, actualizarDevuelta, calcularCambio
+// ya no aplican en pantalla Datos — el pago se elige en seguimiento
+// Se mantienen como no-ops para no romper referencias residuales
+function renderPagoGrid() { /* pago ahora ocurre en seguimiento */ }
+window.selPago = function(id) { paySelected = id; };
 function esEfectivo() {
   const m = payMethods.find(m => m.id === paySelected);
   return m && m.label.toLowerCase().includes('efectivo');
 }
-
-function actualizarDevuelta() {
-  const box = document.getElementById('devueltaBox');
-  if (!box) return;
-  if (esEfectivo()) {
-    box.classList.add('show');
-    calcularCambio();
-  } else {
-    box.classList.remove('show');
-  }
-}
-
-function calcularCambio() {
-  const hint = document.getElementById('devueltaHint');
-  const inp  = document.getElementById('fDevuelta');
-  if (!hint || !inp) return;
-  const total = cartTotal() + costoEnvio;
-  const raw   = inp.value.replace(/\D/g,'');
-  const conQue = raw ? parseInt(raw, 10) : 0;
-  if (conQue >= total) {
-    hint.textContent = `Cambio a devolver: ${fmt(conQue - total)}`;
-    hint.style.color = 'var(--verde)';
-  } else if (conQue > 0) {
-    hint.textContent = `⚠️ El valor es menor al total (${fmt(total)})`;
-    hint.style.color = 'var(--rojo)';
-  } else {
-    hint.textContent = 'El repartidor llevará el cambio exacto.';
-    hint.style.color = 'var(--gris)';
-  }
-}
-
-// Listener para recalcular en tiempo real mientras escribe
-document.addEventListener('input', function(e) {
-  if (e.target.id === 'fDevuelta') calcularCambio();
-});
+function actualizarDevuelta() { /* no-op: devuelta se captura en seguimiento */ }
+function calcularCambio() { /* no-op */ }
 
 // ════════════════════════════════════════════════════════════════
 // ENVIAR PEDIDO
