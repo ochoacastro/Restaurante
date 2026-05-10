@@ -6249,7 +6249,11 @@ async function pinEnter() {
     document.getElementById('loginScreen').style.display = 'none';
     aplicarRolUI();
     actualizarHeaderUsuario();
-    (window._posDBReady || Promise.resolve()).then(() => init());
+    (window._posDBReady || Promise.resolve()).then(() => {
+      init();
+      // Refrescar badges de domicilios ahora que usuarioActivo está disponible
+      setTimeout(() => { if (typeof domActualizarBadges === 'function') domActualizarBadges(); }, 1200);
+    });
     // Firebase en segundo plano: verificar sesión y registrar sin bloquear la UI
     fbVerificarSesion(loginTargetUser.id).then(sesionOcupada => {
       if (sesionOcupada) {
@@ -16389,9 +16393,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Detectar pedidos nuevos con estado 'pendiente'
       if (_domPrimerCarga) {
-        // Primera carga: solo registrar IDs existentes, sin alertar
-        _domPedidos.forEach(p => { if (p.sessionId) _domSeenIds.add(p.sessionId); });
         _domPrimerCarga = false;
+        // Primera carga: registrar IDs y alertar si hay pendientes sin atender
+        const pendientesAbiertos = [];
+        _domPedidos.forEach(p => {
+          if (p.sessionId) {
+            _domSeenIds.add(p.sessionId);
+            if (p.estado === 'pendiente') pendientesAbiertos.push(p);
+          }
+        });
+        if (pendientesAbiertos.length > 0) {
+          const rol = window.usuarioActivo?.rol;
+          if (rol === 'admin' || rol === 'master') {
+            const n = pendientesAbiertos.length;
+            if (typeof showToast === 'function') {
+              showToast('🛵 ' + n + ' pedido' + (n>1?'s':'') + ' de domicilio pendiente' + (n>1?'s':'') + ' esperando atención', 7000);
+            }
+            // Navegar automáticamente al tab domicilios
+            const panelDom = document.getElementById('panel-domicilios');
+            if (panelDom && !panelDom.classList.contains('active')) {
+              setTimeout(() => { if (typeof showTab === 'function') showTab('domicilios'); }, 800);
+            }
+          }
+        }
       } else {
         _domPedidos.forEach(p => {
           if (p.sessionId && !_domSeenIds.has(p.sessionId) && p.estado === 'pendiente') {
