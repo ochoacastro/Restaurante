@@ -538,6 +538,10 @@
   .pay-cash-options { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
   .pay-cash-opt { background:rgba(255,255,255,.06); border:1.5px solid rgba(255,255,255,.12); border-radius:13px; padding:13px 14px; font-size:14px; font-weight:800; color:#fff; cursor:pointer; text-align:left; display:flex; align-items:center; gap:10px; transition:all .18s; font-family:inherit; width:100%; }
   .pay-cash-opt.selected { background:rgba(255,68,26,.15); border-color:var(--rappi); color:var(--rappi); }
+  .pay-cash-opt.error { border-color:#E53935; animation: cashShake .4s ease; }
+  @keyframes cashShake {
+    0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)}
+  }
   .pay-cash-opt-icon { font-size:22px; flex-shrink:0; }
   .pay-cash-input-wrap { margin-bottom:16px; }
   .pay-cash-input-label { font-size:12px; color:rgba(255,255,255,.5); font-weight:700; margin-bottom:6px; }
@@ -1917,6 +1921,52 @@
   /* ── MENÚ FÍSICO ── */
   /* Estilos del menú físico son inline — generados por el motor JS unificado */
 
+  /* ── PANTALLA DE ÉXITO POST-PEDIDO ── */
+  #orderSuccessScreen {
+    position: fixed; inset: 0; z-index: 11000;
+    background: linear-gradient(160deg, #0a2e0a 0%, #1a4a1a 60%, #0d3a1a 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 32px 24px; text-align: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.35s ease;
+  }
+  #orderSuccessScreen.visible { opacity: 1; pointer-events: all; }
+  .oss-checkmark {
+    font-size: 80px; margin-bottom: 16px;
+    animation: ossBounce 0.55s cubic-bezier(.36,1.6,.6,1) both;
+  }
+  @keyframes ossBounce {
+    from { transform: scale(0); opacity: 0; }
+    to   { transform: scale(1); opacity: 1; }
+  }
+  .oss-title {
+    font-size: 26px; font-weight: 900; color: #fff;
+    margin-bottom: 8px; letter-spacing: -0.3px;
+  }
+  .oss-sub {
+    font-size: 14px; color: rgba(255,255,255,.65);
+    line-height: 1.6; margin-bottom: 28px; max-width: 300px;
+  }
+  .oss-chips {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 32px;
+  }
+  .oss-chip {
+    background: rgba(255,255,255,.10); border: 1px solid rgba(255,255,255,.18);
+    border-radius: 20px; padding: 8px 16px;
+    font-size: 13px; font-weight: 700; color: rgba(255,255,255,.85);
+  }
+  .oss-btn-new {
+    width: 100%; max-width: 320px; padding: 18px;
+    background: var(--rappi); border: none; border-radius: 16px;
+    font-size: 17px; font-weight: 900; color: #fff;
+    cursor: pointer; font-family: inherit;
+    box-shadow: 0 6px 24px rgba(255,68,26,.45);
+    transition: transform .15s, box-shadow .15s;
+    touch-action: manipulation;
+  }
+  .oss-btn-new:active { transform: scale(.97); box-shadow: 0 3px 12px rgba(255,68,26,.35); }
+
 </style>
 </head>
 <body>
@@ -2870,7 +2920,7 @@ let cart = cartByMode[mode];
 let selectedItem = null;
 let pinBuffer = '';
 let selectedPayment = '';
-let orderForm = { name: '', phone: '', address: '', payment: '', notes: '' };
+let orderForm = { name: '', phone: '', address: '', payment: '', notes: '', notasPago: '' };
 
 function syncMenuViews(){
   // (reservado para compatibilidad futura)
@@ -2982,17 +3032,9 @@ function normalizePhone(value){
 }
 
 function getWhatsAppNumber(){
-  // 1. Preferencia: businessWhatsApp guardado en pos_menu_settings_v1
-  let src = normalizePhone(settings.businessWhatsApp || DEFAULT_WHATSAPP_NUMBER);
-  // 2. Fallback: waTelDomicilio de pos_config (guardado por el POS/index)
-  if(!src){
-    try {
-      const posConf = JSON.parse(localStorage.getItem('pos_config') || '{}');
-      if(posConf.waTelDomicilio) src = normalizePhone(posConf.waTelDomicilio);
-    } catch(e) {}
-  }
-  if(!src) return '';
-  return src.startsWith('57') ? src : `57${src}`;
+  const raw = normalizePhone(settings.businessWhatsApp || DEFAULT_WHATSAPP_NUMBER);
+  if(!raw) return '';
+  return raw.startsWith('57') ? raw : `57${raw}`;
 }
 
 function getBusinessWhatsapp(){
@@ -4465,74 +4507,20 @@ $('#cartSheet').addEventListener('click', (e) => {
   }
 });
 
-$('#waBtn').addEventListener('click', () => {
-  if(mode !== 'domicilio') { showAlertDialog('El pedido por WhatsApp está disponible solo para domicilio.'); return; }
-  if(!cart.length) return;
-  const waNumber = getBusinessWhatsapp();
-  if(!waNumber || waNumber === '57' || waNumber.length < 10){
-    showAlertDialog('El número de WhatsApp del negocio no está configurado. Pide al administrador que lo agregue en el editor.');
-    return;
-  }
-  const nameEl    = $('#customerName');
-  const phoneEl   = $('#customerPhone');
-  const addressEl = $('#customerAddress');
-  const notesEl   = $('#customerNotes');
+// ══ HELPERS: modal efectivo + pantalla de éxito ══════════════════════
 
-  const name    = String(nameEl?.value    || orderForm.name    || '').trim();
-  const phone   = normalizePhone(String(phoneEl?.value || orderForm.phone || ''));
-  const address = String(addressEl?.value || orderForm.address || '').trim();
-  const notes   = String(notesEl?.value   || orderForm.notes   || '').trim();
-  const paymentId    = orderForm.payment || selectedPaymentForMode(mode);
-  const paymentLabel = paymentLabelById(mode, paymentId);
+// Guarda los datos del pedido listos para enviar (se usan al confirmar el modal)
+let _pendingOrderData = null;
 
-  // Limpiar errores previos
-  [nameEl, phoneEl, addressEl].forEach(el => el?.classList.remove('error'));
+function _buildAndSendOrder(notasPagoStr) {
+  if (!_pendingOrderData) return;
+  const { waNumber, name, phone, address, notes, paymentLabel, _tipoDocWa, negocioNombre, typeTxt, fmtWa, totalVal } = _pendingOrderData;
 
-  let hasError = false;
-  if(!name)    { nameEl?.classList.add('error');    hasError = true; }
-  if(!phone)   { phoneEl?.classList.add('error');   hasError = true; }
-  if(!address) { addressEl?.classList.add('error'); hasError = true; }
+  orderForm.notasPago = notasPagoStr || '';
 
-  if(hasError){
-    showAlertDialog('Por favor completa los campos obligatorios (marcados con *).');
-    if(!name) nameEl?.focus();
-    else if(!phone) phoneEl?.focus();
-    else addressEl?.focus();
-    return;
-  }
-  if(!paymentLabel){ showAlertDialog('Selecciona una forma de pago.'); return; }
+  const lines    = cart.map(i => `• ${i.nombre} x${i.cantidad} = ${fmtWa(i.precio * i.cantidad)}`);
+  const totalTxt = fmtWa(totalVal);
 
-  // Validar FE si corresponde
-  let _tipoDocWa = 'recibo';
-  try { if (typeof window._tipoDocActual !== 'undefined') _tipoDocWa = window._tipoDocActual; } catch(e){}
-  if (_tipoDocWa === 'fe') {
-    const feN = document.getElementById('feNombre')?.value?.trim();
-    const feD = document.getElementById('feNit')?.value?.trim();
-    const feC = document.getElementById('feCorreo')?.value?.trim();
-    if (!feN || !feD || !feC) {
-      showAlertDialog('Para factura electrónica completa: nombre, número de documento y correo.');
-      return;
-    }
-  }
-
-  orderForm.name    = name;
-  orderForm.phone   = phone;
-  orderForm.address = address;
-  orderForm.notes   = notes;
-  orderForm.payment = paymentId;
-  selectedPayment   = paymentId;
-
-  const fmtWa = (n) => '$ ' + Number(n || 0).toLocaleString('es-CO');
-  const lines = cart.map(i => `• ${i.nombre} x${i.cantidad} = ${fmtWa(i.precio * i.cantidad)}`);
-  const totalTxt = fmtWa(subtotal());
-  const typeTxt = mode === 'restaurante' ? 'Restaurante' : 'Domicilio';
-  const negocioNombre = (() => {
-    try { const c = JSON.parse(localStorage.getItem('pos_config') || '{}'); if (c.nombre && c.nombre !== 'Mi Restaurante') return c.nombre; } catch(e){}
-    try { const b = localStorage.getItem('pos_login_brand'); if (b) return b; } catch(e){}
-    return 'Mi Restaurante';
-  })();
-
-  // Datos de Factura Electrónica (si aplica)
   let feLines = [];
   if (_tipoDocWa === 'fe') {
     const feNombreVal  = document.getElementById('feNombre')?.value?.trim() || '';
@@ -4570,14 +4558,237 @@ $('#waBtn').addEventListener('click', () => {
 
   window.open(`https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`, '_blank');
 
-  // Limpiar el carrito del modo domicilio después de enviar el pedido
-  // para evitar que al volver se restaure un pedido ya enviado
+  // Limpiar carrito
   cartByMode[mode] = [];
   cart = cartByMode[mode];
   saveCart();
-  // Limpiar también el localStorage de respaldo
   try { localStorage.removeItem(CART_KEY + '_local'); } catch(_) {}
   render();
+
+  // Mostrar pantalla de éxito
+  ossShow(paymentLabel, totalTxt, orderForm.notasPago);
+  _pendingOrderData = null;
+}
+
+// ── Pantalla de éxito ──────────────────────────────────────────────────
+function ossShow(paymentLabel, totalTxt, notasPago) {
+  const screen = document.getElementById('orderSuccessScreen');
+  if (!screen) return;
+
+  // Chips informativos
+  const chipPago  = document.getElementById('ossChipPago');
+  const chipTotal = document.getElementById('ossChipTotal');
+  if (chipPago)  chipPago.textContent  = '💳 ' + (paymentLabel || 'Pagado');
+  if (chipTotal) chipTotal.textContent = '🧾 ' + (totalTxt || '');
+
+  // Sub-texto con nota de pago si hay devuelta pendiente
+  const ossSubText = document.getElementById('ossSubText');
+  if (ossSubText) {
+    ossSubText.innerHTML = notasPago
+      ? `Tu pedido fue enviado por WhatsApp.<br><span style="color:rgba(255,255,255,.55);font-size:12px;">${notasPago}</span>`
+      : 'Tu pedido fue enviado por WhatsApp.<br>El restaurante lo está recibiendo.';
+  }
+
+  screen.setAttribute('aria-hidden', 'false');
+  screen.classList.add('visible');
+
+  // Cerrar el carrito si está abierto
+  const cs = document.getElementById('cartSheet');
+  if (cs) { cs.classList.remove('show'); cs.setAttribute('aria-hidden', 'true'); }
+}
+
+function ossNuevoPedido() {
+  const screen = document.getElementById('orderSuccessScreen');
+  if (screen) { screen.classList.remove('visible'); screen.setAttribute('aria-hidden', 'true'); }
+  // Limpiar formulario y llevar al inicio del menú
+  orderForm = { name: '', phone: '', address: '', payment: '', notes: '', notasPago: '' };
+  const nameEl    = document.getElementById('customerName');
+  const phoneEl   = document.getElementById('customerPhone');
+  const addressEl = document.getElementById('customerAddress');
+  const notesEl   = document.getElementById('customerNotes');
+  if (nameEl)    nameEl.value    = '';
+  if (phoneEl)   phoneEl.value   = '';
+  if (addressEl) addressEl.value = '';
+  if (notesEl)   notesEl.value   = '';
+  // Hacer scroll al tope del menú
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── Modal efectivo: conectar botones ──────────────────────────────────
+(function initPayConfirmModal() {
+  const cashOptExact  = document.getElementById('cashOptExact');
+  const cashOptChange = document.getElementById('cashOptChange');
+  const cashChangeWrap  = document.getElementById('cashChangeWrap');
+  const cashAmountInput = document.getElementById('cashAmountInput');
+  const cashVueltoLine  = document.getElementById('cashVueltoLine');
+  const cashVueltoVal   = document.getElementById('cashVueltoVal');
+  const payConfirmOk    = document.getElementById('payConfirmOk');
+  const payConfirmCancel = document.getElementById('payConfirmCancel');
+  const payConfirmModal  = document.getElementById('payConfirmModal');
+
+  let cashMode = null; // 'exact' | 'change'
+
+  function selectCashOpt(opt) {
+    cashMode = opt;
+    cashOptExact?.classList.toggle('selected', opt === 'exact');
+    cashOptChange?.classList.toggle('selected', opt === 'change');
+    if (cashChangeWrap) cashChangeWrap.style.display = opt === 'change' ? 'block' : 'none';
+    if (opt === 'change' && cashAmountInput) cashAmountInput.focus();
+    if (opt === 'exact' && cashVueltoLine) cashVueltoLine.style.display = 'none';
+  }
+
+  cashOptExact?.addEventListener('click', () => selectCashOpt('exact'));
+  cashOptChange?.addEventListener('click', () => selectCashOpt('change'));
+
+  cashAmountInput?.addEventListener('input', () => {
+    const paid  = parseFloat(cashAmountInput.value) || 0;
+    const total = _pendingOrderData?.totalVal || subtotal();
+    if (paid > 0 && cashVueltoLine && cashVueltoVal) {
+      const vuelto = paid - total;
+      cashVueltoVal.textContent = '$ ' + Math.max(0, vuelto).toLocaleString('es-CO');
+      cashVueltoLine.style.display = 'block';
+    }
+  });
+
+  payConfirmOk?.addEventListener('click', () => {
+    if (!cashMode) {
+      // Si no eligió ninguna opción, mostrar efecto shake
+      [cashOptExact, cashOptChange].forEach(b => {
+        b?.classList.add('error');
+        setTimeout(() => b?.classList.remove('error'), 600);
+      });
+      return;
+    }
+
+    let notasPago = '';
+    if (cashMode === 'exact') {
+      notasPago = 'Pago exacto en efectivo';
+    } else {
+      const paid  = parseFloat(cashAmountInput?.value || 0);
+      const total = _pendingOrderData?.totalVal || subtotal();
+      if (paid > 0 && paid >= total) {
+        const vuelto = paid - total;
+        notasPago = `Paga con $ ${paid.toLocaleString('es-CO')} · Devuelta: $ ${vuelto.toLocaleString('es-CO')}`;
+      } else if (paid > 0) {
+        notasPago = `Paga con $ ${paid.toLocaleString('es-CO')} en efectivo`;
+      } else {
+        notasPago = 'Necesita devuelta (monto no especificado)';
+      }
+    }
+
+    // Cerrar modal y enviar
+    if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
+    cashMode = null;
+    selectCashOpt(null);
+    _buildAndSendOrder(notasPago);
+  });
+
+  payConfirmCancel?.addEventListener('click', () => {
+    if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
+    cashMode = null;
+    selectCashOpt(null);
+    _pendingOrderData = null;
+  });
+})();
+
+// ── Botón principal WhatsApp ───────────────────────────────────────────
+$('#waBtn').addEventListener('click', () => {
+  if(mode !== 'domicilio') { showAlertDialog('El pedido por WhatsApp está disponible solo para domicilio.'); return; }
+  if(!cart.length) return;
+  const waNumber = getBusinessWhatsapp();
+  if(!waNumber || waNumber === '57' || waNumber.length < 10){
+    showAlertDialog('El número de WhatsApp del negocio no está configurado. Pide al administrador que lo agregue en el editor.');
+    return;
+  }
+  const nameEl    = $('#customerName');
+  const phoneEl   = $('#customerPhone');
+  const addressEl = $('#customerAddress');
+  const notesEl   = $('#customerNotes');
+
+  const name    = String(nameEl?.value    || orderForm.name    || '').trim();
+  const phone   = normalizePhone(String(phoneEl?.value || orderForm.phone || ''));
+  const address = String(addressEl?.value || orderForm.address || '').trim();
+  const notes   = String(notesEl?.value   || orderForm.notes   || '').trim();
+  const paymentId    = orderForm.payment || selectedPaymentForMode(mode);
+  const paymentLabel = paymentLabelById(mode, paymentId);
+
+  [nameEl, phoneEl, addressEl].forEach(el => el?.classList.remove('error'));
+
+  let hasError = false;
+  if(!name)    { nameEl?.classList.add('error');    hasError = true; }
+  if(!phone)   { phoneEl?.classList.add('error');   hasError = true; }
+  if(!address) { addressEl?.classList.add('error'); hasError = true; }
+
+  if(hasError){
+    showAlertDialog('Por favor completa los campos obligatorios (marcados con *).');
+    if(!name) nameEl?.focus();
+    else if(!phone) phoneEl?.focus();
+    else addressEl?.focus();
+    return;
+  }
+  if(!paymentLabel){ showAlertDialog('Selecciona una forma de pago.'); return; }
+
+  let _tipoDocWa = 'recibo';
+  try { if (typeof window._tipoDocActual !== 'undefined') _tipoDocWa = window._tipoDocActual; } catch(e){}
+  if (_tipoDocWa === 'fe') {
+    const feN = document.getElementById('feNombre')?.value?.trim();
+    const feD = document.getElementById('feNit')?.value?.trim();
+    const feC = document.getElementById('feCorreo')?.value?.trim();
+    if (!feN || !feD || !feC) {
+      showAlertDialog('Para factura electrónica completa: nombre, número de documento y correo.');
+      return;
+    }
+  }
+
+  orderForm.name    = name;
+  orderForm.phone   = phone;
+  orderForm.address = address;
+  orderForm.notes   = notes;
+  orderForm.payment = paymentId;
+  selectedPayment   = paymentId;
+
+  const fmtWa = (n) => '$ ' + Number(n || 0).toLocaleString('es-CO');
+  const negocioNombre = (() => {
+    try { const c = JSON.parse(localStorage.getItem('pos_config') || '{}'); if (c.nombre && c.nombre !== 'Mi Restaurante') return c.nombre; } catch(e){}
+    try { const b = localStorage.getItem('pos_login_brand'); if (b) return b; } catch(e){}
+    return 'Mi Restaurante';
+  })();
+
+  // Guardar datos del pedido para usar tras el modal
+  _pendingOrderData = {
+    waNumber, name, phone, address, notes, paymentLabel,
+    _tipoDocWa, negocioNombre,
+    typeTxt: mode === 'restaurante' ? 'Restaurante' : 'Domicilio',
+    fmtWa, totalVal: subtotal()
+  };
+
+  // ¿Es pago en efectivo? → mostrar modal
+  const esEfectivo = paymentLabel.toLowerCase().includes('efectivo');
+  if (esEfectivo) {
+    const payConfirmModal = document.getElementById('payConfirmModal');
+    const payConfirmTotal = document.getElementById('payConfirmTotal');
+    const cashChangeWrap  = document.getElementById('cashChangeWrap');
+    const cashAmountInput = document.getElementById('cashAmountInput');
+    const cashVueltoLine  = document.getElementById('cashVueltoLine');
+    const payConfirmCashSection  = document.getElementById('payConfirmCashSection');
+    const payConfirmWalletSection = document.getElementById('payConfirmWalletSection');
+    // Resetear estado del modal
+    if (payConfirmTotal)        payConfirmTotal.textContent = fmtWa(subtotal());
+    if (payConfirmCashSection)  payConfirmCashSection.style.display = 'block';
+    if (payConfirmWalletSection) payConfirmWalletSection.style.display = 'none';
+    if (cashChangeWrap)         cashChangeWrap.style.display = 'none';
+    if (cashAmountInput)        cashAmountInput.value = '';
+    if (cashVueltoLine)         cashVueltoLine.style.display = 'none';
+    document.querySelectorAll('.pay-cash-opt').forEach(b => b.classList.remove('selected'));
+    if (payConfirmModal) {
+      payConfirmModal.style.display = 'flex';
+      payConfirmModal.setAttribute('aria-hidden', 'false');
+    }
+    return; // Esperar confirmación en el modal
+  }
+
+  // Para otros métodos de pago → enviar directo
+  _buildAndSendOrder('');
 });
 
 // Un solo listener para los botones de modo (evitar duplicados)
@@ -6745,6 +6956,21 @@ window.renderCategoryGridSafe = function() {
 
 })();
 </script>
+
+<!-- ══ PANTALLA DE ÉXITO POST-PEDIDO ══ -->
+<div id="orderSuccessScreen" aria-hidden="true">
+  <div class="oss-checkmark">✅</div>
+  <div class="oss-title">¡Pedido enviado!</div>
+  <div class="oss-sub" id="ossSubText">
+    Tu pedido fue enviado por WhatsApp.<br>
+    El restaurante lo está recibiendo.
+  </div>
+  <div class="oss-chips">
+    <div class="oss-chip" id="ossChipPago">💳 —</div>
+    <div class="oss-chip" id="ossChipTotal">🧾 —</div>
+  </div>
+  <button class="oss-btn-new" onclick="ossNuevoPedido()">🛵 Hacer otro pedido</button>
+</div>
 
 </body>
 </html>
