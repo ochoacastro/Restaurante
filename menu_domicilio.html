@@ -3109,6 +3109,35 @@ function setSelectedPayment(id){
   const esEfectivo = !m || !m.payType || m.payType === 'efectivo'
     || m.label.toLowerCase().includes('efectivo');
 
+  if (esEfectivo) {
+    // Abrir modal de efectivo al seleccionarlo como método de pago
+    const modal     = document.getElementById('payConfirmModal');
+    const cashSec   = document.getElementById('payConfirmCashSection');
+    const walletSec = document.getElementById('payConfirmWalletSection');
+    const icon      = document.getElementById('payConfirmIcon');
+    const title     = document.getElementById('payConfirmTitle');
+    const sub       = document.getElementById('payConfirmSub');
+    const totalEl   = document.getElementById('payConfirmTotal');
+    const okBtn     = document.getElementById('payConfirmOk');
+    const cashChangeWrap  = document.getElementById('cashChangeWrap');
+    const cashAmountInput = document.getElementById('cashAmountInput');
+    const cashVueltoLine  = document.getElementById('cashVueltoLine');
+    if (icon)  icon.textContent  = '💵';
+    if (title) title.textContent = 'Pago en efectivo';
+    if (sub)   sub.textContent   = '¿Cómo vas a pagar?';
+    if (totalEl) { totalEl.textContent = '$ ' + Number(subtotal()).toLocaleString('es-CO'); totalEl.style.display = ''; }
+    if (okBtn)  { okBtn._modoRef = false; okBtn._modoSeleccion = true; okBtn.textContent = 'Confirmar pedido'; }
+    if (cashSec)   cashSec.style.display   = 'block';
+    if (walletSec) walletSec.style.display = 'none';
+    if (cashChangeWrap)  cashChangeWrap.style.display  = 'none';
+    if (cashAmountInput) cashAmountInput.value = '';
+    if (cashVueltoLine)  cashVueltoLine.style.display  = 'none';
+    document.querySelectorAll('.pay-cash-opt').forEach(b => b.classList.remove('selected'));
+    if (modal) { modal.style.display = 'flex'; modal.setAttribute('aria-hidden','false'); }
+    renderCart();
+    return;
+  }
+
   if (!esEfectivo && m && (m.info || m.accountName)) {
     const modal     = document.getElementById('payConfirmModal');
     const cashSec   = document.getElementById('payConfirmCashSection');
@@ -4729,7 +4758,7 @@ function ossNuevoPedido() {
   });
 
   payConfirmOk?.addEventListener('click', () => {
-    // Modo "Entendido" — solo cerrar el modal de referencia de pago
+    // Modo "Entendido" — solo cerrar el modal de referencia de pago (billeteras)
     if (payConfirmOk._modoRef) {
       payConfirmOk._modoRef = false;
       payConfirmOk.textContent = 'Confirmar pedido';
@@ -4748,6 +4777,7 @@ function ossNuevoPedido() {
       return;
     }
 
+    // Calcular nota de pago
     let notasPago = '';
     if (cashMode === 'exact') {
       notasPago = 'Pago exacto en efectivo';
@@ -4764,7 +4794,17 @@ function ossNuevoPedido() {
       }
     }
 
-    // Cerrar modal y enviar
+    // Modo selección — solo cerrar el modal y guardar la nota para cuando se envíe por WhatsApp
+    if (payConfirmOk._modoSeleccion) {
+      payConfirmOk._modoSeleccion = false;
+      window._cashNotasPago = notasPago;
+      if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
+      cashMode = null;
+      selectCashOpt(null);
+      return;
+    }
+
+    // Modo WhatsApp — cerrar modal y enviar
     if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
     cashMode = null;
     selectCashOpt(null);
@@ -4774,12 +4814,13 @@ function ossNuevoPedido() {
   payConfirmCancel?.addEventListener('click', () => {
     if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
     // Limpiar modo referencia si estaba activo
-    if (payConfirmOk) { payConfirmOk._modoRef = false; payConfirmOk.textContent = 'Confirmar pedido'; }
+    if (payConfirmOk) { payConfirmOk._modoRef = false; payConfirmOk._modoSeleccion = false; payConfirmOk.textContent = 'Confirmar pedido'; }
     const payConfirmTotal = document.getElementById('payConfirmTotal');
     if (payConfirmTotal) payConfirmTotal.style.display = '';
     cashMode = null;
     selectCashOpt(null);
     _pendingOrderData = null;
+    window._cashNotasPago = null;
   });
 })();
 
@@ -4854,9 +4895,17 @@ $('#waBtn').addEventListener('click', () => {
     fmtWa, totalVal: subtotal()
   };
 
-  // ¿Es pago en efectivo? → mostrar modal
+  // ¿Es pago en efectivo? → si ya configuró en el modal, enviar directo; si no, abrir modal
   const esEfectivo = paymentLabel.toLowerCase().includes('efectivo');
   if (esEfectivo) {
+    if (window._cashNotasPago) {
+      // Ya eligió en el modal — enviar con la nota guardada
+      const nota = window._cashNotasPago;
+      window._cashNotasPago = null;
+      _buildAndSendOrder(nota);
+      return;
+    }
+    // No ha pasado por el modal aún — abrirlo
     const payConfirmModal = document.getElementById('payConfirmModal');
     const payConfirmTotal = document.getElementById('payConfirmTotal');
     const cashChangeWrap  = document.getElementById('cashChangeWrap');
@@ -4864,7 +4913,6 @@ $('#waBtn').addEventListener('click', () => {
     const cashVueltoLine  = document.getElementById('cashVueltoLine');
     const payConfirmCashSection  = document.getElementById('payConfirmCashSection');
     const payConfirmWalletSection = document.getElementById('payConfirmWalletSection');
-    // Resetear estado del modal
     if (payConfirmTotal)        { payConfirmTotal.textContent = fmtWa(subtotal()); payConfirmTotal.style.display = ''; }
     const payConfirmIcon  = document.getElementById('payConfirmIcon');
     const payConfirmTitle = document.getElementById('payConfirmTitle');
@@ -4873,7 +4921,7 @@ $('#waBtn').addEventListener('click', () => {
     if (payConfirmIcon)  payConfirmIcon.textContent  = '💵';
     if (payConfirmTitle) payConfirmTitle.textContent = 'Pago en efectivo';
     if (payConfirmSub)   payConfirmSub.textContent   = '¿Cómo vas a pagar?';
-    if (payConfirmOkBtn) { payConfirmOkBtn._modoRef = false; payConfirmOkBtn.textContent = 'Confirmar pedido'; }
+    if (payConfirmOkBtn) { payConfirmOkBtn._modoRef = false; payConfirmOkBtn._modoSeleccion = false; payConfirmOkBtn.textContent = 'Confirmar pedido'; }
     if (payConfirmCashSection)  payConfirmCashSection.style.display = 'block';
     if (payConfirmWalletSection) payConfirmWalletSection.style.display = 'none';
     if (cashChangeWrap)         cashChangeWrap.style.display = 'none';
