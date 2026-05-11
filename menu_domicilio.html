@@ -2414,11 +2414,13 @@
         </div>
       </div>
     </div>
-    <!-- Sección billetera digital -->
+    <!-- Sección billetera digital / transferencia -->
     <div id="payConfirmWalletSection" style="display:none;">
       <div class="pay-wallet-info">
-        <div class="pay-wallet-info-label">Número para transferir</div>
+        <div class="pay-wallet-info-label" id="walletInfoLabel">Número para transferir</div>
         <div class="pay-wallet-info-number" id="walletNumber">—</div>
+        <div id="walletAccountType" style="display:none;font-size:12px;color:rgba(255,255,255,.5);font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;"></div>
+        <div id="walletAccountName" style="display:none;font-size:14px;font-weight:800;color:rgba(255,255,255,.85);margin-bottom:6px;"></div>
         <div class="pay-wallet-info-hint">Transfiere el valor exacto del pedido antes de que llegue el domiciliario</div>
         <button class="pay-wallet-copy-btn" id="walletCopyBtn" type="button">📋 Copiar número</button>
       </div>
@@ -3100,6 +3102,73 @@ function paymentLabelById(modeKey, id){
 function setSelectedPayment(id){
   selectedPayment = id;
   orderForm.payment = id;
+
+  // Si el método tiene datos de referencia (no efectivo), mostrar modal informativo
+  const methods = visiblePaymentMethods(mode);
+  const m = methods.find(x => x.id === id);
+  const esEfectivo = !m || !m.payType || m.payType === 'efectivo'
+    || m.label.toLowerCase().includes('efectivo');
+
+  if (!esEfectivo && m && (m.info || m.accountName)) {
+    const modal     = document.getElementById('payConfirmModal');
+    const cashSec   = document.getElementById('payConfirmCashSection');
+    const walletSec = document.getElementById('payConfirmWalletSection');
+    const icon      = document.getElementById('payConfirmIcon');
+    const title     = document.getElementById('payConfirmTitle');
+    const sub       = document.getElementById('payConfirmSub');
+    const total     = document.getElementById('payConfirmTotal');
+    const okBtn     = document.getElementById('payConfirmOk');
+    const walletNum    = document.getElementById('walletNumber');
+    const walletLabel  = document.getElementById('walletInfoLabel');
+    const walletType   = document.getElementById('walletAccountType');
+    const walletName   = document.getElementById('walletAccountName');
+    const copyBtn      = document.getElementById('walletCopyBtn');
+
+    // Configurar contenido según payType
+    const isTrans = m.payType === 'transferencia';
+    if (icon)  icon.textContent  = isTrans ? '🏦' : '📱';
+    if (title) title.textContent = m.label;
+    if (sub)   sub.textContent   = isTrans
+      ? 'Datos para la transferencia bancaria'
+      : 'Número de billetera digital';
+    if (total) total.style.display = 'none'; // no relevante aquí
+    if (walletLabel) walletLabel.textContent = isTrans ? 'Número de cuenta' : 'Número de celular';
+    if (walletNum)   walletNum.textContent   = m.info || '—';
+
+    if (walletType) {
+      if (isTrans && m.accountType) {
+        const tipo = m.accountType === 'corriente' ? 'Cuenta Corriente' : 'Cuenta de Ahorros';
+        walletType.textContent = tipo;
+        walletType.style.display = 'block';
+      } else {
+        walletType.style.display = 'none';
+      }
+    }
+    if (walletName) {
+      if (m.accountName) {
+        walletName.textContent = m.accountName;
+        walletName.style.display = 'block';
+      } else {
+        walletName.style.display = 'none';
+      }
+    }
+    if (copyBtn) {
+      copyBtn.onclick = () => {
+        navigator.clipboard.writeText(m.info || '').then(() => {
+          copyBtn.textContent = '✅ Copiado';
+          setTimeout(() => { copyBtn.textContent = '📋 Copiar número'; }, 2000);
+        }).catch(() => { window.prompt('Copia este número:', m.info || ''); });
+      };
+    }
+
+    // Mostrar solo sección wallet, ocultar efectivo
+    if (cashSec)   cashSec.style.display   = 'none';
+    if (walletSec) walletSec.style.display = 'block';
+    // Cambiar OK por "Entendido"
+    if (okBtn) { okBtn.textContent = '✓ Entendido'; okBtn._modoRef = true; }
+    if (modal) { modal.style.display = 'flex'; modal.setAttribute('aria-hidden','false'); }
+  }
+
   renderCart();
 }
 
@@ -3117,17 +3186,11 @@ function renderPaymentOptions(){
     const iconHtml = m.img
       ? `<img src="${m.img}" style="width:26px;height:26px;object-fit:cover;border-radius:5px;flex-shrink:0;">`
       : `<span>${escapeHtml(m.emoji || '💳')}</span>`;
-    const infoHtml = (m.needsInfo && m.info)
-      ? `<div style="font-size:10px;color:rgba(255,255,255,0.7);font-weight:400;margin-top:2px;letter-spacing:0;">${escapeHtml(m.info)}</div>`
-      : '';
     return `
     <button type="button" class="pay-pill ${m.id === current ? 'active' : ''}" data-pay-id="${escapeHtml(m.id)}">
       <div style="display:flex;align-items:center;gap:6px;">
         ${iconHtml}
-        <div style="text-align:left;">
-          <strong>${escapeHtml(m.label)}</strong>
-          ${infoHtml}
-        </div>
+        <strong>${escapeHtml(m.label)}</strong>
       </div>
     </button>`;
   }).join('');
@@ -4666,6 +4729,16 @@ function ossNuevoPedido() {
   });
 
   payConfirmOk?.addEventListener('click', () => {
+    // Modo "Entendido" — solo cerrar el modal de referencia de pago
+    if (payConfirmOk._modoRef) {
+      payConfirmOk._modoRef = false;
+      payConfirmOk.textContent = 'Confirmar pedido';
+      const payConfirmTotal = document.getElementById('payConfirmTotal');
+      if (payConfirmTotal) payConfirmTotal.style.display = '';
+      if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
+      return;
+    }
+
     if (!cashMode) {
       // Si no eligió ninguna opción, mostrar efecto shake
       [cashOptExact, cashOptChange].forEach(b => {
@@ -4700,6 +4773,10 @@ function ossNuevoPedido() {
 
   payConfirmCancel?.addEventListener('click', () => {
     if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
+    // Limpiar modo referencia si estaba activo
+    if (payConfirmOk) { payConfirmOk._modoRef = false; payConfirmOk.textContent = 'Confirmar pedido'; }
+    const payConfirmTotal = document.getElementById('payConfirmTotal');
+    if (payConfirmTotal) payConfirmTotal.style.display = '';
     cashMode = null;
     selectCashOpt(null);
     _pendingOrderData = null;
@@ -4788,7 +4865,15 @@ $('#waBtn').addEventListener('click', () => {
     const payConfirmCashSection  = document.getElementById('payConfirmCashSection');
     const payConfirmWalletSection = document.getElementById('payConfirmWalletSection');
     // Resetear estado del modal
-    if (payConfirmTotal)        payConfirmTotal.textContent = fmtWa(subtotal());
+    if (payConfirmTotal)        { payConfirmTotal.textContent = fmtWa(subtotal()); payConfirmTotal.style.display = ''; }
+    const payConfirmIcon  = document.getElementById('payConfirmIcon');
+    const payConfirmTitle = document.getElementById('payConfirmTitle');
+    const payConfirmSub   = document.getElementById('payConfirmSub');
+    const payConfirmOkBtn = document.getElementById('payConfirmOk');
+    if (payConfirmIcon)  payConfirmIcon.textContent  = '💵';
+    if (payConfirmTitle) payConfirmTitle.textContent = 'Pago en efectivo';
+    if (payConfirmSub)   payConfirmSub.textContent   = '¿Cómo vas a pagar?';
+    if (payConfirmOkBtn) { payConfirmOkBtn._modoRef = false; payConfirmOkBtn.textContent = 'Confirmar pedido'; }
     if (payConfirmCashSection)  payConfirmCashSection.style.display = 'block';
     if (payConfirmWalletSection) payConfirmWalletSection.style.display = 'none';
     if (cashChangeWrap)         cashChangeWrap.style.display = 'none';
