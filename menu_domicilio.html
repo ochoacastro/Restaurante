@@ -4761,7 +4761,7 @@ function ossNuevoPedido() {
     // Modo "Entendido" — solo cerrar el modal de referencia de pago (billeteras)
     if (payConfirmOk._modoRef) {
       payConfirmOk._modoRef = false;
-      payConfirmOk.textContent = 'Confirmar pedido';
+      payConfirmOk.textContent = 'Confirmar';
       const payConfirmTotal = document.getElementById('payConfirmTotal');
       if (payConfirmTotal) payConfirmTotal.style.display = '';
       if (payConfirmModal) { payConfirmModal.style.display = 'none'; payConfirmModal.setAttribute('aria-hidden','true'); }
