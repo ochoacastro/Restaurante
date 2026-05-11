@@ -2982,9 +2982,17 @@ function normalizePhone(value){
 }
 
 function getWhatsAppNumber(){
-  const raw = normalizePhone(settings.businessWhatsApp || DEFAULT_WHATSAPP_NUMBER);
-  if(!raw) return '';
-  return raw.startsWith('57') ? raw : `57${raw}`;
+  // 1. Preferencia: businessWhatsApp guardado en pos_menu_settings_v1
+  let src = normalizePhone(settings.businessWhatsApp || DEFAULT_WHATSAPP_NUMBER);
+  // 2. Fallback: waTelDomicilio de pos_config (guardado por el POS/index)
+  if(!src){
+    try {
+      const posConf = JSON.parse(localStorage.getItem('pos_config') || '{}');
+      if(posConf.waTelDomicilio) src = normalizePhone(posConf.waTelDomicilio);
+    } catch(e) {}
+  }
+  if(!src) return '';
+  return src.startsWith('57') ? src : `57${src}`;
 }
 
 function getBusinessWhatsapp(){
