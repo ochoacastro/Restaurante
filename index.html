@@ -4501,26 +4501,6 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
     </div>
   </div>
 
-  <!-- Formas de pago -->
-  <div class="cfg-acc" id="cfgacc-pagos">
-    <div class="cfg-acc-header" data-cfgacc="cfgacc-pagos">
-      <div class="cfg-acc-left">
-        <span class="cfg-acc-icon">💳</span>
-        <div>
-          <div class="cfg-acc-title">Formas de pago</div>
-          <div class="cfg-acc-sub">Visibles en restaurante y domicilio</div>
-        </div>
-      </div>
-      <span class="cfg-acc-arrow">▼</span>
-    </div>
-    <div class="cfg-acc-body">
-      <div class="cfg-acc-inner">
-        <div id="cfgPayList" class="payment-list"></div>
-        <button class="btn-save-config" style="margin-top:8px;" onclick="cfgAddPayment()">➕ Agregar método</button>
-      </div>
-    </div>
-  </div>
-
   <!-- Diseño del menú -->
   <div class="cfg-acc" id="cfgacc-diseno">
     <div class="cfg-acc-header" data-cfgacc="cfgacc-diseno">
@@ -4847,17 +4827,6 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
           </div>
         </div>
 
-        <!-- Horarios de atención -->
-        <div class="config-field" style="margin-top:6px;">
-          <label>🕐 Horarios de atención</label>
-          <div style="font-size:11px;color:var(--gris);margin-bottom:10px;line-height:1.5;">
-            Configura los días y horas de atención del restaurante.
-          </div>
-          <div id="horariosWrap" style="display:flex;flex-direction:column;gap:6px;"></div>
-          <div style="margin-top:10px;padding:10px 12px;background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.12);border-radius:var(--r-sm);font-size:12px;color:var(--rappi);font-weight:600;">
-            💡 Deja "Cerrado" los días que no atiendes.
-          </div>
-        </div>
 
 
         <div id="seccionLoginBranding">
@@ -4902,6 +4871,51 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
     </div>
   </div>
 
+
+  <!-- ══ HORARIO DE ATENCIÓN ══ -->
+  <div class="cfg-acc" id="cfgacc-horario">
+    <div class="cfg-acc-header" data-cfgacc="cfgacc-horario">
+      <div class="cfg-acc-left">
+        <span class="cfg-acc-icon">🕐</span>
+        <div>
+          <div class="cfg-acc-title">Horario de atención</div>
+          <div class="cfg-acc-sub">Días y horas en que abres</div>
+        </div>
+      </div>
+      <span class="cfg-acc-arrow">▼</span>
+    </div>
+    <div class="cfg-acc-body">
+      <div class="cfg-acc-inner">
+        <div style="font-size:11px;color:var(--gris);margin-bottom:10px;line-height:1.5;">
+          Configura los días y horas de atención del restaurante.
+        </div>
+        <div id="horariosWrap" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div style="margin-top:10px;padding:10px 12px;background:var(--rappi-soft);border:1.5px solid rgba(255,68,26,0.12);border-radius:var(--r-sm);font-size:12px;color:var(--rappi);font-weight:600;">
+          💡 Deja "Cerrado" los días que no atiendes.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ FORMAS DE PAGO ══ -->
+  <div class="cfg-acc" id="cfgacc-pagos">
+    <div class="cfg-acc-header" data-cfgacc="cfgacc-pagos">
+      <div class="cfg-acc-left">
+        <span class="cfg-acc-icon">💳</span>
+        <div>
+          <div class="cfg-acc-title">Formas de pago</div>
+          <div class="cfg-acc-sub">Visibles en restaurante y domicilio</div>
+        </div>
+      </div>
+      <span class="cfg-acc-arrow">▼</span>
+    </div>
+    <div class="cfg-acc-body">
+      <div class="cfg-acc-inner">
+        <div id="cfgPayList" class="payment-list"></div>
+        <button class="btn-save-config" style="margin-top:8px;" onclick="cfgAddPayment()">➕ Agregar método</button>
+      </div>
+    </div>
+  </div>
 
   <!-- ══ CÓDIGO QR (Menú + Domicilios) ══ -->
   <div class="cfg-acc" id="cfgacc-qr">
@@ -14188,7 +14202,8 @@ function onCfgAccOpen(id) {
   if (id === 'cfgacc-precios')  { renderPreciosConfig(); }
   if (id === 'cfgacc-diseno')   { cfgRenderDiseno(); renderClosedBgPreview(); }
   if (id === 'cfgacc-publicidad') { renderAdBannerPreview(); }
-  if (id === 'cfgacc-restaurante') { renderHorarios(); renderFestivos(); }
+  if (id === 'cfgacc-restaurante') { renderFestivos(); }
+  if (id === 'cfgacc-horario')  { renderHorarios(); renderFestivos(); }
   if (id === 'cfgacc-qr')      { qr2Init(); }
   if (id === 'cfgacc-storage') { storageAdminLoad(); }
 
