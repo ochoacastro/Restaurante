@@ -2408,7 +2408,7 @@
       </div>
       <div class="pay-cash-input-wrap" id="cashChangeWrap" style="display:none;">
         <div class="pay-cash-input-label">¿Con cuánto vas a pagar?</div>
-        <input class="pay-cash-input" id="cashAmountInput" type="number" inputmode="numeric" placeholder="Ej: 50000">
+        <input class="pay-cash-input" id="cashAmountInput" type="text" inputmode="numeric" placeholder="Ej: 50.000">
         <div id="cashVueltoLine" style="margin-top:8px;font-size:13px;color:rgba(255,255,255,.55);text-align:center;display:none;">
           Vuelto aproximado: <strong id="cashVueltoVal" style="color:#4CAF50;"></strong>
         </div>
@@ -4649,12 +4649,19 @@ function ossNuevoPedido() {
   cashOptChange?.addEventListener('click', () => selectCashOpt('change'));
 
   cashAmountInput?.addEventListener('input', () => {
-    const paid  = parseFloat(cashAmountInput.value) || 0;
+    // Extraer solo dígitos, formatear con puntos de miles
+    const digits = cashAmountInput.value.replace(/\D/g, '');
+    const paid   = parseInt(digits, 10) || 0;
+    const formatted = paid > 0 ? paid.toLocaleString('es-CO') : '';
+    // Reescribir el valor formateado solo si cambió (evita loop)
+    if (cashAmountInput.value !== formatted) cashAmountInput.value = formatted;
     const total = _pendingOrderData?.totalVal || subtotal();
     if (paid > 0 && cashVueltoLine && cashVueltoVal) {
       const vuelto = paid - total;
       cashVueltoVal.textContent = '$ ' + Math.max(0, vuelto).toLocaleString('es-CO');
       cashVueltoLine.style.display = 'block';
+    } else if (cashVueltoLine) {
+      cashVueltoLine.style.display = 'none';
     }
   });
 
@@ -4672,7 +4679,7 @@ function ossNuevoPedido() {
     if (cashMode === 'exact') {
       notasPago = 'Pago exacto en efectivo';
     } else {
-      const paid  = parseFloat(cashAmountInput?.value || 0);
+      const paid  = parseInt((cashAmountInput?.value || '').replace(/\D/g, ''), 10) || 0;
       const total = _pendingOrderData?.totalVal || subtotal();
       if (paid > 0 && paid >= total) {
         const vuelto = paid - total;
