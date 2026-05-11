@@ -4774,27 +4774,27 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
 
         <div class="config-field">
           <label>Nombre</label>
-          <input class="config-input" id="cfgNombre" value="" placeholder="Ej: Restaurante El Sabor">
+          <input class="config-input" id="cfgNombre" value="" placeholder="Ej: Restaurante El Sabor" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>NIT</label>
-          <input class="config-input" id="cfgNit" value="" placeholder="Ej: 900123456-7">
+          <input class="config-input" id="cfgNit" value="" placeholder="Ej: 900123456-7" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>Dirección</label>
-          <input class="config-input" id="cfgDir" value="" placeholder="Ej: Calle 10 # 5-23, Bogotá">
+          <input class="config-input" id="cfgDir" value="" placeholder="Ej: Calle 10 # 5-23, Bogotá" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>Teléfono</label>
-          <input class="config-input" id="cfgTel" value="" placeholder="Ej: 3001234567">
+          <input class="config-input" id="cfgTel" value="" placeholder="Ej: 3001234567" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>Mensaje de despedida</label>
-          <input class="config-input" id="cfgMsg" value="¡Gracias por tu visita!">
+          <input class="config-input" id="cfgMsg" value="¡Gracias por tu visita!" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>📲 WhatsApp para pedidos de domicilio</label>
-          <input class="config-input" id="cfgWaDomicilio" type="tel" placeholder="Ej: 3001234567 (sin +57)" inputmode="numeric">
+          <input class="config-input" id="cfgWaDomicilio" type="tel" placeholder="Ej: 3001234567 (sin +57)" inputmode="numeric" oninput="debounceSaveConfig()">
           <div style="font-size:11px;color:var(--gris);margin-top:4px;">Se pre-llenará al enviar domicilios por WhatsApp y es el número de contacto para pedidos.</div>
         </div>
         <div class="config-field">
@@ -4805,7 +4805,7 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
               <div style="font-size:11px;color:var(--gris);margin-top:2px;">Activa para ingresar el costo que se sumará al total</div>
             </div>
             <label class="mpp-toggle" style="flex-shrink:0;">
-              <input type="checkbox" id="cfgCobrarEnvioToggle" onchange="cfgToggleCobrarEnvio(this.checked)">
+              <input type="checkbox" id="cfgCobrarEnvioToggle" onchange="cfgToggleCobrarEnvio(this.checked); debounceSaveConfig()">
               <span class="mpp-slider"></span>
             </label>
           </div>
@@ -4813,7 +4813,7 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
           <div id="cfgCostoEnvioDrawer" style="display:none;margin-top:12px;padding:12px 14px;background:var(--fondo);border:1.5px solid var(--borde);border-radius:var(--r-sm);">
             <div style="font-size:12px;font-weight:700;color:var(--gris-osc);margin-bottom:8px;">Costo del envío</div>
             <input class="config-input" id="cfgCostoEnvio" type="text" inputmode="numeric" min="0"
-              placeholder="Ej: 3.000" style="margin:0;">
+              placeholder="Ej: 3.000" style="margin:0;" oninput="debounceSaveConfig()">
             <div style="font-size:11px;color:var(--gris);margin-top:6px;">Este valor se suma automáticamente al total de cada pedido a domicilio.</div>
           </div>
         </div>
@@ -4821,7 +4821,8 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
           <label>💬 Mensaje de WhatsApp (factura)</label>
           <textarea class="config-input" id="cfgWaMensaje" rows="3"
             placeholder="Ej: Hola, te envío tu factura. Que la disfrutes 😊"
-            style="width:100%;resize:vertical;font-family:inherit;font-size:14px;line-height:1.5;box-sizing:border-box;"></textarea>
+            style="width:100%;resize:vertical;font-family:inherit;font-size:14px;line-height:1.5;box-sizing:border-box;"
+            oninput="debounceSaveConfig()"></textarea>
           <div style="font-size:11px;color:var(--gris);margin-top:4px;">
             Texto que acompaña la factura. Usa <b>{factura}</b> para insertar el número y <b>{negocio}</b> para el nombre del negocio.
           </div>
@@ -4832,11 +4833,11 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
         <div id="seccionLoginBranding">
         <div class="config-field">
           <label>🏠 Nombre en pantalla de inicio</label>
-          <input class="config-input" id="cfgLoginBrand" placeholder="Ej: Mi Restaurante">
+          <input class="config-input" id="cfgLoginBrand" placeholder="Ej: Mi Restaurante" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>📝 Subtítulo en pantalla de inicio</label>
-          <input class="config-input" id="cfgLoginSub" placeholder="Ej: Restaurante Campestre">
+          <input class="config-input" id="cfgLoginSub" placeholder="Ej: Restaurante Campestre" oninput="debounceSaveConfig()">
         </div>
         <div class="config-field">
           <label>🌿 Ícono / Logo pantalla de inicio</label>
@@ -4844,7 +4845,7 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
             <div id="loginIconPreview" style="width:64px;height:64px;border-radius:16px;background:#FF4D1A;display:flex;align-items:center;justify-content:center;font-size:32px;flex-shrink:0;">🌿</div>
             <div style="flex:1;">
               <div style="font-size:11px;color:var(--gris);margin-bottom:6px;">Puedes usar un emoji o subir una imagen.</div>
-              <input class="config-input" id="cfgLoginEmoji" placeholder="Emoji, ej: 🌿" maxlength="4" style="margin-bottom:6px;text-align:center;font-size:20px;">
+              <input class="config-input" id="cfgLoginEmoji" placeholder="Emoji, ej: 🌿" maxlength="4" style="margin-bottom:6px;text-align:center;font-size:20px;" oninput="debounceSaveConfig()">
             </div>
           </div>
           <label class="logo-upload-btn" style="margin-bottom:6px;">
@@ -4866,7 +4867,6 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
           </label>
           <button id="loginBgQuitarBtn" style="display:none;width:100%;padding:9px;background:white;border:1.5px solid rgba(192,57,43,0.35);color:var(--rojo);border-radius:var(--r-sm);font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;" onclick="quitarLoginBg()">🗑️ Quitar fondo</button>
         </div>
-        <button class="btn-save-config" onclick="saveConfig()">💾 Guardar</button>
       </div>
     </div>
   </div>
@@ -7270,7 +7270,14 @@ function _timeSelects(id, val24) {
        + `<select class="horario-time-sel sel-m"  id="${id}-m"  onchange="syncHorarioSel('${id}')">${_mOpts(m5)}</select>`
        + `<select class="horario-time-sel sel-ap" id="${id}-ap" onchange="syncHorarioSel('${id}')">${_apOpts(ap)}</select>`;
 }
-function syncHorarioSel(id) { /* valor se lee al guardar */ }
+function syncHorarioSel(id) {
+  // Auto-guardar al cambiar cualquier select de horario
+  const horarios = leerHorariosDelForm();
+  guardarHorariosLocal(horarios);
+  renderClosedHorarioOverlay();
+  // Sincronizar a Firebase para que menu_domicilio lo reciba en tiempo real
+  if (window.fbSync) fbSync('menuSettings/horarios', horarios);
+}
 
 function renderHorarios() {
   const wrap = document.getElementById('horariosWrap');
@@ -7729,7 +7736,13 @@ function quitarAdBanner() {
 // ── GRILLA DE BOTONES PDF POR SKIN ──────────────────────────────────────
 
 
-function saveConfig() {
+let _saveConfigTimer = null;
+function debounceSaveConfig() {
+  clearTimeout(_saveConfigTimer);
+  _saveConfigTimer = setTimeout(() => saveConfig(true), 900);
+}
+
+function saveConfig(silent = false) {
   const cfgNombre = document.getElementById('cfgNombre').value.trim();
   if (!cfgNombre) { showToast('⚠️ El nombre del negocio no puede estar vacío'); return; }
   config.nombre    = cfgNombre;
@@ -7806,7 +7819,7 @@ function saveConfig() {
   const firstRunBanner = document.getElementById('firstRunBanner');
   if (firstRunBanner) firstRunBanner.style.display = 'none';
 
-  showToast('✅ Configuración guardada');
+  if (!silent) showToast('✅ Configuración guardada');
 }
 
 // Muestra/oculta el cajón del costo de envío al activar el toggle
