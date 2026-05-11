@@ -8141,6 +8141,8 @@ function cerrarDrawer() {
   }
   _drawerActual = null;
   cerrarPedidosPanel();
+  // Cerrar todos los acordeones al salir del drawer
+  document.querySelectorAll('.cfg-acc.open').forEach(a => a.classList.remove('open'));
   document.getElementById('drawerOverlay').classList.remove('open');
   document.body.style.overflow = '';
   if (wasCarrito) showTab('home');
