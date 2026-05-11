@@ -8141,8 +8141,6 @@ function cerrarDrawer() {
   }
   _drawerActual = null;
   cerrarPedidosPanel();
-  // Cerrar todos los acordeones al salir del drawer
-  document.querySelectorAll('.cfg-acc.open').forEach(a => a.classList.remove('open'));
   document.getElementById('drawerOverlay').classList.remove('open');
   document.body.style.overflow = '';
   if (wasCarrito) showTab('home');
@@ -14561,12 +14559,20 @@ function cfgRenderPayments() {
         </div>
         <div class="pay-name-info-col">
           <input class="pay-label-input" value="${esc(m.label||'')}" placeholder="Nombre del método" data-pay-label="${i}">
-          <label class="pay-needsinfo-row">
-            <input type="checkbox" data-pay-needsinfo="${i}" ${m.needsInfo ? 'checked' : ''}>
-            Pide número / cuenta
-          </label>
-          <input class="pay-info-input" value="${esc(m.info||'')}" placeholder="Nro. cuenta / teléfono / alias" data-pay-info="${i}"
-            style="${m.needsInfo ? '' : 'display:none'}">
+          <select class="pay-info-input" data-pay-type="${i}" style="margin-top:4px;">
+            <option value=""      ${!m.payType||m.payType===''?'selected':''}>— Tipo de pago —</option>
+            <option value="efectivo"     ${m.payType==='efectivo'?'selected':''}>💵 Efectivo</option>
+            <option value="billetera"    ${m.payType==='billetera'?'selected':''}>📱 Billetera digital (Nequi, Daviplata…)</option>
+            <option value="transferencia"${m.payType==='transferencia'?'selected':''}>🏦 Transferencia bancaria</option>
+          </select>
+          <div data-pay-ref-wrap="${i}" style="${(m.payType&&m.payType!=='efectivo')?'':'display:none'}; display:${(m.payType&&m.payType!=='efectivo')?'flex':'none'}; flex-direction:column; gap:4px; margin-top:4px;">
+            <input class="pay-info-input" value="${esc(m.info||'')}" placeholder="${m.payType==='transferencia'?'Número de cuenta':'Número de celular'}" data-pay-info="${i}">
+            <input class="pay-info-input" value="${esc(m.accountName||'')}" placeholder="Nombre del titular" data-pay-accountname="${i}">
+            <select class="pay-info-input" data-pay-accounttype="${i}" style="${m.payType==='transferencia'?'':'display:none'}">
+              <option value="ahorros"  ${m.accountType==='ahorros'||!m.accountType?'selected':''}>Cuenta de Ahorros</option>
+              <option value="corriente"${m.accountType==='corriente'?'selected':''}>Cuenta Corriente</option>
+            </select>
+          </div>
         </div>
         <button class="pay-del-btn" data-pay-del="${i}">✕</button>
       </div>
@@ -14628,6 +14634,25 @@ function cfgRenderPayments() {
   list.querySelectorAll('[data-pay-info]').forEach(inp => {
     inp.addEventListener('input', () => cfgSavePaymentField(Number(inp.dataset.payInfo), 'info', inp.value));
   });
+  list.querySelectorAll('[data-pay-accountname]').forEach(inp => {
+    inp.addEventListener('input', () => cfgSavePaymentField(Number(inp.dataset.payAccountname), 'accountName', inp.value));
+  });
+  list.querySelectorAll('[data-pay-accounttype]').forEach(sel => {
+    sel.addEventListener('change', () => cfgSavePaymentField(Number(sel.dataset.payAccounttype), 'accountType', sel.value));
+  });
+  list.querySelectorAll('[data-pay-type]').forEach(sel => {
+    sel.addEventListener('change', () => {
+      const i    = Number(sel.dataset.payType);
+      const type = sel.value;
+      cfgSavePaymentField(i, 'payType', type);
+      const refWrap   = list.querySelector(`[data-pay-ref-wrap="${i}"]`);
+      const accType   = list.querySelector(`[data-pay-accounttype="${i}"]`);
+      const infoInput = list.querySelector(`[data-pay-info="${i}"]`);
+      if (refWrap)   refWrap.style.display   = (type && type !== 'efectivo') ? 'flex' : 'none';
+      if (accType)   accType.style.display   = (type === 'transferencia')    ? ''     : 'none';
+      if (infoInput) infoInput.placeholder   = (type === 'transferencia')    ? 'Número de cuenta' : 'Número de celular';
+    });
+  });
   list.querySelectorAll('[data-pay-needsinfo]').forEach(chk => {
     chk.addEventListener('change', () => {
       const i = Number(chk.dataset.payNeedsinfo);
@@ -14660,7 +14685,7 @@ function cfgSavePaymentField(idx, field, value) {
 function cfgAddPayment() {
   const s = loadMenuSettings();
   if (!Array.isArray(s.paymentMethods)) s.paymentMethods = [];
-  s.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', needsInfo: false, visibleRest: true, visibleDom: true });
+  s.paymentMethods.push({ id: `m${Date.now().toString(36)}`, label: 'Nuevo método', img: null, info: '', needsInfo: false, payType: '', accountName: '', accountType: 'ahorros', visibleRest: true, visibleDom: true });
   saveMenuSettings(s);
   cfgRenderPayments();
 }
