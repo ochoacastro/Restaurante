@@ -12620,15 +12620,23 @@ function exportarBackup() {
       const backup = {
         _version: 1,
         _fecha: new Date().toISOString(),
-        pos_config:    localStorage.getItem('pos_config'),
-        pos_menu:      posStore.getItem('pos_menu'),
-        pos_usuarios:  localStorage.getItem('pos_usuarios'),
-        pos_historial: posStore.getItem('pos_historial'),
-        pos_logo:      posStore.getItem('pos_logo'),
-        pos_printer_name: localStorage.getItem('pos_printer_name'),
-        pos_dark:      localStorage.getItem('pos_dark'),
-        pos_pwa_dismissed: localStorage.getItem('pos_pwa_dismissed'),
-        pos_fb_config: localStorage.getItem('pos_fb_config'),
+        pos_config:           localStorage.getItem('pos_config'),
+        pos_menu:             posStore.getItem('pos_menu'),
+        pos_usuarios:         localStorage.getItem('pos_usuarios'),
+        pos_historial:        posStore.getItem('pos_historial'),
+        pos_logo:             posStore.getItem('pos_logo'),
+        pos_printer_name:     localStorage.getItem('pos_printer_name'),
+        pos_dark:             localStorage.getItem('pos_dark'),
+        pos_pwa_dismissed:    localStorage.getItem('pos_pwa_dismissed'),
+        pos_fb_config:        localStorage.getItem('pos_fb_config'),
+        pos_menu_custom_v3:   posStore.getItem('pos_menu_custom_v3'),
+        pos_menu_settings_v1: posStore.getItem('pos_menu_settings_v1'),
+        pos_pin_bloqueo:      localStorage.getItem('pos_pin_bloqueo'),
+        pos_login_bg:         posStore.getItem('pos_login_bg'),
+        pos_login_brand:      localStorage.getItem('pos_login_brand'),
+        pos_login_emoji:      localStorage.getItem('pos_login_emoji'),
+        pos_login_icon:       posStore.getItem('pos_login_icon'),
+        pos_login_sub:        localStorage.getItem('pos_login_sub'),
       };
       const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
       const url  = URL.createObjectURL(blob);
@@ -12670,7 +12678,11 @@ function importarBackup(input) {
             'pos_config','pos_menu','pos_usuarios',
             'pos_historial','pos_logo',
             'pos_printer_name','pos_dark','pos_pwa_dismissed',
-            'pos_fb_config'
+            'pos_fb_config',
+            'pos_menu_custom_v3','pos_menu_settings_v1',
+            'pos_pin_bloqueo',
+            'pos_login_bg','pos_login_brand','pos_login_emoji',
+            'pos_login_icon','pos_login_sub'
           ];
           keys.forEach(k => {
             if (data[k] !== null && data[k] !== undefined) {
