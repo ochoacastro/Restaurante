@@ -6325,14 +6325,15 @@ function abrirMenuUsuario() {
 async function cerrarSesion() {
   cerrarModal('modalUsuarioMenu');
   // Paso 1: actualizar carrito en la orden activa en memoria
-  guardarOrdenActiva();
+  // FIX: envuelto en try/catch para que un error aquí no bloquee el cierre de sesión
+  try { guardarOrdenActiva(); } catch(e) { console.warn('cerrarSesion guardarOrdenActiva:', e); }
 
   // Paso 2: capturar snapshot de órdenes ANTES de limpiar cualquier variable
-  const ordenesAlCerrar = ordenes.slice();
+  const ordenesAlCerrar = (Array.isArray(ordenes) ? ordenes : []).slice();
 
   // Paso 3: DETENER listeners de Firebase PRIMERO para evitar que el propio
   // set de abajo dispare el onValue y sobreescriba con un array vacío
-  fbDetenerListeners();
+  try { fbDetenerListeners(); } catch(e) {}
 
   // Fix A: limpiar listeners huérfanos que no pasaban por fbDetenerListeners()
   if (typeof _fbUnsubCobros === 'function') { _fbUnsubCobros(); }
@@ -6344,14 +6345,23 @@ async function cerrarSesion() {
   if (window._FB && window._FB.db && ordenesAlCerrar.length > 0) {
     try {
       const { db, ref, set } = window._FB;
-      await set(ref(db, 'restaurante/ordenes'), ordenesAlCerrar);
+      await Promise.race([
+        set(ref(db, 'restaurante/ordenes'), ordenesAlCerrar),
+        new Promise(r => setTimeout(r, 4000)) // máximo 4s para no bloquear
+      ]);
     } catch(e) { console.warn('cerrarSesion fbSync ordenes error:', e.message); }
   }
 
   // Paso 5: liberar sesión del usuario en Firebase
+  // FIX: timeout de 4s para que Firebase lento no bloquee el cierre de sesión
   if (usuarioActivo) {
     window._lastLoggedOutUserId = usuarioActivo.id;
-    await fbLiberarSesion(usuarioActivo.id);
+    try {
+      await Promise.race([
+        fbLiberarSesion(usuarioActivo.id),
+        new Promise(r => setTimeout(r, 4000))
+      ]);
+    } catch(e) { console.warn('cerrarSesion fbLiberarSesion error:', e); }
   }
   // fix #12: detener el reloj del header al cerrar sesión
   if (window._renderHeaderInterval) { clearInterval(window._renderHeaderInterval); window._renderHeaderInterval = null; }
