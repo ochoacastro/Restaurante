@@ -2,7 +2,8 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com; worker-src blob: 'self'; child-src blob: 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; worker-src blob: 'self'; child-src blob: 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; frame-src https://www.google.com https://www.grecaptcha.net; frame-ancestors 'self';">
+<meta http-equiv="Referrer-Policy" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mi Restaurante · POS</title>
 <meta name="theme-color" content="#FF441A">
@@ -22,7 +23,8 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, set, get, onValue, off, serverTimestamp, remove, runTransaction, update }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-
+  import { initializeAppCheck, ReCaptchaEnterpriseProvider }
+    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
   let _fbReadyDispatched = false;
   try {
 
@@ -50,6 +52,11 @@
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
 
+  // ── APP CHECK ────────────────────────────────────────────────────────
+  initializeAppCheck(app, {
+    provider: new ReCaptchaEnterpriseProvider('6LdireYsAAAAADv4e_4hA1zoYB81s8QX0ytSs_GP'),
+    isTokenAutoRefreshEnabled: true
+  });
 
   // ── ID ÚNICO DE ESTA PESTAÑA/DISPOSITIVO ─────────────────────────────
   const SESSION_TAB_ID = Math.random().toString(36).slice(2);
@@ -5858,12 +5865,14 @@ function cargarUsuarios() {
   }
 }
 
-// ── Fix 2: HASH DE PINs con SHA-256 ──────────────────────────────────
-const _PIN_SALT = 'los-helechos-pos-2024';
+// ── Fix 2 + Fix 3 mejorado: HASH DE PINs con SHA-256 y salt por usuario ──
+const _PIN_SALT_BASE = 'los-helechos-pos-2024';
 
-async function hashPin(pin) {
+async function hashPin(pin, saltExtra) {
+  // saltExtra = id del usuario (string), hace el hash único por usuario
+  const salt = saltExtra !== undefined ? _PIN_SALT_BASE + ':' + saltExtra : _PIN_SALT_BASE;
   const buf = await crypto.subtle.digest(
-    'SHA-256', new TextEncoder().encode(pin + _PIN_SALT)
+    'SHA-256', new TextEncoder().encode(pin + salt)
   );
   return Array.from(new Uint8Array(buf))
     .map(b => b.toString(16).padStart(2, '0')).join('');
@@ -5872,7 +5881,7 @@ async function hashPin(pin) {
 // Migra un usuario de pin en texto plano a pinHash (se llama al login correcto)
 async function migrarPinSiNecesario(usuario, pinIngresado) {
   if (usuario.pin && !usuario.pinHash) {
-    usuario.pinHash = await hashPin(pinIngresado);
+    usuario.pinHash = await hashPin(pinIngresado, String(usuario.id));
     usuario.pinLen  = pinIngresado.length;
     delete usuario.pin;
     guardarUsuarios();
@@ -6124,14 +6133,16 @@ function pinDel() {
 
 let _pinIntentosFallidos = 0;
 let _pinBloqueadoHasta   = 0;
+let _pinRondasBloqueo    = 0; // cuántas veces se ha bloqueado ya (para escalar)
 
-// Fix 3: leer estado de bloqueo persistido al arrancar
+// Fix 3 + Fix 4: leer estado de bloqueo persistido al arrancar
 (function _cargarBloqueoPin() {
   try {
     const b = JSON.parse(localStorage.getItem('pos_pin_bloqueo') || '{}');
-    if (b.hasta && Date.now() < b.hasta) {
+    if (b.hasta && (b.hasta === Infinity || Date.now() < b.hasta)) {
       _pinBloqueadoHasta   = b.hasta;
       _pinIntentosFallidos = b.intentos || 0;
+      _pinRondasBloqueo    = b.rondas   || 0;
     } else {
       localStorage.removeItem('pos_pin_bloqueo');
     }
@@ -6141,16 +6152,24 @@ let _pinBloqueadoHasta   = 0;
 async function pinEnter() {
   if (!loginTargetUser) return;
 
-  // Corrección Bug 5 + Fix 3: bloqueo temporal persistido en localStorage
-  if (Date.now() < _pinBloqueadoHasta) {
-    const segs = Math.ceil((_pinBloqueadoHasta - Date.now()) / 1000);
-    const _le=document.getElementById('loginError');if(_le)_le.textContent = `🔒 Demasiados intentos. Espera ${segs}s`;
+  // Fix 3 + Fix 4: bloqueo temporal/permanente persistido
+  if (_pinBloqueadoHasta === Infinity || Date.now() < _pinBloqueadoHasta) {
+    const _le = document.getElementById('loginError');
+    if (_pinBloqueadoHasta === Infinity) {
+      if (_le) _le.textContent = '🔒 Cuenta bloqueada. El Master debe resetear el acceso.';
+    } else {
+      const segs = Math.ceil((_pinBloqueadoHasta - Date.now()) / 1000);
+      const mins = Math.floor(segs / 60);
+      if (_le) _le.textContent = mins > 0
+        ? `🔒 Demasiados intentos. Espera ${mins}m ${segs % 60}s`
+        : `🔒 Demasiados intentos. Espera ${segs}s`;
+    }
     return;
   }
 
-  // Fix 2: comparar hash si ya está migrado, o texto plano + migrar
+  // Fix 2 + Fix 3: comparar hash con salt por usuario si ya está migrado, o texto plano + migrar
   const pinCorrecto = loginTargetUser.pinHash
-    ? (await hashPin(pinBuffer) === loginTargetUser.pinHash)
+    ? (await hashPin(pinBuffer, String(loginTargetUser.id)) === loginTargetUser.pinHash)
     : (pinBuffer === loginTargetUser.pin);
 
   if (pinCorrecto) {
@@ -6334,27 +6353,28 @@ async function cerrarSesion() {
   if (typeof cerrarKDSInline === 'function') cerrarKDSInline(); // limpia kdsUnsub, kdsTimerIv, kdsClockIv
   if (typeof window._domDetener === 'function') window._domDetener(); // limpia _domUnsub, _domUnsubKDS, _domUnsubRespuestas
 
-  // Pasos 4 y 5 en PARALELO: persistir órdenes + liberar sesión (máx 4s total)
-  const promesasFB = [];
+  // Paso 4: persistir órdenes activas en Firebase (solo si hay órdenes)
   if (window._FB && window._FB.db && ordenesAlCerrar.length > 0) {
-    const { db, ref, set } = window._FB;
-    promesasFB.push(
-      Promise.race([
+    try {
+      const { db, ref, set } = window._FB;
+      await Promise.race([
         set(ref(db, 'restaurante/ordenes'), ordenesAlCerrar),
-        new Promise(r => setTimeout(r, 1500))
-      ]).catch(e => console.warn('cerrarSesion fbSync ordenes error:', e.message))
-    );
+        new Promise(r => setTimeout(r, 4000)) // máximo 4s para no bloquear
+      ]);
+    } catch(e) { console.warn('cerrarSesion fbSync ordenes error:', e.message); }
   }
+
+  // Paso 5: liberar sesión del usuario en Firebase
+  // FIX: timeout de 4s para que Firebase lento no bloquee el cierre de sesión
   if (usuarioActivo) {
     window._lastLoggedOutUserId = usuarioActivo.id;
-    promesasFB.push(
-      Promise.race([
+    try {
+      await Promise.race([
         fbLiberarSesion(usuarioActivo.id),
-        new Promise(r => setTimeout(r, 1500))
-      ]).catch(e => console.warn('cerrarSesion fbLiberarSesion error:', e))
-    );
+        new Promise(r => setTimeout(r, 4000))
+      ]);
+    } catch(e) { console.warn('cerrarSesion fbLiberarSesion error:', e); }
   }
-  if (promesasFB.length > 0) await Promise.allSettled(promesasFB);
   // fix #12: detener el reloj del header al cerrar sesión
   if (window._renderHeaderInterval) { clearInterval(window._renderHeaderInterval); window._renderHeaderInterval = null; }
   // Fix F: detener intervalos huérfanos al cerrar sesión
@@ -6477,7 +6497,7 @@ function selMasterColor(c) {
          onclick="selMasterColor('${col}')"></div>`).join('');
 }
 
-function guardarMaster() {
+async function guardarMaster() {
   if (usuarioActivo?.rol !== 'master') { showToast('⛔ Solo el Master puede guardar estos cambios'); cerrarModal('modalEditMaster'); return; }
   const nombre = document.getElementById('masterNombre').value.trim();
   const pin    = document.getElementById('masterPin').value.trim();
@@ -6491,7 +6511,12 @@ function guardarMaster() {
   if (!master) return;
   const colorSeleccionado = _masterColorSeleccionado || master.color;
   master.nombre = nombre;
-  if (pin) master.pin = pin; // Solo actualizar si se ingresó uno nuevo
+  if (pin) {
+    // Fix 2 + Fix 3: guardar hash con salt único por usuario, nunca texto plano
+    master.pinHash = await hashPin(pin, String(master.id));
+    master.pinLen  = pin.length;
+    delete master.pin;
+  }
   master.color  = colorSeleccionado;
   // Actualizar usuario activo si es el master
   if (usuarioActivo?.rol === 'master') {
@@ -6563,8 +6588,8 @@ async function guardarUsuario() {
     if (u) {
       u.nombre = nombre;
       if (pin) {
-        // Fix 2: guardar hash, no texto plano
-        u.pinHash = await hashPin(pin);
+        // Fix 2 + Fix 3: guardar hash con salt único por usuario
+        u.pinHash = await hashPin(pin, String(u.id));
         u.pinLen  = pin.length;
         delete u.pin;
       }
@@ -6578,8 +6603,8 @@ async function guardarUsuario() {
     }
   } else {
     const newId = Math.max(0, ...usuarios.map(u => u.id)) + 1;
-    // Fix 2: guardar hash, no texto plano
-    const pinHash = await hashPin(pin);
+    // Fix 2 + Fix 3: guardar hash con salt único por usuario
+    const pinHash = await hashPin(pin, String(newId));
     usuarios.push({ id: newId, nombre, pinHash, pinLen: pin.length, rol: editRolSeleccionado, color: editColorSeleccionado });
   }
   guardarUsuarios();
