@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com https://www.google.com https://www.grecaptcha.net; worker-src blob: 'self'; child-src blob: 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://www.google.com https://www.grecaptcha.net https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; frame-src https://www.google.com https://www.grecaptcha.net;">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' https://*.firebaseio.com https://*.googleapis.com https://*.gstatic.com; script-src 'self' 'unsafe-inline' blob: https://cdnjs.cloudflare.com https://unpkg.com https://cdn.jsdelivr.net https://www.gstatic.com; worker-src blob: 'self'; child-src blob: 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://*.firebaseio.com wss://*.firebaseio.com https://*.googleapis.com https://unpkg.com https://cdn.jsdelivr.net https://cdnjs.cloudflare.com;">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <title>Mi Restaurante · POS</title>
 <meta name="theme-color" content="#FF441A">
@@ -22,8 +22,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
   import { getDatabase, ref, set, get, onValue, off, serverTimestamp, remove, runTransaction, update }
     from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
-  import { initializeAppCheck, ReCaptchaEnterpriseProvider }
-    from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check.js";
+
   let _fbReadyDispatched = false;
   try {
 
@@ -51,11 +50,6 @@
   const app = initializeApp(firebaseConfig);
   const db  = getDatabase(app);
 
-  // ── APP CHECK ────────────────────────────────────────────────────────
-  initializeAppCheck(app, {
-    provider: new ReCaptchaEnterpriseProvider('6LckYOMsAAAAAGH4M-rH1f2d8C1KEONIroqnqwcP'),
-    isTokenAutoRefreshEnabled: true
-  });
 
   // ── ID ÚNICO DE ESTA PESTAÑA/DISPOSITIVO ─────────────────────────────
   const SESSION_TAB_ID = Math.random().toString(36).slice(2);
@@ -2748,10 +2742,10 @@
     flex-shrink: 0; padding: 7px 13px; border-radius: 10px;
     border: none; font-size: 12px; font-weight: 900;
     cursor: pointer; font-family: inherit;
-    background: var(--negro); color: #fff; white-space: nowrap;
+    background: var(--rappi); color: #fff; white-space: nowrap;
     transition: background 0.15s;
   }
-  .qr2-copy-btn:active { background: #444; }
+  .qr2-copy-btn:active { background: var(--rappi-dark); }
   .qr2-download-btn {
     width: 100%; padding: 11px; border-radius: 12px;
     border: 1.5px solid var(--borde); background: var(--blanco);
@@ -5319,7 +5313,6 @@ body.dark .menu-editor-trigger-arrow { color: #AAAAAA; }
       <div class="role-selector">
         <div class="role-opt" id="roleOptAdmin"  onclick="selRol('admin')">👑 Admin</div>
         <div class="role-opt" id="roleOptMesero" onclick="selRol('mesero')">🧾 Mesero</div>
-        <div class="role-opt" id="roleOptCajero" onclick="selRol('cajero')">💰 Cajero</div>
         <div class="role-opt" id="roleOptCocina" onclick="selRol('cocina')">🍳 Cocina</div>
       </div>
     </div>
@@ -5937,7 +5930,7 @@ function renderLoginUserList() {
   const roles = [
     { rol: 'admin',   icon: '👑', name: 'Administrador', desc: 'Gestión completa del sistema',           habilitado: true },
     { rol: 'mesero',  icon: '🧾', name: 'Mesero',         desc: meseros.length ? `${meseros.length} mesero${meseros.length > 1 ? 's' : ''} disponible${meseros.length > 1 ? 's' : ''}` : 'Sin meseros registrados', habilitado: meseros.length > 0 },
-    { rol: 'cajero',  icon: '💰', name: 'Cajero',          desc: cajeros.length ? `${cajeros.length} cajero${cajeros.length > 1 ? 's' : ''} disponible${cajeros.length > 1 ? 's' : ''}` : 'Sin cajeros registrados', habilitado: cajeros.length > 0 },
+
     { rol: 'cocina',  icon: '🍳', name: 'Cocina',          desc: 'Visualización de pedidos en tiempo real', habilitado: !!perms.cocina },
   ];
 
@@ -6341,28 +6334,27 @@ async function cerrarSesion() {
   if (typeof cerrarKDSInline === 'function') cerrarKDSInline(); // limpia kdsUnsub, kdsTimerIv, kdsClockIv
   if (typeof window._domDetener === 'function') window._domDetener(); // limpia _domUnsub, _domUnsubKDS, _domUnsubRespuestas
 
-  // Paso 4: persistir órdenes activas en Firebase (solo si hay órdenes)
+  // Pasos 4 y 5 en PARALELO: persistir órdenes + liberar sesión (máx 4s total)
+  const promesasFB = [];
   if (window._FB && window._FB.db && ordenesAlCerrar.length > 0) {
-    try {
-      const { db, ref, set } = window._FB;
-      await Promise.race([
+    const { db, ref, set } = window._FB;
+    promesasFB.push(
+      Promise.race([
         set(ref(db, 'restaurante/ordenes'), ordenesAlCerrar),
-        new Promise(r => setTimeout(r, 4000)) // máximo 4s para no bloquear
-      ]);
-    } catch(e) { console.warn('cerrarSesion fbSync ordenes error:', e.message); }
+        new Promise(r => setTimeout(r, 1500))
+      ]).catch(e => console.warn('cerrarSesion fbSync ordenes error:', e.message))
+    );
   }
-
-  // Paso 5: liberar sesión del usuario en Firebase
-  // FIX: timeout de 4s para que Firebase lento no bloquee el cierre de sesión
   if (usuarioActivo) {
     window._lastLoggedOutUserId = usuarioActivo.id;
-    try {
-      await Promise.race([
+    promesasFB.push(
+      Promise.race([
         fbLiberarSesion(usuarioActivo.id),
-        new Promise(r => setTimeout(r, 4000))
-      ]);
-    } catch(e) { console.warn('cerrarSesion fbLiberarSesion error:', e); }
+        new Promise(r => setTimeout(r, 1500))
+      ]).catch(e => console.warn('cerrarSesion fbLiberarSesion error:', e))
+    );
   }
+  if (promesasFB.length > 0) await Promise.allSettled(promesasFB);
   // fix #12: detener el reloj del header al cerrar sesión
   if (window._renderHeaderInterval) { clearInterval(window._renderHeaderInterval); window._renderHeaderInterval = null; }
   // Fix F: detener intervalos huérfanos al cerrar sesión
@@ -12609,9 +12601,9 @@ function confirmar({ icono = '⚠️', titulo = 'Confirmar', mensaje, textoOk = 
 
 // ── BACKUP / RESTAURAR ────────────────────────────────────────────────
 function exportarBackup() {
-  // Fix 4: solo el rol master puede exportar
-  if (usuarioActivo?.rol !== 'master') {
-    showToast('⛔ Solo el Master puede exportar el backup');
+  // Exportar permitido para master y admin
+  if (usuarioActivo?.rol !== 'master' && usuarioActivo?.rol !== 'admin') {
+    showToast('⛔ Solo el Master o Administrador puede exportar el backup');
     return;
   }
   // Corrección Bug 17: advertir con modal (no solo confirm) que el backup incluye credenciales
@@ -18844,9 +18836,9 @@ function meGuardar() {
 
 // ── Vista previa iframe ──────────────────────────────────────
 function meGetPreviewUrl() {
-  const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
-  const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
-  return base + '?admin=1&t=' + Date.now();
+  const urlQR = localStorage.getItem('qr2_url_menu') || '';
+  if (!urlQR) return null;
+  return urlQR.split('?')[0] + '?admin=1&t=' + Date.now();
 }
 
 function meSetMode(mode) {
@@ -18865,7 +18857,14 @@ function meSetMode(mode) {
     if (body)   body.style.display   = 'none';
     if (modal)  modal.classList.add('preview-fullscreen');
     previewPanel.classList.add('active');
-    iframe.src = meGetPreviewUrl();
+    const previewUrl = meGetPreviewUrl();
+    if (previewUrl) {
+      iframe.src = previewUrl;
+    } else {
+      iframe.src = '';
+      iframe.srcdoc = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;font-family:sans-serif;color:#888;gap:12px;padding:32px;text-align:center;"><div style="font-size:48px">🔗</div><div style="font-weight:700;font-size:16px;color:#333">Configura la URL del menú</div><div style="font-size:13px">Ve a la sección <b>Código QR</b> y guarda el link de tu menú para poder usar la vista previa.</div></div>';
+      if (typeof showToast === 'function') showToast('⚠️ Guarda el link del menú en la sección QR primero');
+    }
   } else {
     previewBtn.classList.remove('active');
     editBtn.classList.add('active');
@@ -18879,15 +18878,19 @@ function meSetMode(mode) {
 
 function recargarMenuPreviewInner() {
   const iframe = document.getElementById('mePreviewIframeInner');
-  iframe.src = meGetPreviewUrl();
+  const url = meGetPreviewUrl();
+  if (url) iframe.src = url;
 }
 
 function abrirMenuPreview() {
+  const urlQR = localStorage.getItem('qr2_url_menu') || '';
+  if (!urlQR) {
+    if (typeof showToast === 'function') showToast('⚠️ Guarda el link del menú en la sección QR primero');
+    return;
+  }
   const wrap = document.getElementById('mePreviewIframeWrap');
   const iframe = document.getElementById('mePreviewIframe');
-  const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
-  const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
-  iframe.src = base + '?admin=1&t=' + Date.now();
+  iframe.src = urlQR.split('?')[0] + '?admin=1&t=' + Date.now();
   wrap.classList.add('open');
 }
 
@@ -18898,9 +18901,9 @@ function cerrarMenuPreview() {
 
 function recargarMenuPreview() {
   const iframe = document.getElementById('mePreviewIframe');
-  const urlQR = localStorage.getItem(QR2_KEY_MENU) || '';
-  const base = urlQR ? urlQR.split('?')[0] : 'menu restaurante.html';
-  iframe.src = base + '?admin=1&t=' + Date.now();
+  const urlQR = localStorage.getItem('qr2_url_menu') || '';
+  if (!urlQR) { if (typeof showToast === 'function') showToast('⚠️ Guarda el link del menú en la sección QR primero'); return; }
+  iframe.src = urlQR.split('?')[0] + '?admin=1&t=' + Date.now();
 }
 
 
